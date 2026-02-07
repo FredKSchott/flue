@@ -1,0 +1,25 @@
+{
+	"$schema": "https://turbo.build/schema.json",
+	"globalEnv": [
+		"ANTHROPIC_API_KEY",
+		"GITHUB_TOKEN",
+		"GITHUB_WEBHOOK_SECRET",
+		"ASTRO_REPO",
+		"ASTRO_BRANCH"
+	],
+	"tasks": {
+		"dev": {
+			"persistent": true,
+			"cache": false
+		},
+		"build": {},
+		"check:types": {
+			"dependsOn": ["^check:types"],
+			"outputLogs": "errors-only"
+		},
+		"//#format:lint": {},
+		"//#format:style": {
+			"dependsOn": ["format:lint"]
+		}
+	}
+}

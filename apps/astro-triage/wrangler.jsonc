@@ -1,0 +1,47 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "astro-triage",
+	"main": "src/app.ts",
+	"compatibility_date": "2025-05-06",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": {
+		"enabled": true
+	},
+	"containers": [
+		{
+			"class_name": "Sandbox",
+			"image": "./Dockerfile",
+			"instance_type": "standard-3"
+		}
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"class_name": "Sandbox",
+				"name": "Sandbox"
+			},
+			{
+				"class_name": "TriageRunner",
+				"name": "TriageRunner"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"new_sqlite_classes": ["Sandbox"],
+			"tag": "v1"
+		},
+		{
+			"new_sqlite_classes": ["TriageRunner"],
+			"tag": "v2"
+		},
+		{
+			"deleted_classes": ["TriageRunner"],
+			"tag": "v3"
+		},
+		{
+			"new_sqlite_classes": ["TriageRunner"],
+			"tag": "v4"
+		}
+	]
+}

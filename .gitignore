@@ -1,0 +1,40 @@
+# build output
+dist/
+
+# caches
+.cache/
+.turbo/
+
+# dependencies
+node_modules/
+
+# logs
+logs/
+npm-debug.log*
+pnpm-debug.log*
+
+# environment variables
+.env
+.env.local
+.env.*.local
+.dev.vars
+
+# macOS-specific files
+.DS_Store
+
+# local config
+.idea/
+.vscode/settings.json
+*.code-workspace
+
+# other
+*.tsbuildinfo
+
+# wrangler generated types
+worker-configuration.d.ts
+
+# job data (local development)
+data/
+
+# Docker build artifacts (machine-specific CA certs for TLS proxy)
+corporate-ca.pem

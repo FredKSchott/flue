@@ -1,0 +1,20 @@
+{
+	"name": "@flue/astro-triage",
+	"version": "0.0.1",
+	"type": "module",
+	"license": "Apache-2.0",
+	"private": true,
+	"scripts": {
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy",
+		"check:types": "wrangler types && tsc --noEmit"
+	},
+	"dependencies": {
+		"@flue/cloudflare": "workspace:*"
+	},
+	"devDependencies": {
+		"@cloudflare/sandbox": "^0.7.1",
+		"typescript": "^5.9.2",
+		"wrangler": "^4.59.3"
+	}
+}

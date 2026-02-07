@@ -1,0 +1,22 @@
+{
+	"name": "@flue/cli",
+	"version": "0.0.18",
+	"type": "module",
+	"license": "Apache-2.0",
+	"bin": {
+		"flue": "dist/flue.js"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsdown && mv dist/flue.mjs dist/flue.js",
+		"check:types": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@flue/client": "^0.0.10"
+	},
+	"devDependencies": {
+		"tsdown": "^0.20.3"
+	}
+}
