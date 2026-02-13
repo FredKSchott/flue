@@ -1,6 +1,6 @@
 {
 	"name": "@flue/cli",
-	"version": "0.0.18",
+	"version": "0.0.19",
 	"type": "module",
 	"license": "Apache-2.0",
 	"bin": {
@@ -14,7 +14,7 @@
 		"check:types": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@flue/client": "^0.0.10"
+		"@flue/client": "^0.0.11"
 	},
 	"devDependencies": {
 		"tsdown": "^0.20.3"

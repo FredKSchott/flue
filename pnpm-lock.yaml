@@ -46,8 +46,8 @@ importers:
   packages/cli:
     dependencies:
       '@flue/client':
-        specifier: ^0.0.6
-        version: 0.0.6(typescript@5.9.3)
+        specifier: ^0.0.11
+        version: 0.0.11(typescript@5.9.3)
     devDependencies:
       tsdown:
         specifier: ^0.20.3
@@ -554,8 +554,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@flue/client@0.0.6':
-    resolution: {integrity: sha512-hC0Wj4ERtWD7iv9NCdlD3H0bBCpO0l0HN+vAT7wIYHljYGLTW0Lv/8moRUZ6kGKBq89e4ieJGSuGbdnp05VHXQ==}
+  '@flue/client@0.0.11':
+    resolution: {integrity: sha512-VTGnfk/6lIVRhMPwQOJFQZe3iFAoEKXVpx6xjMJgvZ0TLIlLRp66+KT0r7tmQmbZHWxt/tZI825wJAzoIETvxQ==}
 
   '@img/colour@1.0.0':
     resolution: {integrity: sha512-A5P/LfWGFSl6nsckYtjw9da+19jB8hkJ6ACTGcDfEJ0aE+l2n2El7dsVM7UVHZQ9s2lmYMWlrS21YLy2IR1LUw==}
@@ -1420,7 +1420,7 @@ snapshots:
   '@esbuild/win32-x64@0.27.3':
     optional: true
 
-  '@flue/client@0.0.6(typescript@5.9.3)':
+  '@flue/client@0.0.11(typescript@5.9.3)':
     dependencies:
       '@opencode-ai/sdk': 1.1.56
       '@valibot/to-json-schema': 1.5.0(valibot@1.2.0(typescript@5.9.3))
