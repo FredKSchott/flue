@@ -84,6 +84,9 @@ const server = createServer((req, res) => {
 // Disable server timeout — Anthropic streaming responses can take minutes
 server.timeout = 0;
 
-server.listen(PORT, '127.0.0.1', () => {
-	console.error(`[proxy] listening on 127.0.0.1:${PORT}, forwarding to api.anthropic.com`);
+// Bind to 0.0.0.0 so the Docker container can reach the proxy via
+// host.docker.internal (which resolves to the Docker bridge gateway IP,
+// not 127.0.0.1). On CI runners the host is already network-isolated.
+server.listen(PORT, '0.0.0.0', () => {
+	console.error(`[proxy] listening on 0.0.0.0:${PORT}, forwarding to api.anthropic.com`);
 });
