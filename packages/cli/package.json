@@ -7,7 +7,8 @@
 		"flue": "dist/flue.js"
 	},
 	"files": [
-		"dist"
+		"dist",
+		"src/sandbox/"
 	],
 	"scripts": {
 		"build": "tsdown && mv dist/flue.mjs dist/flue.js",

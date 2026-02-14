@@ -6,4 +6,5 @@ export default defineConfig({
 	dts: false,
 	clean: true,
 	outDir: 'dist',
+	external: [/sandbox\/sandbox\.mjs/],
 });

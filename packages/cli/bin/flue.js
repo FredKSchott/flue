@@ -4,12 +4,15 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const OPENCODE_URL = 'http://localhost:48765';
+
 let openCodeProcess = null;
 let eventStreamAbort = null;
+let sandboxContainerName = null;
+let proxyProcess = null;
 
 function printUsage() {
 	console.error(
-		'Usage: flue run <workflowPath> [--args <json>] [--branch <name>] [--model <provider/model>]',
+		'Usage: flue run <workflowPath> [--args <json>] [--branch <name>] [--model <provider/model>] [--sandbox <image>]',
 	);
 }
 
@@ -23,6 +26,7 @@ function parseArgs(argv) {
 	let argsJson;
 	let branch;
 	let model;
+	let sandbox;
 
 	for (let i = 0; i < rest.length; i += 1) {
 		const arg = rest[i];
@@ -53,12 +57,21 @@ function parseArgs(argv) {
 			i += 1;
 			continue;
 		}
+		if (arg === '--sandbox') {
+			sandbox = rest[i + 1];
+			if (!sandbox) {
+				console.error('Missing value for --sandbox');
+				process.exit(1);
+			}
+			i += 1;
+			continue;
+		}
 		console.error(`Unknown argument: ${arg}`);
 		printUsage();
 		process.exit(1);
 	}
 
-	return { workflowPath, argsJson, branch, model };
+	return { workflowPath, argsJson, branch, model, sandbox };
 }
 
 /** Parse "provider/model" string into { providerID, modelID }. */
@@ -270,8 +283,26 @@ function flushTextBuffer(textBuffers, sessionId, sessionName) {
 
 // -- Main --------------------------------------------------------------------
 
+// Lazy-load sandbox helpers only when --sandbox is used.
+// These are the functions that would move to `@flue/docker` in the future.
+import {
+	assertDockerAvailable,
+	PROXY_PORT,
+	startProxyServer,
+	startSandboxContainer,
+	stopProxy,
+	stopSandboxContainer,
+	waitForProxy,
+} from '../src/sandbox/sandbox.mjs';
+
 async function run() {
-	const { workflowPath, argsJson, branch, model: modelStr } = parseArgs(process.argv.slice(2));
+	const {
+		workflowPath,
+		argsJson,
+		branch,
+		model: modelStr,
+		sandbox,
+	} = parseArgs(process.argv.slice(2));
 	const workdir = process.cwd();
 	let startedOpenCode = null;
 
@@ -299,15 +330,48 @@ async function run() {
 
 	const { Flue } = await import('@flue/client');
 
-	const isRunning = await isOpenCodeRunning();
-	if (!isRunning) {
-		startedOpenCode = startOpenCodeServer();
-		openCodeProcess = startedOpenCode;
-		const ready = await waitForOpenCode();
-		if (!ready) {
-			console.error('OpenCode server did not become ready on http://localhost:48765');
-			stopOpenCodeServer(startedOpenCode);
+	if (sandbox) {
+		// -- Sandbox mode: run OpenCode inside a Docker container --
+		assertDockerAvailable();
+
+		// 1. Start the API proxy on the host
+		const proxy = startProxyServer();
+		proxyProcess = proxy;
+		const proxyReady = await waitForProxy();
+		if (!proxyReady) {
+			console.error('[flue] API proxy did not become ready');
+			stopProxy(proxy);
 			process.exit(1);
+		}
+		console.error(`[flue] API proxy ready on 127.0.0.1:${PROXY_PORT}`);
+
+		// 2. Start the Docker container
+		const containerName = startSandboxContainer(workdir, sandbox);
+		sandboxContainerName = containerName;
+
+		// 3. Wait for OpenCode health check inside the container
+		const ready = await waitForOpenCode(30000);
+		if (!ready) {
+			console.error(
+				'[flue] OpenCode server in sandbox container did not become ready on http://localhost:48765',
+			);
+			stopSandboxContainer(containerName);
+			stopProxy(proxy);
+			process.exit(1);
+		}
+		console.error('[flue] OpenCode server ready inside sandbox container');
+	} else {
+		// -- Standard mode: run OpenCode directly on the host --
+		const isRunning = await isOpenCodeRunning();
+		if (!isRunning) {
+			startedOpenCode = startOpenCodeServer();
+			openCodeProcess = startedOpenCode;
+			const ready = await waitForOpenCode();
+			if (!ready) {
+				console.error('OpenCode server did not become ready on http://localhost:48765');
+				stopOpenCodeServer(startedOpenCode);
+				process.exit(1);
+			}
 		}
 	}
 
@@ -335,10 +399,17 @@ async function run() {
 		eventStream.abort();
 		eventStreamAbort = null;
 		await flue.close();
-		if (startedOpenCode) {
-			stopOpenCodeServer(startedOpenCode);
+		if (sandbox) {
+			stopSandboxContainer(sandboxContainerName);
+			sandboxContainerName = null;
+			stopProxy(proxyProcess);
+			proxyProcess = null;
+		} else {
+			if (startedOpenCode) {
+				stopOpenCodeServer(startedOpenCode);
+			}
+			openCodeProcess = null;
 		}
-		openCodeProcess = null;
 	}
 }
 
@@ -426,9 +497,8 @@ function startOpenCodeServer() {
 	return child;
 }
 
-async function waitForOpenCode() {
+async function waitForOpenCode(timeoutMs = 15000) {
 	const start = Date.now();
-	const timeoutMs = 15000;
 	while (Date.now() - start < timeoutMs) {
 		if (await isOpenCodeRunning()) return true;
 		await new Promise((resolve) => setTimeout(resolve, 500));
@@ -440,14 +510,31 @@ function stopOpenCodeServer(child) {
 	child.kill('SIGTERM');
 }
 
-process.on('SIGINT', () => {
+function cleanup() {
 	if (eventStreamAbort) eventStreamAbort.abort();
 	if (openCodeProcess) stopOpenCodeServer(openCodeProcess);
+	if (sandboxContainerName) stopSandboxContainer(sandboxContainerName);
+	if (proxyProcess) stopProxy(proxyProcess);
+}
+
+process.on('SIGINT', () => {
+	cleanup();
 	process.exit(130);
 });
 
 process.on('SIGTERM', () => {
-	if (eventStreamAbort) eventStreamAbort.abort();
-	if (openCodeProcess) stopOpenCodeServer(openCodeProcess);
+	cleanup();
 	process.exit(143);
+});
+
+process.on('uncaughtException', (err) => {
+	console.error(`[flue] uncaught exception: ${err.message}`);
+	cleanup();
+	process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+	console.error(`[flue] unhandled rejection: ${reason}`);
+	cleanup();
+	process.exit(1);
 });
