@@ -2,6 +2,15 @@
 import { execFileSync, spawn } from 'node:child_process';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import {
+	assertDockerAvailable,
+	PROXY_PORT,
+	startProxyServer,
+	startSandboxContainer,
+	stopProxy,
+	stopSandboxContainer,
+	waitForProxy,
+} from '../src/sandbox/sandbox.mjs';
 
 const OPENCODE_URL = 'http://localhost:48765';
 
@@ -282,18 +291,6 @@ function flushTextBuffer(textBuffers, sessionId, sessionName) {
 }
 
 // -- Main --------------------------------------------------------------------
-
-// Lazy-load sandbox helpers only when --sandbox is used.
-// These are the functions that would move to `@flue/docker` in the future.
-import {
-	assertDockerAvailable,
-	PROXY_PORT,
-	startProxyServer,
-	startSandboxContainer,
-	stopProxy,
-	stopSandboxContainer,
-	waitForProxy,
-} from '../src/sandbox/sandbox.mjs';
 
 async function run() {
 	const {

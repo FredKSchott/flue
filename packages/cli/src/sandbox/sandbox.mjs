@@ -2,8 +2,7 @@
  * Docker sandbox lifecycle management.
  *
  * Handles starting/stopping the API proxy and Docker container that isolate
- * the LLM execution environment from host secrets. This module is the future
- * boundary for extracting into a standalone `@flue/docker` package.
+ * the LLM execution environment from host secrets.
  */
 
 import { execFileSync, spawn } from 'node:child_process';
@@ -82,12 +81,16 @@ export function startSandboxContainer(workdir, image) {
 	const name = `flue-sandbox-${randomBytes(4).toString('hex')}`;
 
 	// OpenCode config that routes Anthropic requests through the host proxy.
-	// The container never sees the real API key.
+	// The container never sees the real API key — the proxy on the host injects it.
+	// We pass a dummy apiKey because OpenCode validates that one exists before
+	// making requests. The proxy's header allowlist strips it; the real key is
+	// added server-side.
 	const opencodeConfig = JSON.stringify({
 		provider: {
 			anthropic: {
 				options: {
 					baseURL: `http://host.docker.internal:${PROXY_PORT}`,
+					apiKey: 'sk-dummy-value-real-key-injected-by-proxy',
 				},
 			},
 		},
