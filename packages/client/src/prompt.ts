@@ -13,10 +13,10 @@ function isFilePath(name: string): boolean {
  *
  * If `name` looks like a file path (contains '/' or ends with '.md'), the
  * prompt instructs the agent to read and follow that file under
- * `.opencode/skills/`. Otherwise, it instructs the agent to use the named
+ * `.agents/skills/`. Otherwise, it instructs the agent to use the named
  * skill.
  *
- * @param name - A skill name or a file path relative to .opencode/skills/.
+ * @param name - A skill name or a file path relative to .agents/skills/.
  * @param args - Key-value arguments to include in the prompt.
  * @param schema - Optional Valibot schema for result extraction.
  * @returns The complete prompt string.
@@ -27,7 +27,7 @@ export function buildSkillPrompt(
 	schema?: v.GenericSchema,
 ): string {
 	const instruction = isFilePath(name)
-		? `Read and use the .opencode/skills/${name} skill.`
+		? `Read and use the .agents/skills/${name} skill.`
 		: `Use the ${name} skill.`;
 	const parts: string[] = [
 		'You are running in headless mode with no human operator. Work autonomously — never ask questions, never wait for user input, never use the question tool. Make your best judgment and proceed independently.',

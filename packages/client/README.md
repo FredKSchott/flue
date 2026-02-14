@@ -41,7 +41,7 @@ Options: `env`, `stdin`, `cwd`, `timeout`
 
 ### `flue.skill(name, options?)`
 
-Delegate a task to an AI agent using a skill file from `.opencode/skills/`. The agent reads the skill instructions and works autonomously.
+Delegate a task to an AI agent using a skill file from `.agents/skills/`. The agent reads the skill instructions and works autonomously.
 
 ```ts
 // Fire-and-forget (no return value)
