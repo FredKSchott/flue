@@ -119,11 +119,11 @@ export function startSandboxContainer(workdir, image) {
 		'127.0.0.1:48765:48765',
 		// Allow container to reach host (for the API proxy)
 		'--add-host=host.docker.internal:host-gateway',
-		// Bind mount the workspace
+		// Bind mount the workspace at the same path as on the host.
+		// This avoids needing a separate "container workdir" concept — the same
+		// path works everywhere (host shell, OpenCode API, LLM tools).
 		'-v',
-		`${workdir}:/workspace`,
-		'-w',
-		'/workspace',
+		`${workdir}:${workdir}`,
 		// Set HOME to /tmp so tools (npm, pnpm, git) that write to $HOME
 		// work when running as a non-root user via --user.
 		'-e',

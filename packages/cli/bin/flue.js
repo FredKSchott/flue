@@ -373,21 +373,16 @@ async function run() {
 		}
 	}
 
-	// In sandbox mode, OpenCode sees the repo at /workspace (bind mount target).
-	const containerWorkdir = sandbox ? '/workspace' : undefined;
-	const opencodeWorkdir = containerWorkdir ?? workdir;
-
 	// Preflight: check that OpenCode has providers and a default model
-	await preflight(opencodeWorkdir, modelStr);
+	await preflight(workdir, modelStr);
 
 	// Start streaming events from OpenCode (background, logs to stderr)
-	const eventStream = startEventStream(opencodeWorkdir);
+	const eventStream = startEventStream(workdir);
 	eventStreamAbort = eventStream;
 
 	const model = modelStr ? parseModel(modelStr) : undefined;
 	const flue = new Flue({
 		workdir,
-		containerWorkdir,
 		args,
 		branch,
 		secrets: process.env,
