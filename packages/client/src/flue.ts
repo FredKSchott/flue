@@ -19,6 +19,7 @@ export class Flue {
 	readonly secrets: Record<string, string>;
 
 	private readonly workdir: string;
+	private readonly shellWorkdir: string;
 	private readonly model?: { providerID: string; modelID: string };
 	private readonly client: OpencodeClient;
 
@@ -27,6 +28,7 @@ export class Flue {
 		this.args = options.args ?? {};
 		this.secrets = options.secrets ?? {};
 		this.workdir = options.workdir;
+		this.shellWorkdir = options.shellWorkdir ?? options.workdir;
 		this.model = options.model;
 		this.client = createOpencodeClient({
 			baseUrl: options.opencodeUrl ?? 'http://localhost:48765',
@@ -73,7 +75,7 @@ export class Flue {
 
 	/** Execute a shell command with scoped environment variables. */
 	async shell(command: string, options?: ShellOptions): Promise<ShellResult> {
-		return runShell(command, { ...options, cwd: options?.cwd ?? this.workdir });
+		return runShell(command, { ...options, cwd: options?.cwd ?? this.shellWorkdir });
 	}
 
 	/** Close the OpenCode client connection. */
