@@ -70,7 +70,8 @@ export class Flue {
 			parts.push(buildResultInstructions(schema));
 		}
 		const fullPrompt = parts.join('\n');
-		return runPrompt(this.client, this.workdir, 'prompt', fullPrompt, {
+		const label = `prompt("${promptText.length > 40 ? promptText.slice(0, 40) + '…' : promptText}")`;
+		return runPrompt(this.client, this.workdir, label, fullPrompt, {
 			result: options?.result,
 			model: options?.model ?? this.model,
 		});

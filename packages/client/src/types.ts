@@ -31,17 +31,6 @@ export interface PromptOptions<S extends v.GenericSchema | undefined = undefined
 	model?: { providerID: string; modelID: string };
 }
 
-/**
- * Internal options for the low-level `runPrompt()` function.
- * Both `flu.prompt()` and `flu.skill()` map their public options to this shape.
- */
-export interface PromptRunOptions<S extends v.GenericSchema | undefined = undefined> {
-	/** Valibot schema for structured result extraction. */
-	result?: S;
-	/** Override model for this invocation. */
-	model?: { providerID: string; modelID: string };
-}
-
 export interface ShellOptions {
 	/** Environment variables scoped to this subprocess only. */
 	env?: Record<string, string>;

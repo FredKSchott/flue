@@ -2,7 +2,7 @@ import type { OpencodeClient, Part } from '@opencode-ai/sdk';
 import type * as v from 'valibot';
 import { buildSkillPrompt } from './prompt.ts';
 import { extractResult } from './result.ts';
-import type { PromptRunOptions, SkillOptions } from './types.ts';
+import type { PromptOptions, SkillOptions } from './types.ts';
 
 /** How often to poll and log progress (ms). */
 const POLL_INTERVAL = 5_000;
@@ -25,7 +25,7 @@ export async function runPrompt<S extends v.GenericSchema | undefined = undefine
 	workdir: string,
 	label: string,
 	prompt: string,
-	options?: PromptRunOptions<S>,
+	options?: PromptOptions<S>,
 ): Promise<S extends v.GenericSchema ? v.InferOutput<S> : void> {
 	const { result: schema, model } = options ?? {};
 
