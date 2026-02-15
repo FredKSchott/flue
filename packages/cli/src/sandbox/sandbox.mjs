@@ -130,7 +130,14 @@ export function startSandboxContainer(workdir, image) {
 		'HOME=/tmp',
 		// Environment: auto-approve all permissions (headless CI)
 		'-e',
-		`OPENCODE_PERMISSION=${JSON.stringify({ '*': 'allow' })}`,
+		`OPENCODE_PERMISSION=${JSON.stringify({ 
+			// Allow all permissions, by default.
+			'*': 'allow', 
+			// Disable questions, they can block the session
+			question: 'deny',
+			// Disable tasks, they are problematic for multi-step workflows
+			task: 'deny',
+		 })}`,
 		// Environment: OpenCode config with proxy-based provider
 		'-e',
 		`OPENCODE_CONFIG_CONTENT=${opencodeConfig}`,

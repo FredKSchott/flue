@@ -26,19 +26,22 @@ export class FlueRunner {
 	 */
 	async setup(): Promise<void> {
 		await runSetup(this.sandbox, this.options, this.workdir);
-		const permission: { question: string } = {
-			// @ts-expect-error: allow wildcard permission config
+		// Headless agent — no human to approve permission prompts.
+		// Must come last so it overrides any project-level config.
+		const permission: Record<string, string> = {
+			// Allow all permissions, by default.
 			'*': 'allow',
+			// Disable questions, they can block the session
 			question: 'deny',
+			// Disable tasks, they are problematic for multi-step workflows
+			task: 'deny',
 		};
 		console.log(`[flue] setup: starting OpenCode server (workdir: ${this.workdir})`);
 		const result = await createOpencode(this.sandbox, {
 			directory: this.workdir,
 			config: {
 				...this.options.opencodeConfig,
-				// Headless agent — no human to approve permission prompts.
-				// Must come last so it overrides any project-level config.
-				permission: permission as unknown as Record<string, string>,
+				permission,
 			},
 		});
 		this.opencodeServer = result.server;

@@ -489,7 +489,14 @@ function startOpenCodeServer() {
 			// Headless/CI — no human to approve permission prompts.
 			// OPENCODE_PERMISSION is read at startup and merged into the config
 			// before the permission ruleset is built, so all "ask" rules become "allow".
-			OPENCODE_PERMISSION: JSON.stringify({ '*': 'allow' }),
+			OPENCODE_PERMISSION: JSON.stringify({ 
+				// Allow all permissions, by default.
+				'*': 'allow', 
+				// Disable questions, they can block the session
+				question: 'deny',
+				// Disable tasks, they are problematic for multi-step workflows
+				task: 'deny', 
+			}),
 		},
 	});
 	child.on('error', (error) => {
