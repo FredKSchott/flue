@@ -60,7 +60,7 @@ export function buildSkillPrompt(
 	schema?: v.GenericSchema,
 ): string {
 	const instruction = isFilePath(name)
-		? `Read and use the .agents/skills/${name} skill.`
+		? `Read the file .agents/skills/${name} directly from disk (do not use the skill tool) and follow it as your skill instructions.`
 		: `Use the ${name} skill.`;
 	const parts: string[] = [HEADLESS_PREAMBLE, '', instruction];
 
