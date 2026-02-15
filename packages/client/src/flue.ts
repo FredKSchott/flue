@@ -1,7 +1,8 @@
 import { createOpencodeClient, type OpencodeClient } from '@opencode-ai/sdk';
 import type * as v from 'valibot';
+import { buildResultInstructions, HEADLESS_PREAMBLE } from './prompt.ts';
 import { runShell } from './shell.ts';
-import { runSkill } from './skill.ts';
+import { runPrompt, runSkill } from './skill.ts';
 import type {
 	FlueOptions,
 	PromptOptions,
@@ -63,12 +64,16 @@ export class Flue {
 		promptText: string,
 		options?: PromptOptions<v.GenericSchema | undefined>,
 	): Promise<any> {
-		const mergedOptions: SkillOptions<v.GenericSchema | undefined> = {
+		const schema = options?.result as v.GenericSchema | undefined;
+		const parts: string[] = [HEADLESS_PREAMBLE, '', promptText];
+		if (schema) {
+			parts.push(buildResultInstructions(schema));
+		}
+		const fullPrompt = parts.join('\n');
+		return runPrompt(this.client, this.workdir, 'prompt', fullPrompt, {
 			result: options?.result,
 			model: options?.model ?? this.model,
-			prompt: promptText,
-		};
-		return runSkill(this.client, this.workdir, '__inline__', mergedOptions);
+		});
 	}
 
 	/** Execute a shell command with scoped environment variables. */

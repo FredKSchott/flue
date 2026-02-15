@@ -2,7 +2,7 @@ import type { OpencodeClient, Part } from '@opencode-ai/sdk';
 import type * as v from 'valibot';
 import { buildSkillPrompt } from './prompt.ts';
 import { extractResult } from './result.ts';
-import type { SkillOptions } from './types.ts';
+import type { PromptRunOptions, SkillOptions } from './types.ts';
 
 /** How often to poll and log progress (ms). */
 const POLL_INTERVAL = 5_000;
@@ -14,40 +14,42 @@ const MAX_EMPTY_POLLS = 60; // 60 polls * 5s = 5 minutes
 const MAX_POLL_TIME = 45 * 60 * 1000;
 
 /**
- * Run a named skill via the OpenCode client and optionally extract a typed result.
+ * Low-level primitive: send a fully-formed prompt to OpenCode, poll until
+ * idle, and optionally extract a typed result.
+ *
+ * Both `flu.prompt()` and `flu.skill()` delegate to this function after
+ * constructing their own prompt text.
  */
-export async function runSkill<S extends v.GenericSchema | undefined = undefined>(
+export async function runPrompt<S extends v.GenericSchema | undefined = undefined>(
 	client: OpencodeClient,
 	workdir: string,
-	name: string,
-	options?: SkillOptions<S>,
+	label: string,
+	prompt: string,
+	options?: PromptRunOptions<S>,
 ): Promise<S extends v.GenericSchema ? v.InferOutput<S> : void> {
-	const { args, result: schema, model, prompt: promptOverride } = options ?? {};
+	const { result: schema, model } = options ?? {};
 
-	const prompt =
-		promptOverride ?? buildSkillPrompt(name, args, schema as v.GenericSchema | undefined);
+	console.log(`[flue] ${label}: starting`);
 
-	console.log(`[flue] skill("${name}"): starting`);
-
-	console.log(`[flue] skill("${name}"): creating session`);
+	console.log(`[flue] ${label}: creating session`);
 	const session = await client.session.create({
-		body: { title: name },
+		body: { title: label },
 		query: { directory: workdir },
 	});
-	console.log(`[flue] skill("${name}"): session created`, {
+	console.log(`[flue] ${label}: session created`, {
 		hasData: !!session.data,
 		sessionId: session.data?.id,
 		error: session.error,
 	});
 
 	if (!session.data) {
-		throw new Error(`Failed to create OpenCode session for skill "${name}".`);
+		throw new Error(`Failed to create OpenCode session for "${label}".`);
 	}
 
 	const sessionId = session.data.id;
 	const promptStart = Date.now();
 
-	console.log(`[flue] skill("${name}"): sending prompt async`);
+	console.log(`[flue] ${label}: sending prompt async`);
 	const asyncResult = await client.session.promptAsync({
 		path: { id: sessionId },
 		query: { directory: workdir },
@@ -57,7 +59,7 @@ export async function runSkill<S extends v.GenericSchema | undefined = undefined
 		},
 	});
 
-	console.log(`[flue] skill("${name}"): prompt sent`, {
+	console.log(`[flue] ${label}: prompt sent`, {
 		hasError: !!asyncResult.error,
 		error: asyncResult.error,
 		data: asyncResult.data,
@@ -65,18 +67,18 @@ export async function runSkill<S extends v.GenericSchema | undefined = undefined
 
 	if (asyncResult.error) {
 		throw new Error(
-			`Failed to send prompt for skill "${name}" (session ${sessionId}): ${JSON.stringify(asyncResult.error)}`,
+			`Failed to send prompt for "${label}" (session ${sessionId}): ${JSON.stringify(asyncResult.error)}`,
 		);
 	}
 
 	// Confirm the session actually started processing
-	await confirmSessionStarted(client, sessionId, workdir, name);
+	await confirmSessionStarted(client, sessionId, workdir, label);
 
-	console.log(`[flue] skill("${name}"): starting polling`);
-	const parts = await pollUntilIdle(client, sessionId, workdir, name, promptStart);
+	console.log(`[flue] ${label}: starting polling`);
+	const parts = await pollUntilIdle(client, sessionId, workdir, label, promptStart);
 	const promptElapsed = ((Date.now() - promptStart) / 1000).toFixed(1);
 
-	console.log(`[flue] skill("${name}"): completed (${promptElapsed}s)`);
+	console.log(`[flue] ${label}: completed (${promptElapsed}s)`);
 
 	if (!schema) {
 		return undefined as S extends v.GenericSchema ? v.InferOutput<S> : undefined;
@@ -88,6 +90,21 @@ export async function runSkill<S extends v.GenericSchema | undefined = undefined
 }
 
 /**
+ * Run a named skill: builds the skill prompt from the name + args + schema,
+ * then delegates to runPrompt().
+ */
+export async function runSkill<S extends v.GenericSchema | undefined = undefined>(
+	client: OpencodeClient,
+	workdir: string,
+	name: string,
+	options?: SkillOptions<S>,
+): Promise<S extends v.GenericSchema ? v.InferOutput<S> : void> {
+	const { args, result: schema, model } = options ?? {};
+	const prompt = buildSkillPrompt(name, args, schema as v.GenericSchema | undefined);
+	return runPrompt(client, workdir, `skill("${name}")`, prompt, { result: schema, model });
+}
+
+/**
  * After promptAsync, confirm that OpenCode actually started processing the session.
  * Polls quickly (1s) to detect the session appearing as "busy" or a user message being recorded.
  * Fails fast (~15s) instead of letting the poll loop run for 5 minutes.
@@ -96,7 +113,7 @@ async function confirmSessionStarted(
 	client: OpencodeClient,
 	sessionId: string,
 	workdir: string,
-	skillName: string,
+	label: string,
 ): Promise<void> {
 	const maxAttempts = 15; // 15 * 1s = 15s
 	for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -106,7 +123,7 @@ async function confirmSessionStarted(
 		const statusResult = await client.session.status({ query: { directory: workdir } });
 		const sessionStatus = statusResult.data?.[sessionId];
 		if (sessionStatus?.type === 'busy') {
-			console.log(`[flue] skill("${skillName}"): session confirmed running`);
+			console.log(`[flue] ${label}: session confirmed running`);
 			return;
 		}
 
@@ -117,13 +134,13 @@ async function confirmSessionStarted(
 		});
 		const messages = messagesResult.data as Array<{ info: { role: string } }> | undefined;
 		if (messages && messages.length > 0) {
-			console.log(`[flue] skill("${skillName}"): session confirmed (${messages.length} messages)`);
+			console.log(`[flue] ${label}: session confirmed (${messages.length} messages)`);
 			return;
 		}
 	}
 
 	throw new Error(
-		`Skill "${skillName}" failed to start: session ${sessionId} has no messages after 15s.\n` +
+		`"${label}" failed to start: session ${sessionId} has no messages after 15s.\n` +
 			`The prompt was accepted but OpenCode never began processing it.\n` +
 			`This usually means no model is configured. Pass --model to the flue CLI or set "model" in opencode.json.`,
 	);
@@ -133,7 +150,7 @@ async function pollUntilIdle(
 	client: OpencodeClient,
 	sessionId: string,
 	workdir: string,
-	skillName: string,
+	label: string,
 	startTime: number,
 ): Promise<Part[]> {
 	let emptyPolls = 0;
@@ -147,7 +164,7 @@ async function pollUntilIdle(
 
 		if (Date.now() - startTime > MAX_POLL_TIME) {
 			throw new Error(
-				`Skill "${skillName}" timed out after ${elapsed}s. Session never went idle. This may indicate a stuck session or OpenCode bug.`,
+				`"${label}" timed out after ${elapsed}s. Session never went idle. This may indicate a stuck session or OpenCode bug.`,
 			);
 		}
 
@@ -162,10 +179,10 @@ async function pollUntilIdle(
 				// Log every 60s while waiting for first output
 				if (emptyPolls % 12 === 0) {
 					console.log(
-						`[flue] skill("${skillName}"): status result: ${JSON.stringify({ hasData: !!statusResult.data, sessionIds: statusResult.data ? Object.keys(statusResult.data) : [], error: statusResult.error })}`,
+						`[flue] ${label}: status result: ${JSON.stringify({ hasData: !!statusResult.data, sessionIds: statusResult.data ? Object.keys(statusResult.data) : [], error: statusResult.error })}`,
 					);
 					console.log(
-						`[flue] skill("${skillName}"): sessionStatus for ${sessionId}: ${JSON.stringify(sessionStatus)}`,
+						`[flue] ${label}: sessionStatus for ${sessionId}: ${JSON.stringify(sessionStatus)}`,
 					);
 				}
 				if (emptyPolls >= MAX_EMPTY_POLLS) {
@@ -175,7 +192,7 @@ async function pollUntilIdle(
 						query: { directory: workdir },
 					});
 					console.error(
-						`[flue] skill("${skillName}"): TIMEOUT DIAGNOSTICS`,
+						`[flue] ${label}: TIMEOUT DIAGNOSTICS`,
 						JSON.stringify(
 							{
 								sessionId,
@@ -188,7 +205,7 @@ async function pollUntilIdle(
 						),
 					);
 					throw new Error(
-						`Skill "${skillName}" produced no output after ${elapsed}s and ${emptyPolls} empty polls. ` +
+						`"${label}" produced no output after ${elapsed}s and ${emptyPolls} empty polls. ` +
 							`The agent may have failed to start — check model ID and API key.`,
 					);
 				}
@@ -200,7 +217,7 @@ async function pollUntilIdle(
 
 		// Log every 60s while session is running
 		if (pollCount % 12 === 0) {
-			console.log(`[flue] skill("${skillName}"): running (${elapsed}s)`);
+			console.log(`[flue] ${label}: running (${elapsed}s)`);
 		}
 	}
 }

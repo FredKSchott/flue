@@ -22,14 +22,23 @@ export interface SkillOptions<S extends v.GenericSchema | undefined = undefined>
 	result?: S;
 	/** Override model for this skill. */
 	model?: { providerID: string; modelID: string };
-	/** Advanced: override the entire prompt. */
-	prompt?: string;
 }
 
 export interface PromptOptions<S extends v.GenericSchema | undefined = undefined> {
 	/** Valibot schema for structured result extraction. */
 	result?: S;
 	/** Override model for this prompt. */
+	model?: { providerID: string; modelID: string };
+}
+
+/**
+ * Internal options for the low-level `runPrompt()` function.
+ * Both `flu.prompt()` and `flu.skill()` map their public options to this shape.
+ */
+export interface PromptRunOptions<S extends v.GenericSchema | undefined = undefined> {
+	/** Valibot schema for structured result extraction. */
+	result?: S;
+	/** Override model for this invocation. */
 	model?: { providerID: string; modelID: string };
 }
 
