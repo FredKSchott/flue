@@ -89,7 +89,7 @@ export function startSandboxContainer(workdir, image) {
 		provider: {
 			anthropic: {
 				options: {
-					baseURL: `http://host.docker.internal:${PROXY_PORT}`,
+					baseURL: `http://host.docker.internal:${PROXY_PORT}/v1`,
 					apiKey: 'sk-dummy-value-real-key-injected-by-proxy',
 				},
 			},
