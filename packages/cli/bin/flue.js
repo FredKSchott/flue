@@ -372,9 +372,9 @@ async function run() {
 		}
 	}
 
-	// In sandbox mode, OpenCode sees the repo at /workspace (bind mount target),
-	// but shell() calls run on the host and need the real host path.
-	const opencodeWorkdir = sandbox ? '/workspace' : workdir;
+	// In sandbox mode, OpenCode sees the repo at /workspace (bind mount target).
+	const containerWorkdir = sandbox ? '/workspace' : undefined;
+	const opencodeWorkdir = containerWorkdir ?? workdir;
 
 	// Preflight: check that OpenCode has providers and a default model
 	await preflight(opencodeWorkdir, modelStr);
@@ -385,8 +385,8 @@ async function run() {
 
 	const model = modelStr ? parseModel(modelStr) : undefined;
 	const flue = new Flue({
-		workdir: opencodeWorkdir,
-		shellWorkdir: workdir,
+		workdir,
+		containerWorkdir,
 		args,
 		branch,
 		secrets: process.env,

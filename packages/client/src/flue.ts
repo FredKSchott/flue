@@ -19,7 +19,7 @@ export class Flue {
 	readonly secrets: Record<string, string>;
 
 	private readonly workdir: string;
-	private readonly shellWorkdir: string;
+	private readonly containerWorkdir: string;
 	private readonly model?: { providerID: string; modelID: string };
 	private readonly client: OpencodeClient;
 
@@ -28,11 +28,11 @@ export class Flue {
 		this.args = options.args ?? {};
 		this.secrets = options.secrets ?? {};
 		this.workdir = options.workdir;
-		this.shellWorkdir = options.shellWorkdir ?? options.workdir;
+		this.containerWorkdir = options.containerWorkdir ?? options.workdir;
 		this.model = options.model;
 		this.client = createOpencodeClient({
 			baseUrl: options.opencodeUrl ?? 'http://localhost:48765',
-			directory: options.workdir,
+			directory: this.containerWorkdir,
 		});
 	}
 
@@ -50,7 +50,7 @@ export class Flue {
 			args: this.args || options?.args ? { ...this.args, ...options?.args } : undefined,
 			model: options?.model ?? this.model,
 		};
-		return runSkill(this.client, this.workdir, name, mergedOptions);
+		return runSkill(this.client, this.containerWorkdir, name, mergedOptions);
 	}
 
 	/** Run an inline prompt in a new OpenCode session. */
@@ -70,12 +70,12 @@ export class Flue {
 			model: options?.model ?? this.model,
 			prompt: promptText,
 		};
-		return runSkill(this.client, this.workdir, '__inline__', mergedOptions);
+		return runSkill(this.client, this.containerWorkdir, '__inline__', mergedOptions);
 	}
 
 	/** Execute a shell command with scoped environment variables. */
 	async shell(command: string, options?: ShellOptions): Promise<ShellResult> {
-		return runShell(command, { ...options, cwd: options?.cwd ?? this.shellWorkdir });
+		return runShell(command, { ...options, cwd: options?.cwd ?? this.workdir });
 	}
 
 	/** Close the OpenCode client connection. */

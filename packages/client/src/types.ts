@@ -3,10 +3,10 @@ import type * as v from 'valibot';
 export interface FlueOptions {
 	/** OpenCode server URL (default: 'http://localhost:48765'). */
 	opencodeUrl?: string;
-	/** Working directory used for OpenCode API calls (the repo root as seen by OpenCode). */
+	/** Working directory (the repo root on the host). */
 	workdir: string;
-	/** Override working directory for shell() calls (e.g. the host path when OpenCode runs in a container). */
-	shellWorkdir?: string;
+	/** Override working directory for OpenCode API calls (e.g. /workspace inside a Docker container). */
+	containerWorkdir?: string;
 	/** Working branch for commits. */
 	branch?: string;
 	/** Workflow arguments. */
