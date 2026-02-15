@@ -220,7 +220,8 @@ function logEvent(event, sessionName, textBuffers, runningTools) {
 		case 'tool.complete': {
 			runningTools.delete(event.sessionId);
 			const dur = event.duration ? ` (${(event.duration / 1000).toFixed(1)}s)` : '';
-			console.error(`${prefix} tool:complete ${event.tool}${dur} — ${event.input}`);
+			const output = event.output ? ` → ${event.output.slice(0, 200)}` : '';
+			console.error(`${prefix} tool:complete ${event.tool}${dur} — ${event.input}${output}`);
 			break;
 		}
 
