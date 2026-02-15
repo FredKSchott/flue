@@ -7,6 +7,7 @@
 
 import { execFileSync, spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
+import { statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -96,17 +97,23 @@ export function startSandboxContainer(workdir, image) {
 		},
 	});
 
+	// Run as the same UID:GID that owns the workspace on the host.
+	// This avoids file ownership mismatches on the bind mount — the container
+	// can read/write workspace files without chown/chmod workarounds.
+	const stat = statSync(workdir);
+	const userFlag = `${stat.uid}:${stat.gid}`;
+
 	const dockerArgs = [
 		'run',
 		'-d',
 		'--name',
 		name,
-		// Security hardening
+		'--user',
+		userFlag,
+		// Security hardening: drop all capabilities since we run as the
+		// workspace owner (no need for CHOWN/SETUID/SETGID).
 		'--security-opt=no-new-privileges',
 		'--cap-drop=ALL',
-		'--cap-add=CHOWN',
-		'--cap-add=SETUID',
-		'--cap-add=SETGID',
 		// Port mapping: OpenCode server accessible from localhost only
 		'-p',
 		'127.0.0.1:48765:48765',
@@ -117,6 +124,10 @@ export function startSandboxContainer(workdir, image) {
 		`${workdir}:/workspace`,
 		'-w',
 		'/workspace',
+		// Set HOME to /tmp so tools (npm, pnpm, git) that write to $HOME
+		// work when running as a non-root user via --user.
+		'-e',
+		'HOME=/tmp',
 		// Environment: auto-approve all permissions (headless CI)
 		'-e',
 		`OPENCODE_PERMISSION=${JSON.stringify({ '*': 'allow' })}`,
