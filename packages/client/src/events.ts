@@ -95,9 +95,9 @@ export function transformEvent(raw: any): FlueEvent | null {
 		}
 
 		if (part.type === 'text') {
-			const delta = raw.properties?.delta;
-			if (delta) {
-				return { timestamp: now, sessionId, type: 'text', text: delta };
+			const text = raw.properties?.delta ?? part.text;
+			if (text) {
+				return { timestamp: now, sessionId, type: 'text', text };
 			}
 			return null;
 		}
