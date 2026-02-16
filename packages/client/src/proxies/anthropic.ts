@@ -1,4 +1,4 @@
-import type { ProxyService } from './types.ts';
+import type { ProxyPolicy, ProxyService } from './types.ts';
 
 /**
  * Anthropic model provider proxy preset.
@@ -7,7 +7,7 @@ import type { ProxyService } from './types.ts';
  * Reads ANTHROPIC_API_KEY from the environment by default.
  * Strips all non-allowlisted headers for security.
  */
-export function anthropic(opts?: { apiKey?: string }): ProxyService {
+export function anthropic(opts?: { apiKey?: string; policy?: string | ProxyPolicy }): ProxyService {
 	const apiKey = opts?.apiKey || process.env.ANTHROPIC_API_KEY;
 	if (!apiKey) {
 		throw new Error(
@@ -35,7 +35,7 @@ export function anthropic(opts?: { apiKey?: string }): ProxyService {
 			filtered['x-api-key'] = apiKey;
 			return { headers: filtered };
 		},
-		policy: 'allow-all',
+		policy: opts?.policy ?? 'allow-all',
 		isModelProvider: true,
 		providerConfig: {
 			providerKey: 'anthropic',
