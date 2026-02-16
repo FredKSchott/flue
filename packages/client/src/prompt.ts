@@ -42,22 +42,26 @@ export function buildResultInstructions(schema: v.GenericSchema): string {
 }
 
 /**
+ * Build a single string from proxy instructions to append to prompts.
+ */
+export function buildProxyInstructions(instructions: string[]): string {
+	if (instructions.length === 0) return '';
+	return '\n\n' + instructions.join('\n');
+}
+
+/**
  * Build the prompt text for a skill invocation.
  *
  * If `name` looks like a file path (contains '/' or ends with '.md'), the
  * prompt instructs the agent to read and follow that file under
  * `.agents/skills/`. Otherwise, it instructs the agent to use the named
  * skill.
- *
- * @param name - A skill name or a file path relative to .agents/skills/.
- * @param args - Key-value arguments to include in the prompt.
- * @param schema - Optional Valibot schema for result extraction.
- * @returns The complete prompt string.
  */
 export function buildSkillPrompt(
 	name: string,
 	args?: Record<string, unknown>,
 	schema?: v.GenericSchema,
+	proxyInstructions?: string[],
 ): string {
 	const instruction = isFilePath(name)
 		? `Read the file .agents/skills/${name} directly from disk (do not use the skill tool) and follow it as your skill instructions.`
@@ -66,6 +70,10 @@ export function buildSkillPrompt(
 
 	if (args && Object.keys(args).length > 0) {
 		parts.push(`\nArguments:\n${JSON.stringify(args, null, 2)}`);
+	}
+
+	if (proxyInstructions && proxyInstructions.length > 0) {
+		parts.push(buildProxyInstructions(proxyInstructions));
 	}
 
 	if (schema) {

@@ -4,12 +4,12 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
 	assertDockerAvailable,
-	PROXY_PORT,
-	startProxyServer,
+	runSetupCommands,
+	startProxyServers,
 	startSandboxContainer,
-	stopProxy,
+	stopProxies,
 	stopSandboxContainer,
-	waitForProxy,
+	waitForProxies,
 } from '../src/sandbox/sandbox.mjs';
 
 const OPENCODE_URL = 'http://localhost:48765';
@@ -17,7 +17,7 @@ const OPENCODE_URL = 'http://localhost:48765';
 let openCodeProcess = null;
 let eventStreamAbort = null;
 let sandboxContainerName = null;
-let proxyProcess = null;
+let proxyHandles = null;
 
 function printUsage() {
 	console.error(
@@ -328,33 +328,67 @@ async function run() {
 
 	const { Flue } = await import('@flue/client');
 
+	// Import workflow early to read exports.proxies before starting sandbox
+	const workflow = await import(workflowUrl);
+	if (typeof workflow.default !== 'function') {
+		console.error('Workflow must export a default function.');
+		process.exit(1);
+	}
+
+	// Read and flatten proxy declarations
+	const proxies = Array.isArray(workflow.proxies) ? workflow.proxies.flat() : [];
+	const proxyInstructions = proxies.map((p) => p.instructions).filter(Boolean);
+
 	if (sandbox) {
 		// -- Sandbox mode: run OpenCode inside a Docker container --
 		assertDockerAvailable();
 
-		// 1. Start the API proxy on the host
-		const proxy = startProxyServer();
-		proxyProcess = proxy;
-		const proxyReady = await waitForProxy();
-		if (!proxyReady) {
-			console.error('[flue] API proxy did not become ready');
-			stopProxy(proxy);
+		// Validate: at least one model provider proxy must exist
+		if (!Array.isArray(workflow.proxies)) {
+			console.error(
+				'[flue] Error: No proxies configured.\n' +
+					'\n' +
+					'In sandbox mode, the workflow must export a `proxies` array.\n' +
+					'Add `export const proxies = [anthropic()]` to your workflow file.\n',
+			);
 			process.exit(1);
 		}
-		console.error(`[flue] API proxy ready on 127.0.0.1:${PROXY_PORT}`);
+		if (!proxies.some((p) => p.isModelProvider)) {
+			console.error(
+				'[flue] Error: No model provider proxy configured.\n' +
+					'\n' +
+					'In sandbox mode, the LLM cannot reach the API without a proxy.\n' +
+					'Add `anthropic()` (or another provider) to your `export const proxies` array.\n',
+			);
+			process.exit(1);
+		}
 
-		// 2. Start the Docker container
-		const containerName = startSandboxContainer(workdir, sandbox);
+		// 1. Start proxy servers on the host
+		const handles = startProxyServers(proxies, workflowUrl);
+		proxyHandles = handles;
+		const proxiesReady = await waitForProxies(handles);
+		if (!proxiesReady) {
+			console.error('[flue] One or more proxy servers did not become ready');
+			stopProxies(handles);
+			process.exit(1);
+		}
+		console.error(`[flue] All ${handles.length} proxy servers ready`);
+
+		// 2. Start the Docker container with proxy configuration
+		const containerName = startSandboxContainer(workdir, sandbox, handles);
 		sandboxContainerName = containerName;
 
-		// 3. Wait for OpenCode health check inside the container
+		// 3. Run setup commands from proxy services inside the container
+		runSetupCommands(containerName, handles);
+
+		// 4. Wait for OpenCode health check inside the container
 		const ready = await waitForOpenCode(30000);
 		if (!ready) {
 			console.error(
 				'[flue] OpenCode server in sandbox container did not become ready on http://localhost:48765',
 			);
 			stopSandboxContainer(containerName);
-			stopProxy(proxy);
+			stopProxies(handles);
 			process.exit(1);
 		}
 		console.error('[flue] OpenCode server ready inside sandbox container');
@@ -385,16 +419,11 @@ async function run() {
 		workdir,
 		args,
 		branch,
-		secrets: process.env,
+		proxyInstructions: proxyInstructions.length > 0 ? proxyInstructions : undefined,
 		model,
 	});
 
 	try {
-		const workflow = await import(workflowUrl);
-		if (typeof workflow.default !== 'function') {
-			console.error('Workflow must export a default function.');
-			process.exit(1);
-		}
 		await workflow.default(flue);
 	} catch (error) {
 		console.error(error instanceof Error ? error.message : String(error));
@@ -406,8 +435,8 @@ async function run() {
 		if (sandbox) {
 			stopSandboxContainer(sandboxContainerName);
 			sandboxContainerName = null;
-			stopProxy(proxyProcess);
-			proxyProcess = null;
+			stopProxies(proxyHandles);
+			proxyHandles = null;
 		} else {
 			if (startedOpenCode) {
 				stopOpenCodeServer(startedOpenCode);
@@ -489,13 +518,13 @@ function startOpenCodeServer() {
 			// Headless/CI — no human to approve permission prompts.
 			// OPENCODE_PERMISSION is read at startup and merged into the config
 			// before the permission ruleset is built, so all "ask" rules become "allow".
-			OPENCODE_PERMISSION: JSON.stringify({ 
+			OPENCODE_PERMISSION: JSON.stringify({
 				// Allow all permissions, by default.
-				'*': 'allow', 
+				'*': 'allow',
 				// Disable questions, they can block the session
 				question: 'deny',
 				// Disable tasks, they are problematic for multi-step workflows
-				task: 'deny', 
+				task: 'deny',
 			}),
 		},
 	});
@@ -525,7 +554,7 @@ function cleanup() {
 	if (eventStreamAbort) eventStreamAbort.abort();
 	if (openCodeProcess) stopOpenCodeServer(openCodeProcess);
 	if (sandboxContainerName) stopSandboxContainer(sandboxContainerName);
-	if (proxyProcess) stopProxy(proxyProcess);
+	if (proxyHandles) stopProxies(proxyHandles);
 }
 
 process.on('SIGINT', () => {

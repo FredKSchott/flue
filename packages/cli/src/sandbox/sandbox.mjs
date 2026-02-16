@@ -1,17 +1,17 @@
 /**
  * Docker sandbox lifecycle management.
  *
- * Handles starting/stopping the API proxy and Docker container that isolate
- * the LLM execution environment from host secrets.
+ * Handles starting/stopping the credential-injecting proxy servers and the
+ * Docker container that isolates the LLM execution environment from host secrets.
  */
 
 import { execFileSync, spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { statSync } from 'node:fs';
+import { existsSync, statSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const PROXY_PORT = 4100;
+const BASE_PORT = 4100;
 
 /**
  * Check that Docker is available on the host.
@@ -34,68 +34,128 @@ export function assertDockerAvailable() {
 }
 
 /**
- * Start the API proxy as a background child process.
- * The proxy listens on 127.0.0.1:PROXY_PORT, adds the ANTHROPIC_API_KEY
- * header, and forwards requests to api.anthropic.com.
- * Returns the child process handle.
+ * Start one proxy-server.mjs child process per ProxyService.
+ * TCP proxies get ports starting from BASE_PORT; socket proxies get
+ * unix socket files in /tmp. Returns an array of handles for health
+ * checking, container config, and cleanup.
  */
-export function startProxyServer() {
-	const proxyPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'proxy.mjs');
-	const child = spawn('node', [proxyPath, '--port', String(PROXY_PORT)], {
-		stdio: ['ignore', 'inherit', 'inherit'],
-		env: process.env,
-	});
-	child.on('error', (err) => {
-		console.error(`[flue] Failed to start API proxy: ${err.message}`);
-	});
-	return child;
+export function startProxyServers(proxies, workflowPath) {
+	const proxyServerPath = path.join(
+		path.dirname(fileURLToPath(import.meta.url)),
+		'proxy-server.mjs',
+	);
+	let nextPort = BASE_PORT;
+	const handles = [];
+
+	for (let i = 0; i < proxies.length; i++) {
+		const proxy = proxies[i];
+		const args = ['--workflow', workflowPath, '--proxy-index', String(i)];
+
+		let port;
+		let socketPath;
+
+		if (proxy.socket) {
+			socketPath = `/tmp/flue-proxy-${proxy.name}.sock`;
+			args.push('--socket', socketPath);
+		} else {
+			port = nextPort++;
+			args.push('--port', String(port));
+		}
+
+		const child = spawn('node', [proxyServerPath, ...args], {
+			stdio: ['ignore', 'inherit', 'inherit'],
+			env: process.env,
+		});
+
+		child.on('error', (err) => {
+			console.error(`[flue] Failed to start proxy '${proxy.name}': ${err.message}`);
+		});
+
+		handles.push({ proxy, port, socketPath, child });
+	}
+
+	return handles;
 }
 
 /**
- * Wait for the API proxy to become healthy.
+ * Wait for all proxy servers to become healthy.
+ * TCP proxies: polls /health endpoint. Socket proxies: checks file existence.
  */
-export async function waitForProxy() {
+export async function waitForProxies(handles, timeoutMs = 10000) {
 	const start = Date.now();
-	const timeoutMs = 10000;
-	while (Date.now() - start < timeoutMs) {
-		try {
-			const controller = new AbortController();
-			const timeout = setTimeout(() => controller.abort(), 1000);
-			const res = await fetch(`http://127.0.0.1:${PROXY_PORT}/health`, {
-				signal: controller.signal,
-			});
-			clearTimeout(timeout);
-			if (res.ok) return true;
-		} catch {
-			// not ready yet
+
+	for (const handle of handles) {
+		while (Date.now() - start < timeoutMs) {
+			if (handle.port !== undefined) {
+				try {
+					const controller = new AbortController();
+					const timeout = setTimeout(() => controller.abort(), 1000);
+					const res = await fetch(`http://127.0.0.1:${handle.port}/health`, {
+						signal: controller.signal,
+					});
+					clearTimeout(timeout);
+					if (res.ok) break;
+				} catch {
+					// not ready yet
+				}
+			} else if (handle.socketPath) {
+				if (existsSync(handle.socketPath)) break;
+			}
+
+			await new Promise((resolve) => setTimeout(resolve, 200));
 		}
-		await new Promise((resolve) => setTimeout(resolve, 200));
+
+		if (Date.now() - start >= timeoutMs) {
+			console.error(`[flue] proxy '${handle.proxy.name}' did not become ready`);
+			return false;
+		}
 	}
-	return false;
+
+	return true;
+}
+
+/**
+ * Replace {{proxyUrl}}, {{socketPath}}, and {{port}} in a template string
+ * with values from a proxy handle.
+ */
+function resolveTemplate(template, handle) {
+	let result = template;
+	if (handle.port !== undefined) {
+		result = result.replace(/\{\{proxyUrl\}\}/g, `http://host.docker.internal:${handle.port}`);
+		result = result.replace(/\{\{port\}\}/g, String(handle.port));
+	}
+	if (handle.socketPath) {
+		result = result.replace(/\{\{socketPath\}\}/g, handle.socketPath);
+		if (handle.port === undefined) {
+			result = result.replace(/\{\{proxyUrl\}\}/g, `http://unix:${handle.socketPath}:`);
+		}
+	}
+	return result;
 }
 
 /**
  * Start the sandbox Docker container with security hardening.
  * Returns the container name (used for cleanup).
  */
-export function startSandboxContainer(workdir, image) {
+export function startSandboxContainer(workdir, image, handles) {
 	const name = `flue-sandbox-${randomBytes(4).toString('hex')}`;
 
-	// OpenCode config that routes Anthropic requests through the host proxy.
-	// The container never sees the real API key — the proxy on the host injects it.
-	// We pass a dummy apiKey because OpenCode validates that one exists before
-	// making requests. The proxy's header allowlist strips it; the real key is
-	// added server-side.
-	const opencodeConfig = JSON.stringify({
-		provider: {
-			anthropic: {
+	// Build OpenCode config dynamically from model provider proxies
+	const providerConfig = {};
+	for (const handle of handles) {
+		if (handle.proxy.isModelProvider && handle.proxy.providerConfig) {
+			const { providerKey, options = {} } = handle.proxy.providerConfig;
+			const baseURL =
+				handle.port !== undefined ? `http://host.docker.internal:${handle.port}/v1` : undefined;
+			providerConfig[providerKey] = {
 				options: {
-					baseURL: `http://host.docker.internal:${PROXY_PORT}/v1`,
-					apiKey: 'sk-dummy-value-real-key-injected-by-proxy',
+					...(baseURL ? { baseURL } : {}),
+					...options,
 				},
-			},
-		},
-	});
+			};
+		}
+	}
+	const opencodeConfig = JSON.stringify({ provider: providerConfig });
 
 	// Run as the same UID:GID that owns the workspace on the host.
 	// This avoids file ownership mismatches on the bind mount — the container
@@ -117,33 +177,50 @@ export function startSandboxContainer(workdir, image) {
 		// Port mapping: OpenCode server accessible from localhost only
 		'-p',
 		'127.0.0.1:48765:48765',
-		// Allow container to reach host (for the API proxy)
+		// Allow container to reach host (for the API proxies)
 		'--add-host=host.docker.internal:host-gateway',
 		// Bind mount the workspace at the same path as on the host.
 		// This avoids needing a separate "container workdir" concept — the same
 		// path works everywhere (host shell, OpenCode API, LLM tools).
 		'-v',
 		`${workdir}:${workdir}`,
-		// Set HOME to /tmp so tools (npm, pnpm, git) that write to $HOME
-		// work when running as a non-root user via --user.
-		'-e',
-		'HOME=/tmp',
-		// Environment: auto-approve all permissions (headless CI)
-		'-e',
-		`OPENCODE_PERMISSION=${JSON.stringify({ 
-			// Allow all permissions, by default.
-			'*': 'allow', 
-			// Disable questions, they can block the session
-			question: 'deny',
-			// Disable tasks, they are problematic for multi-step workflows
-			task: 'deny',
-		 })}`,
-		// Environment: OpenCode config with proxy-based provider
-		'-e',
-		`OPENCODE_CONFIG_CONTENT=${opencodeConfig}`,
-		// The image to run
-		image,
 	];
+
+	// Bind mount unix sockets for socket-based proxies
+	for (const handle of handles) {
+		if (handle.socketPath) {
+			dockerArgs.push('-v', `${handle.socketPath}:${handle.socketPath}`);
+		}
+	}
+
+	// Set HOME to /tmp so tools (npm, pnpm, git) that write to $HOME
+	// work when running as a non-root user via --user.
+	dockerArgs.push('-e', 'HOME=/tmp');
+
+	// Environment: auto-approve all permissions (headless CI)
+	dockerArgs.push(
+		'-e',
+		`OPENCODE_PERMISSION=${JSON.stringify({
+			'*': 'allow',
+			question: 'deny',
+			task: 'deny',
+		})}`,
+	);
+
+	// Environment: OpenCode config with proxy-based providers
+	dockerArgs.push('-e', `OPENCODE_CONFIG_CONTENT=${opencodeConfig}`);
+
+	// Environment variables from all proxy services (templates resolved)
+	for (const handle of handles) {
+		if (handle.proxy.env) {
+			for (const [key, value] of Object.entries(handle.proxy.env)) {
+				dockerArgs.push('-e', `${key}=${resolveTemplate(value, handle)}`);
+			}
+		}
+	}
+
+	// The image to run
+	dockerArgs.push(image);
 
 	try {
 		const containerId = execFileSync('docker', dockerArgs, { encoding: 'utf8' }).trim();
@@ -154,6 +231,31 @@ export function startSandboxContainer(workdir, image) {
 			`[flue] Failed to start sandbox container: ${err instanceof Error ? err.message : String(err)}`,
 		);
 		process.exit(1);
+	}
+}
+
+/**
+ * Run setup commands from all proxy services inside the container.
+ * Failures are logged as warnings — some commands may legitimately fail
+ * (e.g., `gh config set` when `gh` isn't installed in the image).
+ */
+export function runSetupCommands(containerName, handles) {
+	for (const handle of handles) {
+		if (!handle.proxy.setup || handle.proxy.setup.length === 0) continue;
+
+		for (const cmd of handle.proxy.setup) {
+			const resolvedCmd = resolveTemplate(cmd, handle);
+			try {
+				execFileSync('docker', ['exec', containerName, 'sh', '-c', resolvedCmd], {
+					stdio: ['ignore', 'inherit', 'inherit'],
+					timeout: 10000,
+				});
+			} catch (err) {
+				console.error(
+					`[flue] Warning: setup command for '${handle.proxy.name}' failed: ${resolvedCmd}`,
+				);
+			}
+		}
 	}
 }
 
@@ -176,11 +278,20 @@ export function stopSandboxContainer(name) {
 }
 
 /**
- * Stop the proxy child process.
+ * Stop all proxy child processes and clean up socket files.
  */
-export function stopProxy(child) {
-	if (!child || child.killed) return;
-	child.kill('SIGTERM');
+export function stopProxies(handles) {
+	if (!handles) return;
+	for (const handle of handles) {
+		if (handle.child && !handle.child.killed) {
+			handle.child.kill('SIGTERM');
+		}
+		if (handle.socketPath) {
+			try {
+				unlinkSync(handle.socketPath);
+			} catch {
+				// Socket may already be cleaned up
+			}
+		}
+	}
 }
-
-export { PROXY_PORT };

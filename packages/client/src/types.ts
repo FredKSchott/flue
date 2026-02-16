@@ -9,8 +9,8 @@ export interface FlueOptions {
 	branch?: string;
 	/** Workflow arguments. */
 	args?: Record<string, unknown>;
-	/** Scoped secrets. */
-	secrets?: Record<string, string>;
+	/** Proxy instructions to append to every skill/prompt call. */
+	proxyInstructions?: string[];
 	/** Default model for skill/prompt invocations. */
 	model?: { providerID: string; modelID: string };
 }

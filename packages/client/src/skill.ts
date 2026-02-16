@@ -98,9 +98,15 @@ export async function runSkill<S extends v.GenericSchema | undefined = undefined
 	workdir: string,
 	name: string,
 	options?: SkillOptions<S>,
+	proxyInstructions?: string[],
 ): Promise<S extends v.GenericSchema ? v.InferOutput<S> : void> {
 	const { args, result: schema, model } = options ?? {};
-	const prompt = buildSkillPrompt(name, args, schema as v.GenericSchema | undefined);
+	const prompt = buildSkillPrompt(
+		name,
+		args,
+		schema as v.GenericSchema | undefined,
+		proxyInstructions,
+	);
 	return runPrompt(client, workdir, `skill("${name}")`, prompt, { result: schema, model });
 }
 
