@@ -375,6 +375,10 @@ async function run() {
 		console.error(`[flue] All ${handles.length} proxy servers ready`);
 
 		// 2. Start the Docker container with proxy configuration
+		// NOTE: This must come after waitForProxies() completes. Socket-based proxies
+		// (e.g. github-api) create their unix socket files during startup, and Docker
+		// resolves bind-mount paths (-v host:container) at `docker run` time. If the
+		// socket file doesn't exist yet, the mount silently creates a directory instead.
 		const containerName = startSandboxContainer(workdir, sandbox, handles);
 		sandboxContainerName = containerName;
 
