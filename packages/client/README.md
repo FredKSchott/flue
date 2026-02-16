@@ -69,10 +69,23 @@ const summary = await flue.prompt('Summarize these test failures: ...', {
 
 Options: `result`, `model`
 
-### Properties
+## Proxies (Sandbox Mode)
 
-| Property       | Type                      | Description                             |
-| -------------- | ------------------------- | --------------------------------------- |
-| `flue.args`    | `Record<string, unknown>` | Workflow arguments passed by the runner |
-| `flue.secrets` | `Record<string, string>`  | Scoped secrets passed by the runner     |
-| `flue.branch`  | `string`                  | Working branch for commits              |
+In sandbox mode, the AI agent runs inside a sandbox container with no access to sensitive host credentials. Proxies let the sandbox talk to external services without leaking any actual credentials into the sandbox.
+
+Flue ships with built-in presets for popular services. Every proxy supports an access control policy (`policy`) option for advanced control over what the sandbox has access to do. Built-in levels like `'allow-read'` and `'allow-all'` cover common service-specific policy rules, and you can extend them with explicit allow/deny rules for fine-grained control:
+
+```ts
+import { anthropic, github } from '@flue/client/proxies';
+
+export const proxies = [
+  anthropic(),
+  github({
+    token: process.env.GH_TOKEN!,
+    policy: {
+      base: 'allow-read',
+      allow: [{ method: 'POST', path: '/repos/withastro/astro/issues/*/comments', limit: 1 }],
+    },
+  }),
+];
+```
