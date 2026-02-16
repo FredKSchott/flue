@@ -1,12 +1,16 @@
 {
 	"name": "@flue/client",
-	"version": "0.0.18",
+	"version": "0.0.22",
 	"type": "module",
 	"license": "Apache-2.0",
 	"exports": {
 		".": {
 			"types": "./dist/index.d.mts",
 			"import": "./dist/index.mjs"
+		},
+		"./proxies": {
+			"types": "./dist/proxies/index.d.mts",
+			"import": "./dist/proxies/index.mjs"
 		}
 	},
 	"main": "./dist/index.mjs",

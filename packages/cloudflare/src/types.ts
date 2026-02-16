@@ -18,12 +18,12 @@ export interface FlueRunnerOptions {
 export interface StartOptions {
 	/** Workflow arguments (available as flue.args in the script). */
 	args?: Record<string, unknown>;
-	/** Scoped secrets (available as flue.secrets in the script). */
-	secrets?: Record<string, string>;
 	/** Working branch for commits. */
 	branch?: string;
 	/** Default model for skill invocations. */
 	model?: { providerID: string; modelID: string };
+	/** Proxy instructions appended to every skill/prompt call. */
+	proxyInstructions?: string[];
 }
 
 export interface WorkflowHandle {

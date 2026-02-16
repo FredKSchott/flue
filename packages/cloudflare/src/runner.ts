@@ -46,6 +46,30 @@ export class FlueRunner {
 		});
 		this.opencodeServer = result.server;
 		console.log('[flue] setup: OpenCode server started');
+		await this.preflight();
+	}
+
+	/**
+	 * Verify that OpenCode has at least one configured provider.
+	 * Catches misconfiguration early with a clear error message.
+	 */
+	private async preflight(): Promise<void> {
+		const url = `http://localhost:48765/config/providers?directory=${encodeURIComponent(this.workdir)}`;
+		const res = await this.sandbox.containerFetch(new Request(url), 48765);
+		if (!res.ok) {
+			throw new Error(`[flue] preflight: failed to fetch providers (HTTP ${res.status})`);
+		}
+		const data = (await res.json()) as { providers?: unknown[] };
+		const providers = data.providers ?? [];
+		if (providers.length === 0) {
+			throw new Error(
+				'[flue] No LLM providers configured.\n' +
+					'\n' +
+					'OpenCode needs at least one provider with an API key to run workflows.\n' +
+					'Pass an API key via opencodeConfig in FlueRunnerOptions.\n',
+			);
+		}
+		console.log(`[flue] preflight: ${providers.length} provider(s) configured`);
 	}
 
 	/**
@@ -56,6 +80,19 @@ export class FlueRunner {
 			? workflowPath
 			: `${this.workdir}/${workflowPath}`;
 
+		// Create/checkout working branch before the workflow runs.
+		if (options.branch) {
+			console.log(`[flue] start: checking out branch ${options.branch}`);
+			const result = await this.sandbox.exec(`git checkout -B ${options.branch}`, {
+				cwd: this.workdir,
+			});
+			if (!result.success) {
+				throw new Error(
+					`[flue] Failed to checkout branch "${options.branch}" (exit ${result.exitCode}):\n${result.stderr}`,
+				);
+			}
+		}
+
 		await this.sandbox.mkdir(STATUS_DIR, { recursive: true });
 		await this.sandbox.writeFile(
 			CONFIG_PATH,
@@ -64,8 +101,8 @@ export class FlueRunner {
 				workdir: this.workdir,
 				branch: options.branch,
 				args: options.args ?? {},
-				secrets: options.secrets ?? {},
 				model: options.model,
+				proxyInstructions: options.proxyInstructions,
 			}),
 		);
 		await this.sandbox.writeFile(BOOTSTRAP_PATH, bootstrapScript);

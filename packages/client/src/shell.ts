@@ -14,7 +14,7 @@ export async function runShell(command: string, options?: ShellOptions): Promise
 			command,
 			{
 				cwd: options?.cwd,
-				env: options?.env ? { ...process.env, ...options.env } : process.env,
+				env: options?.env ?? process.env,
 				timeout: options?.timeout,
 			},
 			(error, stdout, stderr) => {

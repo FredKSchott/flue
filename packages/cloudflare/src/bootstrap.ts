@@ -22,8 +22,8 @@ try {
 		workdir: config.workdir,
 		branch: config.branch,
 		args: config.args ?? {},
-		secrets: config.secrets ?? {},
 		model: config.model,
+		proxyInstructions: config.proxyInstructions,
 	});
 
 	const workflow = await import(config.workflowPath);

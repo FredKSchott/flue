@@ -43,10 +43,6 @@ export class TriageRunner extends DurableObject<AppEnv> {
 
 		const handle = await runner.start('.flue/workflows/triage.ts', {
 			args: { issueNumber },
-			secrets: {
-				GITHUB_TOKEN: this.env.GITHUB_TOKEN,
-				ANTHROPIC_API_KEY: this.env.ANTHROPIC_API_KEY,
-			},
 			branch: `flue/fix-${issueNumber}`,
 			model: { providerID: 'anthropic', modelID: 'claude-opus-4-6' },
 		});

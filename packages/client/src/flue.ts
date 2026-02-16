@@ -1,6 +1,6 @@
 import { createOpencodeClient, type OpencodeClient } from '@opencode-ai/sdk';
 import type * as v from 'valibot';
-import { buildResultInstructions, HEADLESS_PREAMBLE } from './prompt.ts';
+import { buildProxyInstructions, buildResultInstructions, HEADLESS_PREAMBLE } from './prompt.ts';
 import { runShell } from './shell.ts';
 import { runPrompt, runSkill } from './skill.ts';
 import type {
@@ -16,17 +16,16 @@ export class Flue {
 	readonly branch: string;
 	/** Workflow arguments passed by the runner. */
 	readonly args: Record<string, unknown>;
-	/** Scoped secrets passed by the runner. */
-	readonly secrets: Record<string, string>;
 
 	private readonly workdir: string;
+	private readonly proxyInstructions: string[];
 	private readonly model?: { providerID: string; modelID: string };
 	private readonly client: OpencodeClient;
 
 	constructor(options: FlueOptions) {
 		this.branch = options.branch ?? 'main';
 		this.args = options.args ?? {};
-		this.secrets = options.secrets ?? {};
+		this.proxyInstructions = options.proxyInstructions ?? [];
 		this.workdir = options.workdir;
 		this.model = options.model;
 		this.client = createOpencodeClient({
@@ -49,7 +48,7 @@ export class Flue {
 			args: this.args || options?.args ? { ...this.args, ...options?.args } : undefined,
 			model: options?.model ?? this.model,
 		};
-		return runSkill(this.client, this.workdir, name, mergedOptions);
+		return runSkill(this.client, this.workdir, name, mergedOptions, this.proxyInstructions);
 	}
 
 	/** Run an inline prompt in a new OpenCode session. */
@@ -66,6 +65,9 @@ export class Flue {
 	): Promise<any> {
 		const schema = options?.result as v.GenericSchema | undefined;
 		const parts: string[] = [HEADLESS_PREAMBLE, '', promptText];
+		if (this.proxyInstructions.length > 0) {
+			parts.push(buildProxyInstructions(this.proxyInstructions));
+		}
 		if (schema) {
 			parts.push(buildResultInstructions(schema));
 		}
