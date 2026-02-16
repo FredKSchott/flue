@@ -87,11 +87,19 @@ function resolveGitHubPolicy(policy: string | ProxyPolicy): ProxyPolicy {
 
 	switch (policy) {
 		case 'read-only':
-			return { default: 'deny-non-safe' };
+			return {
+				default: 'deny-non-safe',
+				allow: [
+					// gh CLI uses GraphQL for most read operations (issues, PRs, etc.)
+					{ method: 'POST', path: '/graphql', body: githubBody.graphql() },
+				],
+			};
 		case 'read-only+clone':
 			return {
 				default: 'deny-non-safe',
 				allow: [
+					// gh CLI uses GraphQL for most read operations (issues, PRs, etc.)
+					{ method: 'POST', path: '/graphql', body: githubBody.graphql() },
 					// Git smart HTTP fetch (clone/pull)
 					{ method: 'POST', path: '/*/git-upload-pack' },
 					{ method: 'GET', path: '/*/info/refs' },
