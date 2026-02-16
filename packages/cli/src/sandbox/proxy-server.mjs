@@ -264,6 +264,9 @@ const server = createServer(async (req, res) => {
 				headers,
 			},
 			(proxyRes) => {
+				if (proxyRes.statusCode >= 400) {
+					console.error(`[proxy:${proxyName}] ${req.method} ${reqPath} -> ${proxyRes.statusCode}`);
+				}
 				res.writeHead(proxyRes.statusCode, proxyRes.headers);
 				proxyRes.pipe(res);
 			},

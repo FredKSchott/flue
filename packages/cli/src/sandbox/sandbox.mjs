@@ -70,6 +70,13 @@ export function startProxyServers(proxies, workflowPath) {
 		child.on('error', (err) => {
 			console.error(`[flue] Failed to start proxy '${proxy.name}': ${err.message}`);
 		});
+		child.on('exit', (code, signal) => {
+			if (code !== 0 && code !== null) {
+				console.error(`[flue] proxy '${proxy.name}' exited with code ${code}`);
+			} else if (signal) {
+				console.error(`[flue] proxy '${proxy.name}' killed by signal ${signal}`);
+			}
+		});
 
 		handles.push({ proxy, port, socketPath, child });
 	}
