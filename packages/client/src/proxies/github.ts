@@ -12,7 +12,7 @@ import type { ProxyPolicy, ProxyService } from './types.ts';
  * Both share the same token and policy.
  */
 export function github(opts: { token: string; policy?: string | ProxyPolicy }): ProxyService[] {
-	const resolvedPolicy = resolveGitHubPolicy(opts.policy ?? 'read-only');
+	const resolvedPolicy = resolveGitHubPolicy(opts.policy);
 
 	const denyResponse = ({
 		method,
@@ -75,40 +75,39 @@ export function github(opts: { token: string; policy?: string | ProxyPolicy }): 
 }
 
 /**
- * Resolve GitHub-specific policy level names to concrete ProxyPolicy rules.
+ * Resolve a GitHub policy into a concrete ProxyPolicy.
  *
- * Levels:
- * - 'read-only': GET/HEAD only (default)
- * - 'read-only+clone': GET/HEAD + git smart HTTP fetch (clone/pull)
- * - 'allow-all': everything allowed
+ * Accepts a core policy level string ('allow-read', 'allow-all', 'deny-all')
+ * or a ProxyPolicy object. Defaults to 'allow-read' if omitted.
+ *
+ * When the base is 'allow-read', GitHub-specific allow rules are prepended
+ * so that the gh CLI (GraphQL queries) and git clone/fetch work out of the box.
+ * Other base levels are used as-is.
  */
-function resolveGitHubPolicy(policy: string | ProxyPolicy): ProxyPolicy {
-	if (typeof policy !== 'string') return policy;
+function resolveGitHubPolicy(policy?: string | ProxyPolicy): ProxyPolicy {
+	const base = typeof policy === 'string' ? policy : (policy?.base ?? 'allow-read');
+	const userAllow = typeof policy === 'object' ? (policy.allow ?? []) : [];
+	const userDeny = typeof policy === 'object' ? (policy.deny ?? []) : [];
 
-	switch (policy) {
-		case 'read-only':
+	switch (base) {
+		case 'allow-all':
+		case 'deny-all':
+			return { base, allow: userAllow, deny: userDeny };
+
+		case 'allow-read':
+		default:
 			return {
-				default: 'deny-non-safe',
+				base: 'allow-read',
 				allow: [
-					// gh CLI uses GraphQL for most read operations (issues, PRs, etc.)
+					// gh CLI uses POST /graphql for most read operations
 					{ method: 'POST', path: '/graphql', body: githubBody.graphql() },
-				],
-			};
-		case 'read-only+clone':
-			return {
-				default: 'deny-non-safe',
-				allow: [
-					// gh CLI uses GraphQL for most read operations (issues, PRs, etc.)
-					{ method: 'POST', path: '/graphql', body: githubBody.graphql() },
-					// Git smart HTTP fetch (clone/pull)
+					// git clone / fetch
 					{ method: 'POST', path: '/*/git-upload-pack' },
 					{ method: 'GET', path: '/*/info/refs' },
+					...userAllow,
 				],
+				deny: userDeny,
 			};
-		case 'allow-all':
-			return { default: 'allow-all' };
-		default:
-			throw new Error(`Unknown github() policy level: '${policy}'`);
 	}
 }
 

@@ -66,14 +66,14 @@ export interface ProxyService {
 	/**
 	 * Access control policy for this proxy.
 	 *
-	 * String shorthand: a named policy level defined by the preset.
-	 * Object form: full control with default level + allow/deny rules.
+	 * String shorthand: a core policy level ('allow-read', 'allow-all', 'deny-all').
+	 * Object form: full control with base level + allow/deny rules.
 	 *
-	 * When a string is provided, it is equivalent to { default: theString }.
+	 * When a string is provided, it is equivalent to { base: theString }.
 	 *
-	 * If omitted, defaults to 'read-only' (GET/HEAD only).
-	 * Each preset defines what its policy levels mean — see the preset
-	 * documentation for available levels.
+	 * If omitted, defaults to 'allow-read' (GET/HEAD/OPTIONS only).
+	 * Presets may extend the base level with additional allow rules
+	 * appropriate for their service.
 	 */
 	policy?: string | ProxyPolicy;
 
@@ -113,17 +113,23 @@ export interface ProxyService {
 
 export interface ProxyPolicy {
 	/**
-	 * The base policy level. Preset-defined string that maps to a set of rules.
-	 * Common levels: 'read-only', 'allow-all', 'deny-all'.
-	 * Presets may define additional levels (e.g., 'read-only+clone' for GitHub).
+	 * The base policy level that applies when no allow/deny rule matches.
+	 *
+	 * - `'allow-read'`: allow GET/HEAD/OPTIONS, deny everything else
+	 * - `'allow-all'`: allow everything
+	 * - `'deny-all'`: deny everything
+	 *
+	 * Presets may extend the base level with additional allow rules
+	 * (e.g., the GitHub preset adds GraphQL query and git clone support
+	 * on top of `'allow-read'`).
 	 */
-	default: string;
+	base: string;
 
 	/**
 	 * Explicit allow rules. Evaluated after deny rules.
 	 * A request matching an allow rule is permitted (subject to rate limits).
 	 * If a request matches method + path but fails body validation, the rule
-	 * does not match and evaluation continues to the next rule or default.
+	 * does not match and evaluation continues to the next rule or base level.
 	 */
 	allow?: PolicyRule[];
 

@@ -71,30 +71,21 @@ Options: `result`, `model`
 
 ## Proxies (Sandbox Mode)
 
-In sandbox mode, the AI agent runs inside a Docker container that has no access to host credentials. Proxies bridge the gap: they run on the host machine, accept unauthenticated requests from the container, and inject the real API keys or tokens before forwarding upstream. The agent can call the Anthropic API, use the `gh` CLI, and push to GitHub — all without ever seeing a real secret.
+In sandbox mode, the AI agent runs inside a sandbox container with no access to sensitive host credentials. Proxies let the sandbox talk to external services without leaking any actual credentials into the sandbox.
 
-Each proxy preset handles the wiring automatically — configuring the model provider for OpenCode, setting up `gh` CLI auth via unix socket, routing `git clone`/`push` through the proxy, etc. Every proxy also supports an access control policy to limit what the sandboxed agent is allowed to do. Built-in levels include `'read-only'` (GET + GraphQL queries only), `'read-only+clone'` (adds git fetch/clone), and `'allow-all'`. You can also pass a custom policy object with explicit allow/deny rules for fine-grained control.
+Flue ships with built-in presets for popular services. Every proxy supports an access control policy (`policy`) option for advanced control over what the sandbox has access to do. Built-in levels like `'allow-read'` and `'allow-all'` cover common service-specific policy rules, and you can extend them with explicit allow/deny rules for fine-grained control:
 
 ```ts
-import { anthropic, github, githubBody } from '@flue/client/proxies';
+import { anthropic, github } from '@flue/client/proxies';
 
 export const proxies = [
   anthropic(),
   github({
     token: process.env.GH_TOKEN!,
     policy: {
-      default: 'deny-non-safe',
-      allow: [
-        // Let the gh CLI read issues, PRs, etc. via GraphQL (queries only, no mutations)
-        { method: 'POST', path: '/graphql', body: githubBody.graphql() },
-        // Allow posting a single comment on any issue/PR in withastro/astro
-        { method: 'POST', path: '/repos/withastro/astro/issues/*/comments', limit: 1 },
-      ],
+      base: 'allow-read',
+      allow: [{ method: 'POST', path: '/repos/withastro/astro/issues/*/comments', limit: 1 }],
     },
   }),
 ];
-
-export default async function triage(flue) {
-  await flue.skill('triage/reproduce.md', { args: { issueNumber: 123 } });
-}
 ```

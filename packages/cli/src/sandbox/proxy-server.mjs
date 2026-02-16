@@ -92,15 +92,15 @@ function matchMethod(ruleMethod, requestMethod) {
 
 /**
  * Evaluate the proxy policy for a request.
- * Order: deny rules -> allow rules (with body + rate limits) -> default level.
+ * Order: deny rules -> allow rules (with body + rate limits) -> base level.
  */
 function evaluatePolicy(method, path, parsedBody, policy, ruleCounts) {
 	if (!policy) {
-		// No policy = read-only default
+		// No policy = allow-read default
 		if (['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())) {
 			return { allowed: true, reason: '' };
 		}
-		return { allowed: false, reason: 'not allowed by default read-only policy' };
+		return { allowed: false, reason: 'not allowed by default allow-read policy' };
 	}
 
 	// 1. Check deny rules
@@ -135,19 +135,19 @@ function evaluatePolicy(method, path, parsedBody, policy, ruleCounts) {
 		}
 	}
 
-	// 3. Apply default
-	const defaultLevel = policy.default || 'deny-non-safe';
-	switch (defaultLevel) {
+	// 3. Apply base policy level
+	const base = policy.base || 'allow-read';
+	switch (base) {
 		case 'allow-all':
 			return { allowed: true, reason: '' };
 		case 'deny-all':
-			return { allowed: false, reason: 'default policy: deny-all' };
-		case 'deny-non-safe':
+			return { allowed: false, reason: 'base policy: deny-all' };
+		case 'allow-read':
 		default:
 			if (['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())) {
 				return { allowed: true, reason: '' };
 			}
-			return { allowed: false, reason: 'not allowed by read-only policy' };
+			return { allowed: false, reason: 'not allowed by allow-read policy' };
 	}
 }
 
@@ -184,8 +184,7 @@ const proxyName = config.name || `proxy-${proxyIndex}`;
 const targetUrl = new URL(config.target);
 const isTargetHttps = targetUrl.protocol === 'https:';
 
-const policy =
-	typeof config.policy === 'string' ? { default: config.policy } : config.policy || null;
+const policy = typeof config.policy === 'string' ? { base: config.policy } : config.policy || null;
 const ruleCounts = new Map();
 
 const server = createServer(async (req, res) => {
