@@ -69,10 +69,32 @@ const summary = await flue.prompt('Summarize these test failures: ...', {
 
 Options: `result`, `model`
 
-### Properties
+## Proxies (Sandbox Mode)
 
-| Property       | Type                      | Description                             |
-| -------------- | ------------------------- | --------------------------------------- |
-| `flue.args`    | `Record<string, unknown>` | Workflow arguments passed by the runner |
-| `flue.secrets` | `Record<string, string>`  | Scoped secrets passed by the runner     |
-| `flue.branch`  | `string`                  | Working branch for commits              |
+In sandbox mode, the AI agent runs inside a Docker container that has no access to host credentials. Proxies bridge the gap: they run on the host machine, accept unauthenticated requests from the container, and inject the real API keys or tokens before forwarding upstream. The agent can call the Anthropic API, use the `gh` CLI, and push to GitHub — all without ever seeing a real secret.
+
+Each proxy preset handles the wiring automatically — configuring the model provider for OpenCode, setting up `gh` CLI auth via unix socket, routing `git clone`/`push` through the proxy, etc. Every proxy also supports an access control policy to limit what the sandboxed agent is allowed to do. Built-in levels include `'read-only'` (GET + GraphQL queries only), `'read-only+clone'` (adds git fetch/clone), and `'allow-all'`. You can also pass a custom policy object with explicit allow/deny rules for fine-grained control.
+
+```ts
+import { anthropic, github, githubBody } from '@flue/client/proxies';
+
+export const proxies = [
+  anthropic(),
+  github({
+    token: process.env.GH_TOKEN!,
+    policy: {
+      default: 'deny-non-safe',
+      allow: [
+        // Let the gh CLI read issues, PRs, etc. via GraphQL (queries only, no mutations)
+        { method: 'POST', path: '/graphql', body: githubBody.graphql() },
+        // Allow posting a single comment on any issue/PR in withastro/astro
+        { method: 'POST', path: '/repos/withastro/astro/issues/*/comments', limit: 1 },
+      ],
+    },
+  }),
+];
+
+export default async function triage(flue) {
+  await flue.skill('triage/reproduce.md', { args: { issueNumber: 123 } });
+}
+```
