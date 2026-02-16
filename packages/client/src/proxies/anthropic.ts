@@ -35,6 +35,7 @@ export function anthropic(opts?: { apiKey?: string }): ProxyService {
 			filtered['x-api-key'] = apiKey;
 			return { headers: filtered };
 		},
+		policy: 'allow-all',
 		isModelProvider: true,
 		providerConfig: {
 			providerKey: 'anthropic',
