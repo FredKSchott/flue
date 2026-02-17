@@ -7,6 +7,12 @@
 	"observability": {
 		"enabled": true
 	},
+	"kv_namespaces": [
+		{
+			"binding": "TRIAGE_KV",
+			"id": "75d8089eb4b442adbebcafcccc61d650"
+		}
+	],
 	"containers": [
 		{
 			"class_name": "Sandbox",

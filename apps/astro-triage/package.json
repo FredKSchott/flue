@@ -10,10 +10,12 @@
 		"check:types": "wrangler types && tsc --noEmit"
 	},
 	"dependencies": {
-		"@flue/cloudflare": "workspace:*"
+		"@cloudflare/sandbox": "^0.7.1",
+		"@flue/client": "workspace:*",
+		"@flue/cloudflare": "workspace:*",
+		"valibot": "^1.0.0"
 	},
 	"devDependencies": {
-		"@cloudflare/sandbox": "^0.7.1",
 		"typescript": "^5.9.2",
 		"wrangler": "^4.59.3"
 	}

@@ -5,10 +5,10 @@ import { extractResult } from './result.ts';
 import type { PromptOptions, SkillOptions } from './types.ts';
 
 /** How often to poll and log progress (ms). */
-const POLL_INTERVAL = 5_000;
+const POLL_INTERVAL = 15_000;
 
 /** Max times we'll see 0 assistant messages before giving up. */
-const MAX_EMPTY_POLLS = 60; // 60 polls * 5s = 5 minutes
+const MAX_EMPTY_POLLS = 20; // 20 polls * 15s = 5 minutes
 
 /** Max time to poll before timing out (ms) - 45 minutes. */
 const MAX_POLL_TIME = 45 * 60 * 1000;
@@ -182,8 +182,8 @@ async function pollUntilIdle(
 
 			if (parts.length === 0) {
 				emptyPolls++;
-				// Log every 60s while waiting for first output
-				if (emptyPolls % 12 === 0) {
+				// Log every ~60s while waiting for first output
+				if (emptyPolls % 4 === 0) {
 					console.log(
 						`[flue] ${label}: status result: ${JSON.stringify({ hasData: !!statusResult.data, sessionIds: statusResult.data ? Object.keys(statusResult.data) : [], error: statusResult.error })}`,
 					);
@@ -221,8 +221,8 @@ async function pollUntilIdle(
 			return parts;
 		}
 
-		// Log every 60s while session is running
-		if (pollCount % 12 === 0) {
+		// Log every ~60s while session is running
+		if (pollCount % 4 === 0) {
 			console.log(`[flue] ${label}: running (${elapsed}s)`);
 		}
 	}
