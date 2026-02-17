@@ -1,4 +1,5 @@
 import type * as v from 'valibot';
+import type { ProxyService } from './proxies/types.ts';
 
 export interface FlueOptions {
 	/** OpenCode server URL (default: 'http://localhost:48765'). */
@@ -9,7 +10,9 @@ export interface FlueOptions {
 	branch?: string;
 	/** Workflow arguments. */
 	args?: Record<string, unknown>;
-	/** Proxy instructions to append to every skill/prompt call. */
+	/** Proxy configs — instructions are extracted and appended to every skill/prompt call. */
+	proxies?: ProxyService[];
+	/** @deprecated Use `proxies` instead. Proxy instructions to append to every skill/prompt call. */
 	proxyInstructions?: string[];
 	/** Default model for skill/prompt invocations. */
 	model?: { providerID: string; modelID: string };

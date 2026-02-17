@@ -243,14 +243,12 @@ export class TriageWorkflow extends WorkflowEntrypoint<AppEnv, TriageParams> {
 			proxyKV: this.env.TRIAGE_KV,
 		});
 
-		const proxyInstructions = proxies.filter((p) => p.instructions).map((p) => p.instructions!);
-
 		const flue = new Flue({
 			workdir,
 			branch,
 			args: { issueNumber, triageDir: `triage/issue-${issueNumber}` },
 			model: { providerID: 'anthropic', modelID: 'claude-opus-4-6' },
-			proxyInstructions,
+			proxies,
 			fetch: (req) => sandbox.containerFetch(req, 48765),
 			shell: async (cmd, opts) => {
 				const result = await sandbox.exec(cmd, {

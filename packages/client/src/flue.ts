@@ -26,7 +26,10 @@ export class Flue {
 	constructor(options: FlueOptions) {
 		this.branch = options.branch ?? 'main';
 		this.args = options.args ?? {};
-		this.proxyInstructions = options.proxyInstructions ?? [];
+		this.proxyInstructions =
+			options.proxyInstructions ??
+			options.proxies?.map((p) => p.instructions).filter((i): i is string => !!i) ??
+			[];
 		this.workdir = options.workdir;
 		this.model = options.model;
 		this.shellFn = options.shell;
