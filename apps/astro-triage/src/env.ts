@@ -7,4 +7,5 @@ export interface AppEnv extends Env {
 	TURBO_REMOTE_CACHE_URL: string;
 	TURBO_REMOTE_CACHE_TEAM: string;
 	TURBO_REMOTE_CACHE_TOKEN: string;
+	TRIAGE_WORKFLOW: Workflow;
 }

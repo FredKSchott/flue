@@ -19,13 +19,16 @@
 			{
 				"class_name": "Sandbox",
 				"name": "Sandbox"
-			},
-			{
-				"class_name": "TriageRunner",
-				"name": "TriageRunner"
 			}
 		]
 	},
+	"workflows": [
+		{
+			"name": "triage-workflow",
+			"binding": "TRIAGE_WORKFLOW",
+			"class_name": "TriageWorkflow"
+		}
+	],
 	"migrations": [
 		{
 			"new_sqlite_classes": ["Sandbox"],
@@ -42,6 +45,10 @@
 		{
 			"new_sqlite_classes": ["TriageRunner"],
 			"tag": "v4"
+		},
+		{
+			"deleted_classes": ["TriageRunner"],
+			"tag": "v5"
 		}
 	]
 }
