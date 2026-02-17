@@ -7,6 +7,9 @@
 	"observability": {
 		"enabled": true
 	},
+	"vars": {
+		"WORKER_URL": "https://astro-triage.workers.dev"
+	},
 	"kv_namespaces": [
 		{
 			"binding": "TRIAGE_KV",

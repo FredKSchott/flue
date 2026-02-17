@@ -6,6 +6,8 @@ export interface AppEnv extends Env {
 	/** Write token (comments, labels). Worker-side only — must not be shared with the sandbox. */
 	GITHUB_TOKEN_BOT: string;
 	GITHUB_WEBHOOK_SECRET: string;
+	/** Secret for generating per-session HMAC proxy tokens. */
+	PROXY_SECRET: string;
 	TURBO_REMOTE_CACHE_URL: string;
 	TURBO_REMOTE_CACHE_TEAM: string;
 	TURBO_REMOTE_CACHE_TOKEN: string;

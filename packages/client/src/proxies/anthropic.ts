@@ -18,6 +18,10 @@ export function anthropic(opts?: { apiKey?: string; policy?: string | ProxyPolic
 	return {
 		name: 'anthropic',
 		target: 'https://api.anthropic.com',
+		headers: {
+			'x-api-key': apiKey,
+			host: 'api.anthropic.com',
+		},
 		transform: (req) => {
 			// Only forward Anthropic-safe headers. Strip everything else.
 			const safe = [

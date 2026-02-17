@@ -1,3 +1,5 @@
 export { anthropic } from './anthropic.ts';
 export { github, githubBody } from './github.ts';
+export type { PolicyResult } from './policy.ts';
+export { evaluatePolicy, matchMethod, matchPath } from './policy.ts';
 export type { PolicyRule, ProxyPolicy, ProxyPresetResult, ProxyService } from './types.ts';

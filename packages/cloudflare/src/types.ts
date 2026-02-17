@@ -1,8 +1,18 @@
 import type { Sandbox } from '@cloudflare/sandbox';
+import type { ProxyService } from '@flue/client/proxies';
+
+/** Minimal KV interface — avoids depending on @cloudflare/workers-types. */
+export interface KV {
+	get<T = unknown>(key: string, format: 'json'): Promise<T | null>;
+	put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
+	delete(key: string): Promise<void>;
+}
 
 export interface FlueRunnerOptions {
 	/** A Sandbox instance from getSandbox(). */
 	sandbox: Sandbox;
+	/** Session ID for this sandbox (must match the ID passed to getSandbox). */
+	sessionId: string;
 	/** GitHub repo in 'owner/repo' format. */
 	repo: string;
 	/** Base branch to fetch from (default: 'main'). */
@@ -13,6 +23,14 @@ export interface FlueRunnerOptions {
 	workdir?: string;
 	/** Config passed to createOpencode() for provider/model setup. */
 	opencodeConfig?: object;
+	/** Proxy configs for credential-injecting reverse proxies. */
+	proxies?: ProxyService[];
+	/** The Worker's public URL (e.g., 'https://astro-triage.workers.dev'). Required when proxies are configured. */
+	workerUrl?: string;
+	/** Secret used to generate per-session HMAC proxy tokens. Required when proxies are configured. */
+	proxySecret?: string;
+	/** KV namespace for storing proxy configs across Worker invocations. Required when proxies are configured. */
+	proxyKV?: KV;
 }
 
 export interface StartOptions {

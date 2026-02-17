@@ -2,6 +2,7 @@ import type { WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
 import { WorkflowEntrypoint } from 'cloudflare:workers';
 import { getSandbox } from '@cloudflare/sandbox';
 import { Flue } from '@flue/client';
+import { anthropic, github } from '@flue/client/proxies';
 import { FlueRunner } from '@flue/cloudflare';
 import * as v from 'valibot';
 import type { AppEnv } from './env.ts';
@@ -224,24 +225,32 @@ export class TriageWorkflow extends WorkflowEntrypoint<AppEnv, TriageParams> {
 		const kvKey = `triage:${sessionId}:issue`;
 
 		const sandbox = getSandbox(this.env.Sandbox, sessionId, { sleepAfter: '90m' });
+
+		const proxies = [
+			anthropic({ apiKey: this.env.ANTHROPIC_API_KEY }),
+			...github({ token: this.env.GITHUB_TOKEN }),
+		];
+
 		const runner = new FlueRunner({
 			sandbox,
+			sessionId,
 			repo,
 			baseBranch,
 			prebaked: true,
-			opencodeConfig: {
-				provider: {
-					anthropic: {
-						options: { apiKey: this.env.ANTHROPIC_API_KEY },
-					},
-				},
-			},
+			proxies,
+			workerUrl: this.env.WORKER_URL,
+			proxySecret: this.env.PROXY_SECRET,
+			proxyKV: this.env.TRIAGE_KV,
 		});
+
+		const proxyInstructions = proxies.filter((p) => p.instructions).map((p) => p.instructions!);
+
 		const flue = new Flue({
 			workdir,
 			branch,
 			args: { issueNumber, triageDir: `triage/issue-${issueNumber}` },
 			model: { providerID: 'anthropic', modelID: 'claude-opus-4-6' },
+			proxyInstructions,
 			fetch: (req) => sandbox.containerFetch(req, 48765),
 			shell: async (cmd, opts) => {
 				const result = await sandbox.exec(cmd, {
@@ -260,7 +269,7 @@ export class TriageWorkflow extends WorkflowEntrypoint<AppEnv, TriageParams> {
 				await sandbox.setEnvVars({
 					NODE_OPTIONS: '--max-old-space-size=4096',
 					ASTRO_TELEMETRY_DISABLED: 'true',
-					GITHUB_TOKEN: this.env.GITHUB_TOKEN,
+					// GITHUB_TOKEN and ANTHROPIC_API_KEY no longer passed to container — proxies handle credentials
 					TURBO_API: this.env.TURBO_REMOTE_CACHE_URL,
 					TURBO_TEAM: this.env.TURBO_REMOTE_CACHE_TEAM,
 					TURBO_TOKEN: this.env.TURBO_REMOTE_CACHE_TOKEN,
