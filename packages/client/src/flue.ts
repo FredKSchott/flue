@@ -21,6 +21,7 @@ export class Flue {
 	private readonly proxyInstructions: string[];
 	private readonly model?: { providerID: string; modelID: string };
 	private readonly client: OpencodeClient;
+	private readonly shellFn?: FlueOptions['shell'];
 
 	constructor(options: FlueOptions) {
 		this.branch = options.branch ?? 'main';
@@ -28,9 +29,11 @@ export class Flue {
 		this.proxyInstructions = options.proxyInstructions ?? [];
 		this.workdir = options.workdir;
 		this.model = options.model;
+		this.shellFn = options.shell;
 		this.client = createOpencodeClient({
 			baseUrl: options.opencodeUrl ?? 'http://localhost:48765',
 			directory: this.workdir,
+			...(options.fetch ? { fetch: options.fetch } : {}),
 		});
 	}
 
@@ -81,7 +84,11 @@ export class Flue {
 
 	/** Execute a shell command with scoped environment variables. */
 	async shell(command: string, options?: ShellOptions): Promise<ShellResult> {
-		return runShell(command, { ...options, cwd: options?.cwd ?? this.workdir });
+		const mergedOptions = { ...options, cwd: options?.cwd ?? this.workdir };
+		if (this.shellFn) {
+			return this.shellFn(command, mergedOptions);
+		}
+		return runShell(command, mergedOptions);
 	}
 
 	/** Close the OpenCode client connection. */
