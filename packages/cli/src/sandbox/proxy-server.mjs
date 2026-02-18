@@ -174,25 +174,39 @@ const { workflow: workflowPath, proxyIndex, port, socket } = parseArgs();
 const workflowModule = await import(workflowPath);
 const proxyExport = workflowModule.proxies;
 
-let allProxies;
-if (proxyExport && !Array.isArray(proxyExport) && typeof proxyExport === 'object') {
-	// New object format: { anthropic: ProxyFactory, github: ProxyFactory }
-	allProxies = Object.values(proxyExport).flatMap((factory) => {
-		if (typeof factory !== 'function' || !factory.secretsMap) return [factory];
+const allProxies = resolveProxies(proxyExport);
+
+/**
+ * Resolve proxy declarations from a workflow module.
+ * Handles object-of-factories format and legacy array format.
+ */
+function resolveProxies(proxyExport) {
+	if (!proxyExport) return [];
+	if (Array.isArray(proxyExport)) return proxyExport.flat();
+
+	const results = [];
+	for (const [key, factory] of Object.entries(proxyExport)) {
+		if (typeof factory !== 'function' || !factory.secretsMap) {
+			console.error(`[proxy-server] Warning: proxies.${key} is not a ProxyFactory, skipping`);
+			continue;
+		}
 		const secrets = {};
-		for (const [param, envVar] of Object.entries(factory.secretsMap)) {
-			secrets[param] = process.env[envVar];
-			if (!secrets[param]) {
-				console.error(`[proxy-server] Missing env var ${envVar} for proxy '${factory.proxyName}'`);
+		for (const [secretKey, envVar] of Object.entries(factory.secretsMap)) {
+			const value = process.env[envVar];
+			if (!value) {
+				console.error(`[proxy-server] Missing env var ${envVar} for proxies.${key}`);
 				process.exit(1);
 			}
+			secrets[secretKey] = value;
 		}
 		const result = factory(secrets);
-		return Array.isArray(result) ? result : [result];
-	});
-} else {
-	// Legacy: array of ProxyService[]
-	allProxies = (Array.isArray(proxyExport) ? proxyExport : []).flat();
+		if (Array.isArray(result)) {
+			results.push(...result);
+		} else {
+			results.push(result);
+		}
+	}
+	return results;
 }
 
 const config = allProxies[proxyIndex];

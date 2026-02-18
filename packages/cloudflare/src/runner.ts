@@ -1,10 +1,9 @@
 import type { Sandbox } from '@cloudflare/sandbox';
 import { createOpencode, type OpencodeServer } from '@cloudflare/sandbox/opencode';
-import { Flue } from '@flue/client';
+import { FlueClient } from '@flue/client';
 import type { ProxyService } from '@flue/client/proxies';
 import { bootstrapScript } from './bootstrap.ts';
-import { deriveWorkdir, setup as runSetup } from './setup.ts';
-import type { FlueRunnerOptions, StartOptions, WorkflowHandle, WorkflowStatus } from './types.ts';
+import type { FlueRuntimeOptions, StartOptions, WorkflowHandle, WorkflowStatus } from './types.ts';
 import { generateProxyToken, type SerializedProxyConfig } from './worker.ts';
 
 const STATUS_DIR = '/tmp/flue-workflow';
@@ -14,53 +13,69 @@ const BOOTSTRAP_PATH = `${STATUS_DIR}/bootstrap.mjs`;
 /** TTL for proxy configs in KV (2 hours). Auto-cleanup even if teardown fails. */
 const PROXY_KV_TTL = 7200;
 
-export class FlueRunner {
+export class FlueRuntime {
 	readonly sandbox: Sandbox;
-	private readonly options: FlueRunnerOptions;
+	private readonly options: FlueRuntimeOptions;
 	readonly workdir: string;
 	private readonly sessionId: string;
 	private opencodeServer: OpencodeServer | null = null;
 	private resolvedProxies: ProxyService[] = [];
+	private _client: FlueClient | null = null;
+	private setupComplete = false;
 
-	constructor(options: FlueRunnerOptions) {
+	constructor(options: FlueRuntimeOptions) {
 		this.sandbox = options.sandbox;
 		this.options = options;
-		this.workdir = options.workdir ?? deriveWorkdir(options.repo);
+		this.workdir = options.workdir;
 		this.sessionId = options.sessionId;
 	}
 
 	/**
-	 * Setup the container: git fetch/clone, install dependencies, build,
-	 * configure proxies, start the OpenCode server. Must be called before start().
+	 * Lazily-created FlueClient wired to this sandbox. Throws if called before setup().
+	 */
+	get client(): FlueClient {
+		if (!this.setupComplete) {
+			throw new Error('[flue] Cannot access .client before setup() completes');
+		}
+		if (!this._client) {
+			this._client = new FlueClient({
+				workdir: this.workdir,
+				args: this.options.args,
+				model: this.options.model,
+				proxies: this.resolvedProxies,
+				fetch: (req: Request) => this.sandbox.containerFetch(req, 48765),
+				shell: async (
+					cmd: string,
+					opts?: { cwd?: string; env?: Record<string, string>; timeout?: number },
+				) => {
+					const result = await this.sandbox.exec(cmd, {
+						cwd: opts?.cwd,
+						env: opts?.env,
+						timeout: opts?.timeout,
+					});
+					return { stdout: result.stdout, stderr: result.stderr, exitCode: result.exitCode };
+				},
+			});
+		}
+		return this._client;
+	}
+
+	/**
+	 * Initialize the runtime: configure proxies, start the OpenCode server,
+	 * and verify providers. Must be called before accessing .client.
+	 *
+	 * Repo-specific setup (clone, install, build, branch checkout) is the
+	 * caller's responsibility — use flue.client.shell() after setup().
 	 */
 	async setup(): Promise<void> {
-		await runSetup(this.sandbox, this.options, this.workdir);
-
-		// Resolve proxy definitions if provided
-		if (this.options.proxyDefinitions && this.options.proxySecrets) {
-			const resolved: ProxyService[] = [];
-			for (const [key, factory] of Object.entries(this.options.proxyDefinitions)) {
-				const secrets = this.options.proxySecrets[key];
-				if (!secrets) throw new Error(`Missing secrets for proxy '${key}'`);
-				const result = factory(secrets);
-				resolved.push(...(Array.isArray(result) ? result : [result]));
-			}
-			this.resolvedProxies = resolved;
-		} else if (this.options.proxies) {
-			this.resolvedProxies = this.options.proxies;
+		// Flatten gateway proxies
+		if (this.options.gateway) {
+			this.resolvedProxies = this.options.gateway.proxies.flat();
 		}
 
 		if (this.resolvedProxies.length > 0) {
 			await this.setupProxies();
 		}
-
-		// Headless agent — no human to approve permission prompts.
-		// Must come last so it overrides any project-level config.
-		const permission: Record<string, string> = {
-			'*': 'allow',
-			question: 'deny',
-			task: 'deny',
-		};
 
 		const opencodeConfig = this.buildOpencodeConfig();
 		console.log(`[flue] setup: starting OpenCode server (workdir: ${this.workdir})`);
@@ -68,12 +83,14 @@ export class FlueRunner {
 			directory: this.workdir,
 			config: {
 				...opencodeConfig,
-				permission,
+				// Headless agent — no human to approve permission prompts.
+				permission: { '*': 'allow', question: 'deny', task: 'deny' } as Record<string, string>,
 			},
 		});
 		this.opencodeServer = result.server;
 		console.log('[flue] setup: OpenCode server started');
 		await this.preflight();
+		this.setupComplete = true;
 	}
 
 	/**
@@ -92,7 +109,7 @@ export class FlueRunner {
 				'[flue] No LLM providers configured.\n' +
 					'\n' +
 					'OpenCode needs at least one provider with an API key to run workflows.\n' +
-					'Pass an API key via opencodeConfig in FlueRunnerOptions.\n',
+					'Pass an API key via opencodeConfig in FlueRuntimeOptions.\n',
 			);
 		}
 		console.log(`[flue] preflight: ${providers.length} provider(s) configured`);
@@ -102,18 +119,20 @@ export class FlueRunner {
 	 * Register proxy configs in KV and configure the container environment.
 	 */
 	private async setupProxies(): Promise<void> {
-		const { workerUrl, proxySecret, proxyKV, sandbox } = this.options;
+		const gateway = this.options.gateway;
 		const proxies = this.resolvedProxies;
-		if (proxies.length === 0) return;
-		if (!workerUrl) throw new Error('[flue] workerUrl is required when proxies are configured');
-		if (!proxySecret) throw new Error('[flue] proxySecret is required when proxies are configured');
-		if (!proxyKV) throw new Error('[flue] proxyKV is required when proxies are configured');
+		if (proxies.length === 0 || !gateway) return;
 
-		const proxyToken = await generateProxyToken(proxySecret, this.sessionId);
+		const { url, secret, kv } = gateway;
+		if (!url) throw new Error('[flue] gateway.url is required when proxies are configured');
+		if (!secret) throw new Error('[flue] gateway.secret is required when proxies are configured');
+		if (!kv) throw new Error('[flue] gateway.kv is required when proxies are configured');
+
+		const proxyToken = await generateProxyToken(secret, this.sessionId);
 		const envVars: Record<string, string> = {};
 
 		for (const proxy of proxies) {
-			const proxyUrl = `${workerUrl}/proxy/${this.sessionId}/${proxy.name}`;
+			const proxyUrl = `${url}/proxy/${this.sessionId}/${proxy.name}`;
 
 			// Store serialized config in KV for the proxy route handler
 			const serialized: SerializedProxyConfig = {
@@ -123,7 +142,7 @@ export class FlueRunner {
 				policy: serializePolicy(proxy.policy),
 				stripApiV3Prefix: proxy.name === 'github-api',
 			};
-			await proxyKV.put(`proxy:${this.sessionId}:${proxy.name}`, JSON.stringify(serialized), {
+			await kv.put(`proxy:${this.sessionId}:${proxy.name}`, JSON.stringify(serialized), {
 				expirationTtl: PROXY_KV_TTL,
 			});
 
@@ -147,7 +166,7 @@ export class FlueRunner {
 					if (cmd.includes('{{socketPath}}')) continue;
 					const resolved = resolveTemplates(cmd, proxyUrl, proxyToken);
 					try {
-						await sandbox.exec(resolved, { cwd: this.workdir });
+						await this.sandbox.exec(resolved, { cwd: this.workdir });
 					} catch {
 						console.log(`[flue] Warning: setup for '${proxy.name}' failed: ${resolved}`);
 					}
@@ -156,7 +175,7 @@ export class FlueRunner {
 		}
 
 		if (Object.keys(envVars).length > 0) {
-			await sandbox.setEnvVars(envVars);
+			await this.sandbox.setEnvVars(envVars);
 		}
 
 		console.log(
@@ -168,7 +187,7 @@ export class FlueRunner {
 	 * Set env vars for gh CLI enterprise mode routing.
 	 */
 	private setupGithubApiEnvVars(envVars: Record<string, string>, proxyToken: string): void {
-		const workerDomain = new URL(this.options.workerUrl!).hostname;
+		const workerDomain = new URL(this.options.gateway!.url).hostname;
 		const compoundToken = `${this.sessionId}:${proxyToken}`;
 		envVars['GH_HOST'] = workerDomain;
 		envVars['GH_ENTERPRISE_TOKEN'] = compoundToken;
@@ -180,7 +199,7 @@ export class FlueRunner {
 	 * Run gh CLI config commands for enterprise host.
 	 */
 	private async setupGithubApiCommands(): Promise<void> {
-		const workerDomain = new URL(this.options.workerUrl!).hostname;
+		const workerDomain = new URL(this.options.gateway!.url).hostname;
 		try {
 			await this.sandbox.exec(`gh config set -h ${workerDomain} git_protocol https`, {
 				cwd: this.workdir,
@@ -194,18 +213,18 @@ export class FlueRunner {
 	 * Build OpenCode config, routing model providers through proxies when available.
 	 */
 	private buildOpencodeConfig(): object {
-		const { workerUrl, opencodeConfig } = this.options;
+		const gateway = this.options.gateway;
 		const proxies = this.resolvedProxies;
 
-		if (proxies.length === 0 || !workerUrl) {
-			return opencodeConfig ?? {};
+		if (proxies.length === 0 || !gateway) {
+			return this.options.opencodeConfig ?? {};
 		}
 
 		const providerConfig: Record<string, object> = {};
 		for (const proxy of proxies) {
 			if (proxy.isModelProvider && proxy.providerConfig) {
 				const { providerKey, options = {} } = proxy.providerConfig;
-				const proxyUrl = `${workerUrl}/proxy/${this.sessionId}/${proxy.name}`;
+				const proxyUrl = `${gateway.url}/proxy/${this.sessionId}/${proxy.name}`;
 				providerConfig[providerKey] = {
 					options: {
 						baseURL: `${proxyUrl}/v1`,
@@ -216,44 +235,13 @@ export class FlueRunner {
 		}
 
 		if (Object.keys(providerConfig).length === 0) {
-			return opencodeConfig ?? {};
+			return this.options.opencodeConfig ?? {};
 		}
 
 		return {
-			...(opencodeConfig as Record<string, unknown> | undefined),
+			...(this.options.opencodeConfig as Record<string, unknown> | undefined),
 			provider: providerConfig,
 		};
-	}
-
-	/**
-	 * Create a Flue instance wired to this sandbox. Must be called after setup().
-	 */
-	createFlue(options: {
-		workdir?: string;
-		branch?: string;
-		args?: Record<string, unknown>;
-		model?: { providerID: string; modelID: string };
-	}): Flue {
-		const workdir = options.workdir ?? this.workdir;
-		return new Flue({
-			workdir,
-			branch: options.branch,
-			args: options.args,
-			model: options.model,
-			proxies: this.resolvedProxies,
-			fetch: (req: Request) => this.sandbox.containerFetch(req, 48765),
-			shell: async (
-				cmd: string,
-				opts?: { cwd?: string; env?: Record<string, string>; timeout?: number },
-			) => {
-				const result = await this.sandbox.exec(cmd, {
-					cwd: opts?.cwd,
-					env: opts?.env,
-					timeout: opts?.timeout,
-				});
-				return { stdout: result.stdout, stderr: result.stderr, exitCode: result.exitCode };
-			},
-		});
 	}
 
 	/**

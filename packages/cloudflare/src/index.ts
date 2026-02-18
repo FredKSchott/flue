@@ -1,7 +1,8 @@
 export { createFlueEventTransform, type FlueEvent } from './events.ts';
-export { FlueRunner } from './runner.ts';
+export { FlueRuntime } from './runner.ts';
 export type {
-	FlueRunnerOptions,
+	FlueRuntimeOptions,
+	GatewayOptions,
 	KV,
 	StartOptions,
 	WorkflowHandle,

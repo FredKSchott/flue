@@ -4,16 +4,14 @@ import { buildProxyInstructions, buildResultInstructions, HEADLESS_PREAMBLE } fr
 import { runShell } from './shell.ts';
 import { runPrompt, runSkill } from './skill.ts';
 import type {
-	FlueOptions,
+	FlueClientOptions,
 	PromptOptions,
 	ShellOptions,
 	ShellResult,
 	SkillOptions,
 } from './types.ts';
 
-export class Flue {
-	/** Working branch for commits. */
-	readonly branch: string;
+export class FlueClient {
 	/** Workflow arguments passed by the runner. */
 	readonly args: Record<string, unknown>;
 
@@ -21,10 +19,9 @@ export class Flue {
 	private readonly proxyInstructions: string[];
 	private readonly model?: { providerID: string; modelID: string };
 	private readonly client: OpencodeClient;
-	private readonly shellFn?: FlueOptions['shell'];
+	private readonly shellFn?: FlueClientOptions['shell'];
 
-	constructor(options: FlueOptions) {
-		this.branch = options.branch ?? 'main';
+	constructor(options: FlueClientOptions) {
 		this.args = options.args ?? {};
 		this.proxyInstructions =
 			options.proxyInstructions ??

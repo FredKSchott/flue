@@ -1,4 +1,4 @@
-import type { Flue } from '@flue/client';
+import type { FlueClient } from '@flue/client';
 import { anthropic, github, githubBody } from '@flue/client/proxies';
 import * as v from 'valibot';
 
@@ -44,7 +44,7 @@ const issueDetailsSchema = v.object({
 });
 type IssueDetails = v.InferOutput<typeof issueDetailsSchema>;
 
-async function shouldRetriage(flue: Flue, issue: IssueDetails): Promise<'yes' | 'no'> {
+async function shouldRetriage(flue: FlueClient, issue: IssueDetails): Promise<'yes' | 'no'> {
 	return flue.prompt(
 		`You are reviewing a GitHub issue conversation to decide whether a triage re-run is warranted.
 
@@ -82,7 +82,7 @@ const repoLabelSchema = v.object({
 });
 type RepoLabel = v.InferOutput<typeof repoLabelSchema>;
 
-async function fetchRepoLabels(flue: Flue): Promise<{
+async function fetchRepoLabels(flue: FlueClient): Promise<{
 	priorityLabels: RepoLabel[];
 	packageLabels: RepoLabel[];
 }> {
@@ -105,7 +105,7 @@ async function fetchRepoLabels(flue: Flue): Promise<{
 }
 
 async function selectTriageLabels(
-	flue: Flue,
+	flue: FlueClient,
 	{
 		comment,
 		priorityLabels,
@@ -154,7 +154,7 @@ ${comment}
 }
 
 async function runTriagePipeline(
-	flue: Flue,
+	flue: FlueClient,
 	issueNumber: number,
 	issueDetails: IssueDetails,
 ): Promise<{
@@ -256,8 +256,11 @@ async function runTriagePipeline(
 	};
 }
 
-export default async function triage(flue: Flue) {
-	const { issueNumber } = v.parse(v.object({ issueNumber: v.number() }), flue.args);
+export default async function triage(flue: FlueClient) {
+	const { issueNumber, branch } = v.parse(
+		v.object({ issueNumber: v.number(), branch: v.string() }),
+		flue.args,
+	);
 	const issueResult = await flue.shell(
 		`gh issue view ${issueNumber} --json title,body,author,labels,createdAt,state,number,url,comments`,
 	);
@@ -286,7 +289,7 @@ export default async function triage(flue: Flue) {
 	if (triageResult.fixed) {
 		const diff = await flue.shell('git diff main --stat');
 		if (diff.stdout.trim()) {
-			await flue.shell(`git checkout -B ${flue.branch}`);
+			await flue.shell(`git checkout -B ${branch}`);
 			const status = await flue.shell('git status --porcelain');
 			if (status.stdout.trim()) {
 				await flue.shell('git add -A');
@@ -294,7 +297,7 @@ export default async function triage(flue: Flue) {
 					`git commit -m ${JSON.stringify(triageResult.commitMessage ?? 'fix(auto-triage): automated fix')}`,
 				);
 			}
-			const pushResult = await flue.shell(`git push -f origin ${flue.branch}`);
+			const pushResult = await flue.shell(`git push -f origin ${branch}`);
 			console.info('push result:', pushResult);
 			isPushed = pushResult.exitCode === 0;
 		}
@@ -306,7 +309,7 @@ export default async function triage(flue: Flue) {
 	assert(priorityLabels.length > 0, 'no priority labels found');
 	assert(packageLabels.length > 0, 'no package labels found');
 
-	const branchName = isPushed ? flue.branch : null;
+	const branchName = isPushed ? branch : null;
 	const comment = await flue.skill('triage/comment.md', {
 		args: { branchName, priorityLabels, issueDetails },
 		result: v.pipe(

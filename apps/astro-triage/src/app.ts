@@ -1,7 +1,7 @@
 import { FlueWorker } from '@flue/cloudflare/worker';
 import type { AppEnv } from './env.ts';
 
-const app = new FlueWorker<AppEnv>({ proxyKVBinding: 'TRIAGE_KV' });
+const app = new FlueWorker<AppEnv>({ gatewayKVBinding: 'GATEWAY_KV' });
 
 app.post('/webhooks/github', async (c) => {
 	const body = await c.req.json();

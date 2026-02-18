@@ -15,9 +15,9 @@ try {
 
 	const config = JSON.parse(await readFile(\`\${STATUS_DIR}/config.json\`, 'utf8'));
 
-	const { Flue } = await import('@flue/client');
+	const { FlueClient } = await import('@flue/client');
 
-	flue = new Flue({
+	flue = new FlueClient({
 		opencodeUrl: 'http://localhost:48765',
 		workdir: config.workdir,
 		branch: config.branch,

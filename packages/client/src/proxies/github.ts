@@ -3,7 +3,7 @@ import type { ProxyFactory, ProxyPolicy, ProxyService } from './types.ts';
 /**
  * GitHub proxy preset.
  *
- * Returns a ProxyFactory that, when called with { token }, produces two
+ * Returns a ProxyFactory that, when called with `{ token }`, produces two
  * ProxyService objects:
  * - `github-api`: unix socket proxy for REST/GraphQL API (api.github.com),
  *   used by the `gh` CLI and `curl`.
@@ -13,7 +13,8 @@ import type { ProxyFactory, ProxyPolicy, ProxyService } from './types.ts';
  * Both share the same token and policy.
  */
 export function github(opts?: { policy?: string | ProxyPolicy }): ProxyFactory<{ token: string }> {
-	const factory = (({ token }: { token: string }): ProxyService[] => {
+	const factory = (secrets: { token: string }): ProxyService[] => {
+		const { token } = secrets;
 		const resolvedPolicy = resolveGitHubPolicy(opts?.policy);
 
 		const denyResponse = ({
@@ -70,8 +71,9 @@ export function github(opts?: { policy?: string | ProxyPolicy }): ProxyFactory<{
 		};
 
 		return [apiProxy, gitProxy];
-	}) as ProxyFactory<{ token: string }>;
-	factory.secretsMap = { token: 'GITHUB_TOKEN' };
+	};
+
+	factory.secretsMap = { token: 'GITHUB_TOKEN' } as const;
 	factory.proxyName = 'github';
 	return factory;
 }

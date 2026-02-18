@@ -291,6 +291,51 @@ function flushTextBuffer(textBuffers, sessionId, sessionName) {
 	}
 }
 
+// -- Proxy Resolution --------------------------------------------------------
+
+/**
+ * Resolve proxy declarations from a workflow module.
+ *
+ * Handles two formats:
+ * - Object of ProxyFactory instances (has secretsMap): resolve secrets from
+ *   process.env, call the factory, collect results.
+ * - Array of ProxyService | ProxyService[] (legacy): flatten and pass through.
+ */
+function resolveProxies(proxyExport) {
+	if (!proxyExport) return [];
+	if (Array.isArray(proxyExport)) return proxyExport.flat();
+
+	// Object format: { anthropic: ProxyFactory, github: ProxyFactory, ... }
+	const results = [];
+	for (const [key, factory] of Object.entries(proxyExport)) {
+		if (typeof factory !== 'function' || !factory.secretsMap) {
+			console.error(`[flue] Warning: proxies.${key} is not a ProxyFactory, skipping`);
+			continue;
+		}
+		const secrets = {};
+		for (const [secretKey, envVar] of Object.entries(factory.secretsMap)) {
+			const value = process.env[envVar];
+			if (!value) {
+				console.error(
+					`[flue] Error: Missing environment variable ${envVar} required by proxies.${key}\n` +
+						`\n` +
+						`  Set it in your environment:\n` +
+						`    export ${envVar}=<your-value>\n`,
+				);
+				process.exit(1);
+			}
+			secrets[secretKey] = value;
+		}
+		const result = factory(secrets);
+		if (Array.isArray(result)) {
+			results.push(...result);
+		} else {
+			results.push(result);
+		}
+	}
+	return results;
+}
+
 // -- Main --------------------------------------------------------------------
 
 async function run() {
@@ -326,7 +371,7 @@ async function run() {
 		: path.resolve(workdir, workflowPath);
 	const workflowUrl = pathToFileURL(resolvedPath).href;
 
-	const { Flue } = await import('@flue/client');
+	const { FlueClient } = await import('@flue/client');
 
 	// Import workflow early to read exports.proxies before starting sandbox
 	const workflow = await import(workflowUrl);
@@ -335,30 +380,11 @@ async function run() {
 		process.exit(1);
 	}
 
-	// Read and flatten proxy declarations.
-	// Supports both the legacy array format and the new object format (ProxyFactory).
-	let proxies;
-	const proxyExport = workflow.proxies;
-	if (proxyExport && !Array.isArray(proxyExport) && typeof proxyExport === 'object') {
-		proxies = Object.values(proxyExport).flatMap((factory) => {
-			if (typeof factory !== 'function' || !factory.secretsMap) return [factory];
-			const secrets = {};
-			for (const [param, envVar] of Object.entries(factory.secretsMap)) {
-				secrets[param] = process.env[envVar];
-				if (!secrets[param]) {
-					console.error(
-						`[flue] Missing env var ${envVar} for proxy '${factory.proxyName}'.\n` +
-							`Set it in your environment before running in sandbox mode.\n`,
-					);
-					process.exit(1);
-				}
-			}
-			const result = factory(secrets);
-			return Array.isArray(result) ? result : [result];
-		});
-	} else {
-		proxies = Array.isArray(proxyExport) ? proxyExport.flat() : [];
-	}
+	// Resolve proxy declarations.
+	// workflow.proxies can be:
+	//   - an object of ProxyFactory instances: { anthropic: ProxyFactory, github: ProxyFactory }
+	//   - an array of ProxyService | ProxyService[] (legacy)
+	const proxies = resolveProxies(workflow.proxies);
 	const proxyInstructions = proxies.map((p) => p.instructions).filter(Boolean);
 
 	if (sandbox) {
@@ -441,10 +467,9 @@ async function run() {
 	eventStreamAbort = eventStream;
 
 	const model = modelStr ? parseModel(modelStr) : undefined;
-	const flue = new Flue({
+	const flue = new FlueClient({
 		workdir,
 		args,
-		branch,
 		proxyInstructions: proxyInstructions.length > 0 ? proxyInstructions : undefined,
 		model,
 	});

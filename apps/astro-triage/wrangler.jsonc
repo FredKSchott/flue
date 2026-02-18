@@ -11,11 +11,11 @@
 		"subrequests": 1000000
 	},
 	"vars": {
-		"WORKER_URL": "https://astro-triage.workers.dev"
+		"GATEWAY_URL": "https://astro-triage.workers.dev"
 	},
 	"kv_namespaces": [
 		{
-			"binding": "TRIAGE_KV",
+			"binding": "GATEWAY_KV",
 			"id": "75d8089eb4b442adbebcafcccc61d650"
 		}
 	],

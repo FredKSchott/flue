@@ -1,38 +1,36 @@
 import type { WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
 import { WorkflowEntrypoint } from 'cloudflare:workers';
 import { getSandbox } from '@cloudflare/sandbox';
-import { FlueRunner } from '@flue/cloudflare';
+import { FlueRuntime } from '@flue/cloudflare';
 import type { AppEnv } from './env.ts';
 import triage, { proxies } from './issue-triage.ts';
 
 interface TriageParams {
 	issueNumber: number;
 	repo: string;
-	baseBranch: string;
 }
 
 export class TriageWorkflow extends WorkflowEntrypoint<AppEnv, TriageParams> {
 	async run(event: WorkflowEvent<TriageParams>, step: WorkflowStep) {
-		const { issueNumber, repo, baseBranch } = event.payload;
-		const sessionId = event.instanceId;
+		const { issueNumber } = event.payload;
 		const branch = `flue/fix-${issueNumber}`;
+		const sandbox = getSandbox(this.env.Sandbox, event.instanceId, { sleepAfter: '90m' });
 
-		const sandbox = getSandbox(this.env.Sandbox, sessionId, { sleepAfter: '90m' });
-
-		const runner = new FlueRunner({
+		const flue = new FlueRuntime({
 			sandbox,
-			sessionId,
-			repo,
-			baseBranch,
-			prebaked: true,
-			proxyDefinitions: proxies,
-			proxySecrets: {
-				anthropic: { apiKey: this.env.ANTHROPIC_API_KEY },
-				github: { token: this.env.GITHUB_TOKEN_BOT },
+			sessionId: event.instanceId,
+			workdir: '/home/user/astro',
+			args: { issueNumber, branch, triageDir: `triage/issue-${issueNumber}` },
+			model: { providerID: 'anthropic', modelID: 'claude-opus-4-6' },
+			gateway: {
+				proxies: [
+					proxies.anthropic({ apiKey: this.env.ANTHROPIC_API_KEY }),
+					proxies.github({ token: this.env.GITHUB_TOKEN_BOT }),
+				],
+				url: this.env.GATEWAY_URL,
+				secret: this.env.GATEWAY_SECRET,
+				kv: this.env.GATEWAY_KV,
 			},
-			workerUrl: this.env.WORKER_URL,
-			proxySecret: this.env.PROXY_SECRET,
-			proxyKV: this.env.TRIAGE_KV,
 		});
 
 		await step.do(
@@ -46,26 +44,17 @@ export class TriageWorkflow extends WorkflowEntrypoint<AppEnv, TriageParams> {
 					TURBO_TEAM: this.env.TURBO_REMOTE_CACHE_TEAM,
 					TURBO_TOKEN: this.env.TURBO_REMOTE_CACHE_TOKEN,
 				});
-
-				await runner.setup();
-
-				await sandbox.exec(`git checkout -B ${branch}`, { cwd: runner.workdir });
+				await flue.setup();
+				await flue.client.shell('git fetch origin main');
+				await flue.client.shell('git reset --hard origin/main');
+				await flue.client.shell('pnpm install --frozen-lockfile');
+				await flue.client.shell('pnpm run build');
+				await flue.client.shell(`git checkout -B ${branch}`);
 			},
 		);
 
-		const result = await step.do(
-			'triage',
-			{ timeout: '60 minutes', retries: { limit: 0, delay: 0 } },
-			async () => {
-				const flue = runner.createFlue({
-					branch,
-					args: { issueNumber, triageDir: `triage/issue-${issueNumber}` },
-					model: { providerID: 'anthropic', modelID: 'claude-opus-4-6' },
-				});
-				return triage(flue);
-			},
+		return step.do('triage', { timeout: '60 minutes', retries: { limit: 0, delay: 0 } }, async () =>
+			triage(flue.client),
 		);
-
-		return result;
 	}
 }

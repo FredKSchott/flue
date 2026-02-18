@@ -7,10 +7,10 @@ import type { KV } from './types.ts';
 export interface FlueWorkerOptions {
 	/** Name of the Sandbox binding in env (default: 'Sandbox'). */
 	sandboxBinding?: string;
-	/** Name of the KV binding used for proxy config storage (default: 'PROXY_KV'). */
-	proxyKVBinding?: string;
-	/** Name of the env var/secret holding the proxy HMAC secret (default: 'PROXY_SECRET'). */
-	proxySecretBinding?: string;
+	/** Name of the KV binding used for gateway proxy config storage (default: 'GATEWAY_KV'). */
+	gatewayKVBinding?: string;
+	/** Name of the env var/secret holding the gateway HMAC secret (default: 'GATEWAY_SECRET'). */
+	gatewaySecretBinding?: string;
 }
 
 /**
@@ -60,8 +60,8 @@ export class FlueWorker<E extends Record<string, any>> extends Hono<{ Bindings: 
 	constructor(options?: FlueWorkerOptions) {
 		super();
 		const bindingName = options?.sandboxBinding ?? 'Sandbox';
-		const kvBindingName = options?.proxyKVBinding ?? 'PROXY_KV';
-		const secretBindingName = options?.proxySecretBinding ?? 'PROXY_SECRET';
+		const kvBindingName = options?.gatewayKVBinding ?? 'GATEWAY_KV';
+		const secretBindingName = options?.gatewaySecretBinding ?? 'GATEWAY_SECRET';
 
 		this.get('/health', (c) => c.json({ ok: true }));
 

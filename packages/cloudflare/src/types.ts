@@ -1,5 +1,5 @@
 import type { Sandbox } from '@cloudflare/sandbox';
-import type { ProxyFactory, ProxyService } from '@flue/client/proxies';
+import type { ProxyService } from '@flue/client/proxies';
 
 /** Minimal KV interface — avoids depending on @cloudflare/workers-types. */
 export interface KV {
@@ -8,33 +8,33 @@ export interface KV {
 	delete(key: string): Promise<void>;
 }
 
-export interface FlueRunnerOptions {
+export interface GatewayOptions {
+	/** Resolved proxy configs. Accepts a mix of single services and arrays
+	 *  (e.g., github() returns ProxyService[]). Flattened internally. */
+	proxies: (ProxyService | ProxyService[])[];
+	/** The Worker's public URL (e.g., 'https://astro-triage.workers.dev'). */
+	url: string;
+	/** Secret used to generate per-session HMAC proxy tokens. */
+	secret: string;
+	/** KV namespace for storing proxy configs. */
+	kv: KV;
+}
+
+export interface FlueRuntimeOptions {
 	/** A Sandbox instance from getSandbox(). */
 	sandbox: Sandbox;
 	/** Session ID for this sandbox (must match the ID passed to getSandbox). */
 	sessionId: string;
-	/** GitHub repo in 'owner/repo' format. */
-	repo: string;
-	/** Base branch to fetch from (default: 'main'). */
-	baseBranch?: string;
-	/** If true, repo is pre-baked in the Docker image (skip clone). */
-	prebaked?: boolean;
-	/** Override working directory (default: /home/user/{repo-name}). */
-	workdir?: string;
+	/** Working directory inside the container (e.g., '/home/user/astro'). */
+	workdir: string;
 	/** Config passed to createOpencode() for provider/model setup. */
 	opencodeConfig?: object;
-	/** Unresolved proxy definitions from the workflow module. */
-	proxyDefinitions?: Record<string, ProxyFactory<any>>;
-	/** Secrets for each proxy, keyed by the proxy definition key. */
-	proxySecrets?: Record<string, Record<string, string>>;
-	/** Pre-resolved proxy configs (alternative to proxyDefinitions + proxySecrets). */
-	proxies?: ProxyService[];
-	/** The Worker's public URL (e.g., 'https://astro-triage.workers.dev'). Required when proxies are configured. */
-	workerUrl?: string;
-	/** Secret used to generate per-session HMAC proxy tokens. Required when proxies are configured. */
-	proxySecret?: string;
-	/** KV namespace for storing proxy configs across Worker invocations. Required when proxies are configured. */
-	proxyKV?: KV;
+	/** Proxy gateway configuration. Omit if no proxies needed. */
+	gateway?: GatewayOptions;
+	/** Workflow arguments available as flue.client.args. */
+	args?: Record<string, unknown>;
+	/** Default model for skill/prompt invocations. */
+	model?: { providerID: string; modelID: string };
 }
 
 export interface StartOptions {
