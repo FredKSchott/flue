@@ -1,5 +1,5 @@
 #!/usr/bin/env -S node --experimental-strip-types
-import { spawn } from 'node:child_process';
+import { exec, execFile, spawn } from 'node:child_process';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
@@ -326,6 +326,73 @@ function resolveProxies(proxyExport) {
 	return results;
 }
 
+// -- Shell Implementations ---------------------------------------------------
+
+/**
+ * Create a shell function that runs commands on the host via child_process.exec.
+ */
+function createHostShell(defaultCwd) {
+	return (command, opts) => {
+		return new Promise((resolve) => {
+			const child = exec(
+				command,
+				{
+					cwd: opts?.cwd ?? defaultCwd,
+					env: opts?.env ?? process.env,
+					timeout: opts?.timeout,
+				},
+				(error, stdout, stderr) => {
+					const exitCode = error ? (error.code ?? 1) : 0;
+					resolve({ stdout: stdout ?? '', stderr: stderr ?? '', exitCode });
+				},
+			);
+			if (opts?.stdin) {
+				child.stdin?.write(opts.stdin);
+				child.stdin?.end();
+			}
+		});
+	};
+}
+
+/**
+ * Create a shell function that runs commands inside a Docker container
+ * via `docker exec`. Matches the FlueClient shell interface so that
+ * sandbox-mode workflows execute inside the container, not on the host.
+ */
+function createDockerShell(containerName, defaultCwd) {
+	return (command, opts) => {
+		return new Promise((resolve) => {
+			const args = ['exec'];
+			if (opts?.cwd || defaultCwd) {
+				args.push('-w', opts?.cwd ?? defaultCwd);
+			}
+			if (opts?.env) {
+				for (const [k, v] of Object.entries(opts.env)) {
+					args.push('-e', `${k}=${v}`);
+				}
+			}
+			if (opts?.stdin) {
+				args.push('-i');
+			}
+			args.push(containerName, 'sh', '-c', command);
+
+			let stdout = '';
+			let stderr = '';
+			const child = execFile('docker', args, { timeout: opts?.timeout }, (error, out, err) => {
+				stdout = out ?? '';
+				stderr = err ?? '';
+				const exitCode = error ? (error.code ?? 1) : 0;
+				resolve({ stdout, stderr, exitCode });
+			});
+
+			if (opts?.stdin) {
+				child.stdin?.write(opts.stdin);
+				child.stdin?.end();
+			}
+		});
+	};
+}
+
 // -- Main --------------------------------------------------------------------
 
 async function run() {
@@ -446,10 +513,15 @@ async function run() {
 	eventStreamAbort = eventStream;
 
 	const model = modelStr ? parseModel(modelStr) : undefined;
+	const shell = sandbox
+		? createDockerShell(sandboxContainerName, workdir)
+		: createHostShell(workdir);
 	const flue = new FlueClient({
 		workdir,
 		proxies: proxies.length > 0 ? proxies : undefined,
 		model,
+		fetch: (req) => globalThis.fetch(req),
+		shell,
 	});
 
 	try {

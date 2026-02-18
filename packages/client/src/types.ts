@@ -10,22 +10,10 @@ export interface FlueClientOptions {
 	proxies?: ProxyService[];
 	/** Default model for skill/prompt invocations. */
 	model?: { providerID: string; modelID: string };
-	/**
-	 * Custom fetch implementation for reaching the OpenCode server.
-	 * Use this when the OpenCode server is not reachable via global fetch
-	 * (e.g. from a Cloudflare Worker, route through sandbox.containerFetch).
-	 *
-	 * When omitted, the SDK's default fetch (globalThis.fetch) is used.
-	 */
-	fetch?: (request: Request) => Promise<Response>;
-	/**
-	 * Custom shell implementation for executing commands.
-	 * Use this when child_process is not available (e.g. Cloudflare Workers)
-	 * and commands should be routed through sandbox.exec() instead.
-	 *
-	 * When omitted, commands run via Node.js child_process.exec.
-	 */
-	shell?: (command: string, options?: ShellOptions) => Promise<ShellResult>;
+	/** Fetch implementation for reaching the OpenCode server. */
+	fetch: (request: Request) => Promise<Response>;
+	/** Shell implementation for executing commands in the target environment. */
+	shell: (command: string, options?: ShellOptions) => Promise<ShellResult>;
 }
 
 export interface SkillOptions<S extends v.GenericSchema | undefined = undefined> {

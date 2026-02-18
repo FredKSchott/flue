@@ -1,7 +1,6 @@
 import { createOpencodeClient, type OpencodeClient } from '@opencode-ai/sdk';
 import type * as v from 'valibot';
 import { buildProxyInstructions, buildResultInstructions, HEADLESS_PREAMBLE } from './prompt.ts';
-import { runShell } from './shell.ts';
 import { runPrompt, runSkill } from './skill.ts';
 import type {
 	FlueClientOptions,
@@ -16,7 +15,7 @@ export class FlueClient {
 	private readonly proxyInstructions: string[];
 	private readonly model?: { providerID: string; modelID: string };
 	private readonly client: OpencodeClient;
-	private readonly shellFn?: FlueClientOptions['shell'];
+	private readonly shellFn: FlueClientOptions['shell'];
 
 	constructor(options: FlueClientOptions) {
 		this.proxyInstructions =
@@ -27,7 +26,7 @@ export class FlueClient {
 		this.client = createOpencodeClient({
 			baseUrl: options.opencodeUrl ?? 'http://localhost:48765',
 			directory: this.workdir,
-			...(options.fetch ? { fetch: options.fetch } : {}),
+			fetch: options.fetch,
 		});
 	}
 
@@ -77,11 +76,7 @@ export class FlueClient {
 
 	/** Execute a shell command with scoped environment variables. */
 	async shell(command: string, options?: ShellOptions): Promise<ShellResult> {
-		const mergedOptions = { ...options, cwd: options?.cwd ?? this.workdir };
-		if (this.shellFn) {
-			return this.shellFn(command, mergedOptions);
-		}
-		return runShell(command, mergedOptions);
+		return this.shellFn(command, { ...options, cwd: options?.cwd ?? this.workdir });
 	}
 
 	/** Close the OpenCode client connection. */

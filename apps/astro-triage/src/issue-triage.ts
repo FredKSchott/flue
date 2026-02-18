@@ -291,7 +291,6 @@ export default async function triage(flue: FlueClient, args: TriageArgs) {
 	if (triageResult.fixed) {
 		const diff = await flue.shell('git diff main --stat');
 		if (diff.stdout.trim()) {
-			await flue.shell(`git checkout -B ${branch}`);
 			const status = await flue.shell('git status --porcelain');
 			if (status.stdout.trim()) {
 				await flue.shell('git add -A');
@@ -322,6 +321,7 @@ export default async function triage(flue: FlueClient, args: TriageArgs) {
 		),
 	});
 
+	// TODO: Post with the houston GitHub API token instead of the sandbox proxy token.
 	await flue.shell(`gh api repos/withastro/astro/issues/${issueNumber}/comments -f body=@-`, {
 		stdin: comment,
 	});
