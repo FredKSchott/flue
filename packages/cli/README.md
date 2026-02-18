@@ -13,13 +13,13 @@ pnpm install @flue/cli
 ## Usage
 
 ```bash
-flue run <workflowPath> [--args <json>] [--branch <name>] [--model <provider/model>] [--sandbox <image>]
+flue run <workflowPath> [--args <json>] [--model <provider/model>] [--sandbox <image>]
 ```
 
 ```bash
 flue run .flue/workflows/triage.ts
 flue run .flue/workflows/triage.ts --model anthropic/claude-sonnet-4-5
-flue run .flue/workflows/triage.ts --args '{"issueNumber": 123}' --branch flue/fix-123
+flue run .flue/workflows/triage.ts --args '{"issueNumber": 123}'
 flue run .flue/workflows/triage.ts --sandbox my-org/my-sandbox:latest
 ```
 
@@ -27,10 +27,9 @@ The CLI auto-starts an [OpenCode](https://opencode.ai) server if one isn't alrea
 
 ## Sandbox Mode
 
-The `--sandbox <image>` flag runs the OpenCode server inside a Docker container for security isolation. The LLM and its tool calls execute inside the container, while the host retains control of secrets (like API keys). 
+The `--sandbox <image>` flag runs the OpenCode server inside a Docker container for security isolation. The LLM and its tool calls execute inside the container, while the host retains control of secrets (like API keys). Shell commands via `flue.shell()` also execute inside the container.
 
 Prerequisites: Docker (GitHub Actions supported). Your container image must have [OpenCode](https://opencode.ai) and `git` installed, and should start the OpenCode server on port 48765. Any other tools your workflows need (e.g., `curl`, `pnpm`) can be added to the image as well.
-
 
 ## Model Configuration
 

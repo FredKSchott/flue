@@ -14,14 +14,15 @@ pnpm install @flue/client
 
 ```ts
 // .flue/workflows/issue-triage.ts
-import type { Flue } from '@flue/client';
+import type { FlueClient } from '@flue/client';
 
-export default async function triage(flue: Flue) {
-  const { issueNumber } = flue.args as { issueNumber: number };
-  const issue = await flue.shell(`gh issue view ${issueNumber} --json title,body`);
-  const result = await flue.skill('triage/diagnose.md', { args: { issueNumber } });
+export default async function triage(flue: FlueClient, args: { issueNumber: number }) {
+  const issue = await flue.shell(`gh issue view ${args.issueNumber} --json title,body`);
+  const result = await flue.skill('triage/diagnose.md', {
+    args: { issueNumber: args.issueNumber },
+  });
   const comment = await flue.prompt(`Summarize the triage for: ${issue.stdout}`);
-  await flue.shell(`gh issue comment ${issueNumber} --body-file -`, { stdin: comment });
+  await flue.shell(`gh issue comment ${args.issueNumber} --body-file -`, { stdin: comment });
 }
 ```
 
@@ -29,11 +30,10 @@ export default async function triage(flue: Flue) {
 
 ### `flue.shell(command, options?)`
 
-Run a shell command. Returns `{ stdout, stderr, exitCode }`.
+Run a shell command in the target environment. Returns `{ stdout, stderr, exitCode }`.
 
 ```ts
 const result = await flue.shell('pnpm test');
-const result = await flue.shell('gh issue view 123', { env: { GH_TOKEN: '...' } });
 const result = await flue.shell('cat -', { stdin: 'hello' });
 ```
 
@@ -78,14 +78,13 @@ Flue ships with built-in presets for popular services. Every proxy supports an a
 ```ts
 import { anthropic, github } from '@flue/client/proxies';
 
-export const proxies = [
-  anthropic(),
-  github({
-    token: process.env.GH_TOKEN!,
+export const proxies = {
+  anthropic: anthropic(),
+  github: github({
     policy: {
       base: 'allow-read',
       allow: [{ method: 'POST', path: '/repos/withastro/astro/issues/*/comments', limit: 1 }],
     },
   }),
-];
+};
 ```
