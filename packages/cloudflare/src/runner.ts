@@ -40,7 +40,6 @@ export class FlueRuntime {
 		if (!this._client) {
 			this._client = new FlueClient({
 				workdir: this.workdir,
-				args: this.options.args,
 				model: this.options.model,
 				proxies: this.resolvedProxies,
 				fetch: (req: Request) => this.sandbox.containerFetch(req, 48765),

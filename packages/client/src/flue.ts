@@ -12,9 +12,6 @@ import type {
 } from './types.ts';
 
 export class FlueClient {
-	/** Workflow arguments passed by the runner. */
-	readonly args: Record<string, unknown>;
-
 	private readonly workdir: string;
 	private readonly proxyInstructions: string[];
 	private readonly model?: { providerID: string; modelID: string };
@@ -22,7 +19,6 @@ export class FlueClient {
 	private readonly shellFn?: FlueClientOptions['shell'];
 
 	constructor(options: FlueClientOptions) {
-		this.args = options.args ?? {};
 		this.proxyInstructions =
 			options.proxyInstructions ??
 			options.proxies?.map((p) => p.instructions).filter((i): i is string => !!i) ??
@@ -48,7 +44,6 @@ export class FlueClient {
 	async skill(name: string, options?: SkillOptions<v.GenericSchema | undefined>): Promise<any> {
 		const mergedOptions: SkillOptions<v.GenericSchema | undefined> = {
 			...options,
-			args: this.args || options?.args ? { ...this.args, ...options?.args } : undefined,
 			model: options?.model ?? this.model,
 		};
 		return runSkill(this.client, this.workdir, name, mergedOptions, this.proxyInstructions);

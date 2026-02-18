@@ -20,14 +20,12 @@ try {
 	flue = new FlueClient({
 		opencodeUrl: 'http://localhost:48765',
 		workdir: config.workdir,
-		branch: config.branch,
-		args: config.args ?? {},
 		model: config.model,
 		proxyInstructions: config.proxyInstructions,
 	});
 
 	const workflow = await import(config.workflowPath);
-	const result = await workflow.default(flue);
+	const result = await workflow.default(flue, config.args ?? {});
 
 	await writeStatus({ status: 'completed', result, completedAt: Date.now() });
 	await flue.close();

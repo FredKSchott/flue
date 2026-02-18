@@ -31,8 +31,6 @@ export interface FlueRuntimeOptions {
 	opencodeConfig?: object;
 	/** Proxy gateway configuration. Omit if no proxies needed. */
 	gateway?: GatewayOptions;
-	/** Workflow arguments available as flue.client.args. */
-	args?: Record<string, unknown>;
 	/** Default model for skill/prompt invocations. */
 	model?: { providerID: string; modelID: string };
 }

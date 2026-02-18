@@ -256,11 +256,13 @@ async function runTriagePipeline(
 	};
 }
 
-export default async function triage(flue: FlueClient) {
-	const { issueNumber, branch } = v.parse(
-		v.object({ issueNumber: v.number(), branch: v.string() }),
-		flue.args,
-	);
+interface TriageArgs {
+	issueNumber: number;
+	branch: string;
+}
+
+export default async function triage(flue: FlueClient, args: TriageArgs) {
+	const { issueNumber, branch } = args;
 	const issueResult = await flue.shell(
 		`gh issue view ${issueNumber} --json title,body,author,labels,createdAt,state,number,url,comments`,
 	);

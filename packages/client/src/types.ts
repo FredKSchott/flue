@@ -6,8 +6,6 @@ export interface FlueClientOptions {
 	opencodeUrl?: string;
 	/** Working directory (the repo root). */
 	workdir: string;
-	/** Workflow arguments. */
-	args?: Record<string, unknown>;
 	/** Proxy configs — instructions are extracted and appended to every skill/prompt call. */
 	proxies?: ProxyService[];
 	/** @deprecated Use `proxies` instead. Proxy instructions to append to every skill/prompt call. */

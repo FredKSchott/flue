@@ -1,5 +1,5 @@
 #!/usr/bin/env -S node --experimental-strip-types
-import { execFileSync, spawn } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
@@ -21,7 +21,7 @@ let proxyHandles = null;
 
 function printUsage() {
 	console.error(
-		'Usage: flue run <workflowPath> [--args <json>] [--branch <name>] [--model <provider/model>] [--sandbox <image>]',
+		'Usage: flue run <workflowPath> [--args <json>] [--model <provider/model>] [--sandbox <image>]',
 	);
 }
 
@@ -33,7 +33,6 @@ function parseArgs(argv) {
 	}
 
 	let argsJson;
-	let branch;
 	let model;
 	let sandbox;
 
@@ -43,15 +42,6 @@ function parseArgs(argv) {
 			argsJson = rest[i + 1];
 			if (!argsJson) {
 				console.error('Missing value for --args');
-				process.exit(1);
-			}
-			i += 1;
-			continue;
-		}
-		if (arg === '--branch') {
-			branch = rest[i + 1];
-			if (!branch) {
-				console.error('Missing value for --branch');
 				process.exit(1);
 			}
 			i += 1;
@@ -80,7 +70,7 @@ function parseArgs(argv) {
 		process.exit(1);
 	}
 
-	return { workflowPath, argsJson, branch, model, sandbox };
+	return { workflowPath, argsJson, model, sandbox };
 }
 
 /** Parse "provider/model" string into { providerID, modelID }. */
@@ -339,19 +329,9 @@ function resolveProxies(proxyExport) {
 // -- Main --------------------------------------------------------------------
 
 async function run() {
-	const {
-		workflowPath,
-		argsJson,
-		branch,
-		model: modelStr,
-		sandbox,
-	} = parseArgs(process.argv.slice(2));
+	const { workflowPath, argsJson, model: modelStr, sandbox } = parseArgs(process.argv.slice(2));
 	const workdir = process.cwd();
 	let startedOpenCode = null;
-
-	if (branch) {
-		execFileSync('git', ['checkout', '-B', branch], { stdio: 'inherit' });
-	}
 
 	let args = {};
 	if (argsJson) {
@@ -469,13 +449,12 @@ async function run() {
 	const model = modelStr ? parseModel(modelStr) : undefined;
 	const flue = new FlueClient({
 		workdir,
-		args,
 		proxyInstructions: proxyInstructions.length > 0 ? proxyInstructions : undefined,
 		model,
 	});
 
 	try {
-		await workflow.default(flue);
+		await workflow.default(flue, args);
 	} catch (error) {
 		console.error(error instanceof Error ? error.message : String(error));
 		process.exit(1);

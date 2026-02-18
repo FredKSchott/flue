@@ -12,7 +12,7 @@ interface TriageParams {
 
 export class TriageWorkflow extends WorkflowEntrypoint<AppEnv, TriageParams> {
 	async run(event: WorkflowEvent<TriageParams>, step: WorkflowStep) {
-		const { issueNumber } = event.payload;
+		const issueNumber = event.payload.issueNumber;
 		const branch = `flue/fix-${issueNumber}`;
 		const sandbox = getSandbox(this.env.Sandbox, event.instanceId, { sleepAfter: '90m' });
 
@@ -20,7 +20,6 @@ export class TriageWorkflow extends WorkflowEntrypoint<AppEnv, TriageParams> {
 			sandbox,
 			sessionId: event.instanceId,
 			workdir: '/home/user/astro',
-			args: { issueNumber, branch, triageDir: `triage/issue-${issueNumber}` },
 			model: { providerID: 'anthropic', modelID: 'claude-opus-4-6' },
 			gateway: {
 				proxies: [
@@ -54,7 +53,7 @@ export class TriageWorkflow extends WorkflowEntrypoint<AppEnv, TriageParams> {
 		);
 
 		return step.do('triage', { timeout: '60 minutes', retries: { limit: 0, delay: 0 } }, async () =>
-			triage(flue.client),
+			triage(flue.client, { issueNumber, branch }),
 		);
 	}
 }
