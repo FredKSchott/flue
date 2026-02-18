@@ -335,8 +335,30 @@ async function run() {
 		process.exit(1);
 	}
 
-	// Read and flatten proxy declarations
-	const proxies = Array.isArray(workflow.proxies) ? workflow.proxies.flat() : [];
+	// Read and flatten proxy declarations.
+	// Supports both the legacy array format and the new object format (ProxyFactory).
+	let proxies;
+	const proxyExport = workflow.proxies;
+	if (proxyExport && !Array.isArray(proxyExport) && typeof proxyExport === 'object') {
+		proxies = Object.values(proxyExport).flatMap((factory) => {
+			if (typeof factory !== 'function' || !factory.secretsMap) return [factory];
+			const secrets = {};
+			for (const [param, envVar] of Object.entries(factory.secretsMap)) {
+				secrets[param] = process.env[envVar];
+				if (!secrets[param]) {
+					console.error(
+						`[flue] Missing env var ${envVar} for proxy '${factory.proxyName}'.\n` +
+							`Set it in your environment before running in sandbox mode.\n`,
+					);
+					process.exit(1);
+				}
+			}
+			const result = factory(secrets);
+			return Array.isArray(result) ? result : [result];
+		});
+	} else {
+		proxies = Array.isArray(proxyExport) ? proxyExport.flat() : [];
+	}
 	const proxyInstructions = proxies.map((p) => p.instructions).filter(Boolean);
 
 	if (sandbox) {
@@ -344,12 +366,12 @@ async function run() {
 		assertDockerAvailable();
 
 		// Validate: at least one model provider proxy must exist
-		if (!Array.isArray(workflow.proxies)) {
+		if (!workflow.proxies) {
 			console.error(
 				'[flue] Error: No proxies configured.\n' +
 					'\n' +
-					'In sandbox mode, the workflow must export a `proxies` array.\n' +
-					'Add `export const proxies = [anthropic()]` to your workflow file.\n',
+					'In sandbox mode, the workflow must export a `proxies` definition.\n' +
+					'Add `export const proxies = { anthropic: anthropic() }` to your workflow file.\n',
 			);
 			process.exit(1);
 		}

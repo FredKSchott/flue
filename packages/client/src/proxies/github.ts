@@ -1,9 +1,10 @@
-import type { ProxyPolicy, ProxyService } from './types.ts';
+import type { ProxyFactory, ProxyPolicy, ProxyService } from './types.ts';
 
 /**
  * GitHub proxy preset.
  *
- * Returns two `ProxyService` objects:
+ * Returns a ProxyFactory that, when called with { token }, produces two
+ * ProxyService objects:
  * - `github-api`: unix socket proxy for REST/GraphQL API (api.github.com),
  *   used by the `gh` CLI and `curl`.
  * - `github-git`: TCP port proxy for git smart HTTP (github.com),
@@ -11,67 +12,68 @@ import type { ProxyPolicy, ProxyService } from './types.ts';
  *
  * Both share the same token and policy.
  */
-export function github(opts: { token: string; policy?: string | ProxyPolicy }): ProxyService[] {
-	const resolvedPolicy = resolveGitHubPolicy(opts.policy);
+export function github(opts?: { policy?: string | ProxyPolicy }): ProxyFactory<{ token: string }> {
+	const factory = (({ token }: { token: string }): ProxyService[] => {
+		const resolvedPolicy = resolveGitHubPolicy(opts?.policy);
 
-	const denyResponse = ({
-		method,
-		path,
-		reason,
-	}: {
-		method: string;
-		path: string;
-		reason: string;
-	}) => ({
-		status: 403,
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			message: `Blocked by flue proxy policy: ${method} ${path} — ${reason}`,
-			documentation_url: 'https://flue.dev/docs/proxy-policy',
-		}),
-	});
+		const denyResponse = ({
+			method,
+			path,
+			reason,
+		}: {
+			method: string;
+			path: string;
+			reason: string;
+		}) => ({
+			status: 403,
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				message: `Blocked by flue proxy policy: ${method} ${path} — ${reason}`,
+				documentation_url: 'https://flue.dev/docs/proxy-policy',
+			}),
+		});
 
-	const apiProxy: ProxyService = {
-		name: 'github-api',
-		target: 'https://api.github.com',
-		headers: {
-			authorization: `token ${opts.token}`,
-			host: 'api.github.com',
-			'user-agent': 'flue-proxy',
-		},
-		policy: resolvedPolicy,
-		socket: true,
-		env: {
-			GH_TOKEN: 'proxy-placeholder',
-		},
-		setup: [
-			// Route gh CLI traffic through the proxy unix socket.
-			'gh config set http_unix_socket {{socketPath}} 2>/dev/null || true',
-		],
-		instructions: [
-			'The `gh` CLI is pre-configured with authentication.',
-			'For GitHub API calls, prefer `gh api` over raw `curl`.',
-		].join(' '),
-		denyResponse,
-	};
+		const apiProxy: ProxyService = {
+			name: 'github-api',
+			target: 'https://api.github.com',
+			headers: {
+				authorization: `token ${token}`,
+				host: 'api.github.com',
+				'user-agent': 'flue-proxy',
+			},
+			policy: resolvedPolicy,
+			socket: true,
+			env: {
+				GH_TOKEN: 'proxy-placeholder',
+			},
+			setup: ['gh config set http_unix_socket {{socketPath}} 2>/dev/null || true'],
+			instructions: [
+				'The `gh` CLI is pre-configured with authentication.',
+				'For GitHub API calls, prefer `gh api` over raw `curl`.',
+			].join(' '),
+			denyResponse,
+		};
 
-	const gitProxy: ProxyService = {
-		name: 'github-git',
-		target: 'https://github.com',
-		headers: {
-			authorization: `Basic ${Buffer.from(`x-access-token:${opts.token}`).toString('base64')}`,
-			'user-agent': 'flue-proxy',
-		},
-		policy: resolvedPolicy,
-		setup: [
-			// Route git clone/fetch/push through the proxy HTTP endpoint.
-			'git config --global url."{{proxyUrl}}/".insteadOf "https://github.com/"',
-			'git config --global http.{{proxyUrl}}/.extraheader "Authorization: Bearer proxy-placeholder"',
-		],
-		denyResponse,
-	};
+		const gitProxy: ProxyService = {
+			name: 'github-git',
+			target: 'https://github.com',
+			headers: {
+				authorization: `Basic ${Buffer.from(`x-access-token:${token}`).toString('base64')}`,
+				'user-agent': 'flue-proxy',
+			},
+			policy: resolvedPolicy,
+			setup: [
+				'git config --global url."{{proxyUrl}}/".insteadOf "https://github.com/"',
+				'git config --global http.{{proxyUrl}}/.extraheader "Authorization: Bearer proxy-placeholder"',
+			],
+			denyResponse,
+		};
 
-	return [apiProxy, gitProxy];
+		return [apiProxy, gitProxy];
+	}) as ProxyFactory<{ token: string }>;
+	factory.secretsMap = { token: 'GITHUB_TOKEN' };
+	factory.proxyName = 'github';
+	return factory;
 }
 
 /**

@@ -1,5 +1,5 @@
 import type { Sandbox } from '@cloudflare/sandbox';
-import type { ProxyService } from '@flue/client/proxies';
+import type { ProxyFactory, ProxyService } from '@flue/client/proxies';
 
 /** Minimal KV interface — avoids depending on @cloudflare/workers-types. */
 export interface KV {
@@ -23,7 +23,11 @@ export interface FlueRunnerOptions {
 	workdir?: string;
 	/** Config passed to createOpencode() for provider/model setup. */
 	opencodeConfig?: object;
-	/** Proxy configs for credential-injecting reverse proxies. */
+	/** Unresolved proxy definitions from the workflow module. */
+	proxyDefinitions?: Record<string, ProxyFactory<any>>;
+	/** Secrets for each proxy, keyed by the proxy definition key. */
+	proxySecrets?: Record<string, Record<string, string>>;
+	/** Pre-resolved proxy configs (alternative to proxyDefinitions + proxySecrets). */
 	proxies?: ProxyService[];
 	/** The Worker's public URL (e.g., 'https://astro-triage.workers.dev'). Required when proxies are configured. */
 	workerUrl?: string;

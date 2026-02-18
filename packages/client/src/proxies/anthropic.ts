@@ -1,21 +1,16 @@
-import type { ProxyPolicy, ProxyService } from './types.ts';
+import type { ProxyFactory, ProxyPolicy, ProxyService } from './types.ts';
 
 /**
  * Anthropic model provider proxy preset.
  *
- * Proxies requests to api.anthropic.com with the API key injected.
- * Reads ANTHROPIC_API_KEY from the environment by default.
+ * Returns a ProxyFactory that, when called with { apiKey }, produces a
+ * ProxyService proxying requests to api.anthropic.com with the key injected.
  * Strips all non-allowlisted headers for security.
  */
-export function anthropic(opts?: { apiKey?: string; policy?: string | ProxyPolicy }): ProxyService {
-	const apiKey = opts?.apiKey || process.env.ANTHROPIC_API_KEY;
-	if (!apiKey) {
-		throw new Error(
-			'anthropic() proxy requires ANTHROPIC_API_KEY. ' +
-				'Set it in your environment or pass { apiKey } explicitly.',
-		);
-	}
-	return {
+export function anthropic(opts?: {
+	policy?: string | ProxyPolicy;
+}): ProxyFactory<{ apiKey: string }> {
+	const factory = (({ apiKey }: { apiKey: string }): ProxyService => ({
 		name: 'anthropic',
 		target: 'https://api.anthropic.com',
 		headers: {
@@ -23,7 +18,6 @@ export function anthropic(opts?: { apiKey?: string; policy?: string | ProxyPolic
 			host: 'api.anthropic.com',
 		},
 		transform: (req) => {
-			// Only forward Anthropic-safe headers. Strip everything else.
 			const safe = [
 				'content-type',
 				'content-length',
@@ -47,5 +41,8 @@ export function anthropic(opts?: { apiKey?: string; policy?: string | ProxyPolic
 				apiKey: 'sk-dummy-value-real-key-injected-by-proxy',
 			},
 		},
-	};
+	})) as ProxyFactory<{ apiKey: string }>;
+	factory.secretsMap = { apiKey: 'ANTHROPIC_API_KEY' };
+	factory.proxyName = 'anthropic';
+	return factory;
 }

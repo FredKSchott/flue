@@ -172,7 +172,29 @@ function tryParseJson(body, contentType) {
 const { workflow: workflowPath, proxyIndex, port, socket } = parseArgs();
 
 const workflowModule = await import(workflowPath);
-const allProxies = (workflowModule.proxies || []).flat();
+const proxyExport = workflowModule.proxies;
+
+let allProxies;
+if (proxyExport && !Array.isArray(proxyExport) && typeof proxyExport === 'object') {
+	// New object format: { anthropic: ProxyFactory, github: ProxyFactory }
+	allProxies = Object.values(proxyExport).flatMap((factory) => {
+		if (typeof factory !== 'function' || !factory.secretsMap) return [factory];
+		const secrets = {};
+		for (const [param, envVar] of Object.entries(factory.secretsMap)) {
+			secrets[param] = process.env[envVar];
+			if (!secrets[param]) {
+				console.error(`[proxy-server] Missing env var ${envVar} for proxy '${factory.proxyName}'`);
+				process.exit(1);
+			}
+		}
+		const result = factory(secrets);
+		return Array.isArray(result) ? result : [result];
+	});
+} else {
+	// Legacy: array of ProxyService[]
+	allProxies = (Array.isArray(proxyExport) ? proxyExport : []).flat();
+}
+
 const config = allProxies[proxyIndex];
 
 if (!config) {

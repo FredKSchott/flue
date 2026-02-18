@@ -7,6 +7,9 @@
 	"observability": {
 		"enabled": true
 	},
+	"limits": {
+		"subrequests": 1000000
+	},
 	"vars": {
 		"WORKER_URL": "https://astro-triage.workers.dev"
 	},

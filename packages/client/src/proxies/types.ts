@@ -184,3 +184,20 @@ export interface PolicyRule {
  * The CLI auto-flattens with proxies.flat().
  */
 export type ProxyPresetResult = ProxyService | ProxyService[];
+
+/**
+ * A proxy definition that has been configured but not yet activated with secrets.
+ * Call it with the required secrets to get a resolved ProxyService or ProxyService[].
+ *
+ * Each preset defines its own TSecrets shape:
+ * - anthropic() needs { apiKey: string }
+ * - github() needs { token: string }
+ */
+export interface ProxyFactory<TSecrets extends Record<string, string>> {
+	(secrets: TSecrets): ProxyService | ProxyService[];
+	/** Maps secret parameter names to default environment variable names.
+	 *  Used by the CLI runner for auto-resolution from process.env. */
+	secretsMap: { [K in keyof TSecrets]: string };
+	/** The proxy preset name (e.g., 'anthropic', 'github'). */
+	proxyName: string;
+}

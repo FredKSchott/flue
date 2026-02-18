@@ -1,9 +1,7 @@
 // Secrets and bindings that wrangler can't auto-detect.
 export interface AppEnv extends Env {
 	ANTHROPIC_API_KEY: string;
-	/** Read-only token passed to the container for git push via proxy. */
-	GITHUB_TOKEN: string;
-	/** Write token (comments, labels). Worker-side only — must not be shared with the sandbox. */
+	/** GitHub token injected into the container via proxy. Handles all reads and writes. */
 	GITHUB_TOKEN_BOT: string;
 	GITHUB_WEBHOOK_SECRET: string;
 	/** Secret for generating per-session HMAC proxy tokens. */

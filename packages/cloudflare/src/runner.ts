@@ -1,5 +1,6 @@
 import type { Sandbox } from '@cloudflare/sandbox';
 import { createOpencode, type OpencodeServer } from '@cloudflare/sandbox/opencode';
+import { Flue } from '@flue/client';
 import type { ProxyService } from '@flue/client/proxies';
 import { bootstrapScript } from './bootstrap.ts';
 import { deriveWorkdir, setup as runSetup } from './setup.ts';
@@ -16,9 +17,10 @@ const PROXY_KV_TTL = 7200;
 export class FlueRunner {
 	readonly sandbox: Sandbox;
 	private readonly options: FlueRunnerOptions;
-	private readonly workdir: string;
+	readonly workdir: string;
 	private readonly sessionId: string;
 	private opencodeServer: OpencodeServer | null = null;
+	private resolvedProxies: ProxyService[] = [];
 
 	constructor(options: FlueRunnerOptions) {
 		this.sandbox = options.sandbox;
@@ -34,7 +36,21 @@ export class FlueRunner {
 	async setup(): Promise<void> {
 		await runSetup(this.sandbox, this.options, this.workdir);
 
-		if (this.options.proxies && this.options.proxies.length > 0) {
+		// Resolve proxy definitions if provided
+		if (this.options.proxyDefinitions && this.options.proxySecrets) {
+			const resolved: ProxyService[] = [];
+			for (const [key, factory] of Object.entries(this.options.proxyDefinitions)) {
+				const secrets = this.options.proxySecrets[key];
+				if (!secrets) throw new Error(`Missing secrets for proxy '${key}'`);
+				const result = factory(secrets);
+				resolved.push(...(Array.isArray(result) ? result : [result]));
+			}
+			this.resolvedProxies = resolved;
+		} else if (this.options.proxies) {
+			this.resolvedProxies = this.options.proxies;
+		}
+
+		if (this.resolvedProxies.length > 0) {
 			await this.setupProxies();
 		}
 
@@ -86,8 +102,9 @@ export class FlueRunner {
 	 * Register proxy configs in KV and configure the container environment.
 	 */
 	private async setupProxies(): Promise<void> {
-		const { proxies, workerUrl, proxySecret, proxyKV, sandbox } = this.options;
-		if (!proxies || proxies.length === 0) return;
+		const { workerUrl, proxySecret, proxyKV, sandbox } = this.options;
+		const proxies = this.resolvedProxies;
+		if (proxies.length === 0) return;
 		if (!workerUrl) throw new Error('[flue] workerUrl is required when proxies are configured');
 		if (!proxySecret) throw new Error('[flue] proxySecret is required when proxies are configured');
 		if (!proxyKV) throw new Error('[flue] proxyKV is required when proxies are configured');
@@ -177,9 +194,10 @@ export class FlueRunner {
 	 * Build OpenCode config, routing model providers through proxies when available.
 	 */
 	private buildOpencodeConfig(): object {
-		const { proxies, workerUrl, opencodeConfig } = this.options;
+		const { workerUrl, opencodeConfig } = this.options;
+		const proxies = this.resolvedProxies;
 
-		if (!proxies || proxies.length === 0 || !workerUrl) {
+		if (proxies.length === 0 || !workerUrl) {
 			return opencodeConfig ?? {};
 		}
 
@@ -205,6 +223,37 @@ export class FlueRunner {
 			...(opencodeConfig as Record<string, unknown> | undefined),
 			provider: providerConfig,
 		};
+	}
+
+	/**
+	 * Create a Flue instance wired to this sandbox. Must be called after setup().
+	 */
+	createFlue(options: {
+		workdir?: string;
+		branch?: string;
+		args?: Record<string, unknown>;
+		model?: { providerID: string; modelID: string };
+	}): Flue {
+		const workdir = options.workdir ?? this.workdir;
+		return new Flue({
+			workdir,
+			branch: options.branch,
+			args: options.args,
+			model: options.model,
+			proxies: this.resolvedProxies,
+			fetch: (req: Request) => this.sandbox.containerFetch(req, 48765),
+			shell: async (
+				cmd: string,
+				opts?: { cwd?: string; env?: Record<string, string>; timeout?: number },
+			) => {
+				const result = await this.sandbox.exec(cmd, {
+					cwd: opts?.cwd,
+					env: opts?.env,
+					timeout: opts?.timeout,
+				});
+				return { stdout: result.stdout, stderr: result.stderr, exitCode: result.exitCode };
+			},
+		});
 	}
 
 	/**
