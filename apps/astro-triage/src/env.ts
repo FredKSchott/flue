@@ -3,6 +3,7 @@
 export interface AppEnv extends Env {
 	ANTHROPIC_API_KEY: string;
 	GITHUB_TOKEN_BOT: string;
+	FREDKBOT_GITHUB_TOKEN: string;
 	GITHUB_WEBHOOK_SECRET: string;
 	GATEWAY_SECRET: string;
 	TURBO_REMOTE_CACHE_URL: string;

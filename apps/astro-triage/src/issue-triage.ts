@@ -1,6 +1,8 @@
+import { env } from 'cloudflare:workers';
 import type { FlueClient } from '@flue/client';
 import { anthropic, github, githubBody } from '@flue/client/proxies';
 import * as v from 'valibot';
+import type { AppEnv } from './env.ts';
 
 export const proxies = {
 	anthropic: anthropic(),
@@ -12,9 +14,6 @@ export const proxies = {
 				{ method: 'POST', path: '/*/git-upload-pack' },
 				{ method: 'GET', path: '/*/info/refs' },
 				{ method: 'POST', path: '/*/git-receive-pack' },
-				{ method: 'POST', path: '/repos/withastro/astro/issues/*/comments', limit: 2 },
-				{ method: 'POST', path: '/repos/withastro/astro/issues/*/labels', limit: 2 },
-				{ method: 'DELETE', path: '/repos/withastro/astro/issues/*/labels/*', limit: 2 },
 			],
 		},
 	}),
@@ -22,6 +21,59 @@ export const proxies = {
 
 function assert(condition: unknown, message: string): asserts condition {
 	if (!condition) throw new Error(message);
+}
+
+async function postGitHubComment(issueNumber: number, body: string): Promise<void> {
+	const res = await fetch(
+		`https://api.github.com/repos/withastro/astro/issues/${issueNumber}/comments`,
+		{
+			method: 'POST',
+			headers: {
+				Authorization: `token ${(env as AppEnv).FREDKBOT_GITHUB_TOKEN}`,
+				'Content-Type': 'application/json',
+				Accept: 'application/vnd.github+json',
+			},
+			body: JSON.stringify({ body }),
+		},
+	);
+	if (!res.ok) {
+		throw new Error(`Failed to post comment (HTTP ${res.status}): ${await res.text()}`);
+	}
+}
+
+async function addGitHubLabels(issueNumber: number, labels: string[]): Promise<void> {
+	const res = await fetch(
+		`https://api.github.com/repos/withastro/astro/issues/${issueNumber}/labels`,
+		{
+			method: 'POST',
+			headers: {
+				Authorization: `token ${(env as AppEnv).FREDKBOT_GITHUB_TOKEN}`,
+				'Content-Type': 'application/json',
+				Accept: 'application/vnd.github+json',
+			},
+			body: JSON.stringify({ labels }),
+		},
+	);
+	if (!res.ok) {
+		throw new Error(`Failed to add labels (HTTP ${res.status}): ${await res.text()}`);
+	}
+}
+
+async function removeGitHubLabel(issueNumber: number, label: string): Promise<void> {
+	const res = await fetch(
+		`https://api.github.com/repos/withastro/astro/issues/${issueNumber}/labels/${encodeURIComponent(label)}`,
+		{
+			method: 'DELETE',
+			headers: {
+				Authorization: `token ${(env as AppEnv).FREDKBOT_GITHUB_TOKEN}`,
+				'Content-Type': 'application/json',
+				Accept: 'application/vnd.github+json',
+			},
+		},
+	);
+	if (!res.ok && res.status !== 404) {
+		throw new Error(`Failed to remove label (HTTP ${res.status}): ${await res.text()}`);
+	}
 }
 
 const issueDetailsSchema = v.object({
@@ -321,15 +373,10 @@ export default async function triage(flue: FlueClient, args: TriageArgs) {
 		),
 	});
 
-	// TODO: Post with the houston GitHub API token instead of the sandbox proxy token.
-	await flue.shell(`gh api repos/withastro/astro/issues/${issueNumber}/comments -f body=@-`, {
-		stdin: comment,
-	});
+	await postGitHubComment(issueNumber, comment);
 
 	if (triageResult.reproducible) {
-		await flue.shell(
-			`gh api -X DELETE repos/withastro/astro/issues/${issueNumber}/labels/needs%20triage`,
-		);
+		await removeGitHubLabel(issueNumber, 'needs triage');
 
 		const selectedLabels = await selectTriageLabels(flue, {
 			comment,
@@ -337,18 +384,13 @@ export default async function triage(flue: FlueClient, args: TriageArgs) {
 			packageLabels,
 		});
 		if (selectedLabels.length > 0) {
-			const labelsJson = JSON.stringify({ labels: selectedLabels });
-			await flue.shell(
-				`echo '${labelsJson}' | gh api repos/withastro/astro/issues/${issueNumber}/labels --input -`,
-			);
+			await addGitHubLabels(issueNumber, selectedLabels);
 		}
 	} else if (triageResult.skipped) {
 		// Triage was skipped due to a runner limitation. Keep "needs triage" so a
 		// maintainer can still pick it up, and add "auto triage skipped" to prevent
 		// the workflow from re-running on every new comment.
-		await flue.shell(
-			`echo '{"labels":["auto triage skipped"]}' | gh api repos/withastro/astro/issues/${issueNumber}/labels --input -`,
-		);
+		await addGitHubLabels(issueNumber, ['auto triage skipped']);
 	} else {
 		// Not reproducible: do nothing. The "needs triage" label stays on the issue
 		// so that it can continue to be worked on and triaged by the humans.
