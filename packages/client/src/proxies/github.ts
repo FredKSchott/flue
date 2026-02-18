@@ -121,30 +121,6 @@ function resolveGitHubPolicy(policy?: string | ProxyPolicy): ProxyPolicy {
  * These return validator functions suitable for `PolicyRule.body`.
  */
 export const githubBody = {
-	/** Validate an issue creation body. */
-	issue(opts: { titleMatch?: RegExp; requiredLabels?: string[] }) {
-		return (body: unknown): boolean => {
-			const b = body as { title?: string; labels?: (string | { name: string })[] };
-			if (opts.titleMatch && !opts.titleMatch.test(b?.title ?? '')) return false;
-			if (opts.requiredLabels) {
-				const labels = (b?.labels ?? []).map((l) => (typeof l === 'string' ? l : l?.name));
-				if (!opts.requiredLabels.every((r) => labels.includes(r))) return false;
-			}
-			return true;
-		};
-	},
-
-	/** Validate a comment body. */
-	comment(opts: { maxLength?: number; pattern?: RegExp }) {
-		return (body: unknown): boolean => {
-			const b = body as { body?: string };
-			if (typeof b?.body !== 'string') return false;
-			if (opts.maxLength && b.body.length > opts.maxLength) return false;
-			if (opts.pattern && !opts.pattern.test(b.body)) return false;
-			return true;
-		};
-	},
-
 	/** Validate a GraphQL request — restrict to queries only, or specific operations. */
 	graphql(opts?: { allowedOperations?: string[]; denyMutations?: boolean }) {
 		return (body: unknown): boolean => {
