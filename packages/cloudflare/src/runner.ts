@@ -2,13 +2,8 @@ import type { Sandbox } from '@cloudflare/sandbox';
 import { createOpencode, type OpencodeServer } from '@cloudflare/sandbox/opencode';
 import { FlueClient } from '@flue/client';
 import type { ProxyService } from '@flue/client/proxies';
-import { bootstrapScript } from './bootstrap.ts';
-import type { FlueRuntimeOptions, StartOptions, WorkflowHandle, WorkflowStatus } from './types.ts';
+import type { FlueRuntimeOptions } from './types.ts';
 import { generateProxyToken, type SerializedProxyConfig } from './worker.ts';
-
-const STATUS_DIR = '/tmp/flue-workflow';
-const CONFIG_PATH = `${STATUS_DIR}/config.json`;
-const BOOTSTRAP_PATH = `${STATUS_DIR}/bootstrap.mjs`;
 
 /** TTL for proxy configs in KV (2 hours). Auto-cleanup even if teardown fails. */
 const PROXY_KV_TTL = 7200;
@@ -241,74 +236,6 @@ export class FlueRuntime {
 			...(this.options.opencodeConfig as Record<string, unknown> | undefined),
 			provider: providerConfig,
 		};
-	}
-
-	/**
-	 * Start a workflow script as a background process in the container.
-	 */
-	async start(workflowPath: string, options: StartOptions = {}): Promise<WorkflowHandle> {
-		const resolvedWorkflowPath = workflowPath.startsWith('/')
-			? workflowPath
-			: `${this.workdir}/${workflowPath}`;
-
-		if (options.branch) {
-			console.log(`[flue] start: checking out branch ${options.branch}`);
-			const result = await this.sandbox.exec(`git checkout -B ${options.branch}`, {
-				cwd: this.workdir,
-			});
-			if (!result.success) {
-				throw new Error(
-					`[flue] Failed to checkout branch "${options.branch}" (exit ${result.exitCode}):\n${result.stderr}`,
-				);
-			}
-		}
-
-		await this.sandbox.mkdir(STATUS_DIR, { recursive: true });
-		await this.sandbox.writeFile(
-			CONFIG_PATH,
-			JSON.stringify({
-				workflowPath: resolvedWorkflowPath,
-				workdir: this.workdir,
-				branch: options.branch,
-				args: options.args ?? {},
-				model: options.model,
-				proxyInstructions: options.proxyInstructions,
-			}),
-		);
-		await this.sandbox.writeFile(BOOTSTRAP_PATH, bootstrapScript);
-
-		const process = await this.sandbox.startProcess(
-			'node --experimental-strip-types /tmp/flue-workflow/bootstrap.mjs',
-			{ cwd: this.workdir },
-		);
-
-		return { processId: process.id };
-	}
-
-	/**
-	 * Poll a running workflow's status.
-	 */
-	static async poll(sandbox: Sandbox, processId: string): Promise<WorkflowStatus> {
-		const process = await sandbox.getProcess(processId);
-		if (!process) {
-			return { status: 'failed', error: 'Process not found' };
-		}
-
-		try {
-			const content = await sandbox.readFile('/tmp/flue-workflow/status.json');
-			const raw =
-				typeof content === 'string'
-					? content
-					: 'content' in content
-						? content.content
-						: ((content as { text?: string }).text ?? '');
-			return JSON.parse(raw) as WorkflowStatus;
-		} catch {
-			if (process.status === 'running' || process.status === 'starting') {
-				return { status: 'running' };
-			}
-			return { status: 'failed', error: `Process exited with status: ${process.status}` };
-		}
 	}
 }
 
