@@ -8,8 +8,6 @@ export interface FlueClientOptions {
 	workdir: string;
 	/** Proxy configs — instructions are extracted and appended to every skill/prompt call. */
 	proxies?: ProxyService[];
-	/** @deprecated Use `proxies` instead. Proxy instructions to append to every skill/prompt call. */
-	proxyInstructions?: string[];
 	/** Default model for skill/prompt invocations. */
 	model?: { providerID: string; modelID: string };
 	/**

@@ -365,7 +365,6 @@ async function run() {
 	//   - an object of ProxyFactory instances: { anthropic: ProxyFactory, github: ProxyFactory }
 	//   - an array of ProxyService | ProxyService[] (legacy)
 	const proxies = resolveProxies(workflow.proxies);
-	const proxyInstructions = proxies.map((p) => p.instructions).filter(Boolean);
 
 	if (sandbox) {
 		// -- Sandbox mode: run OpenCode inside a Docker container --
@@ -449,7 +448,7 @@ async function run() {
 	const model = modelStr ? parseModel(modelStr) : undefined;
 	const flue = new FlueClient({
 		workdir,
-		proxyInstructions: proxyInstructions.length > 0 ? proxyInstructions : undefined,
+		proxies: proxies.length > 0 ? proxies : undefined,
 		model,
 	});
 

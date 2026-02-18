@@ -20,9 +20,7 @@ export class FlueClient {
 
 	constructor(options: FlueClientOptions) {
 		this.proxyInstructions =
-			options.proxyInstructions ??
-			options.proxies?.map((p) => p.instructions).filter((i): i is string => !!i) ??
-			[];
+			options.proxies?.map((p) => p.instructions).filter((i): i is string => !!i) ?? [];
 		this.workdir = options.workdir;
 		this.model = options.model;
 		this.shellFn = options.shell;
