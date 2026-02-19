@@ -46,7 +46,6 @@ export function github(opts?: { policy?: string | ProxyPolicy }): ProxyFactory<{
 			socket: true,
 			env: {
 				GH_TOKEN: 'proxy-placeholder',
-				GH_HOST: 'github.com',
 			},
 			setup: ['gh config set http_unix_socket {{socketPath}} 2>/dev/null || true'],
 			instructions: [

@@ -226,6 +226,22 @@ export function startSandboxContainer(workdir, image, handles) {
 		}
 	}
 
+	// Derive GH_REPO from the workspace's git remote so that the gh CLI
+	// can identify the repository even when url.*.insteadOf rewrites the
+	// remote URLs (which makes them unrecognizable as GitHub hosts).
+	try {
+		const remoteUrl = execFileSync('git', ['config', '--get', 'remote.origin.url'], {
+			cwd: workdir,
+			encoding: 'utf8',
+		}).trim();
+		const match = remoteUrl.match(/github\.com[/:]([^/]+\/[^/.]+?)(?:\.git)?$/);
+		if (match) {
+			dockerArgs.push('-e', `GH_REPO=${match[1]}`);
+		}
+	} catch {
+		// No git remote — not fatal, gh commands may still work with --repo flags
+	}
+
 	// The image to run
 	dockerArgs.push(image);
 
