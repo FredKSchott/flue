@@ -1,6 +1,6 @@
 {
 	"name": "@flue/cli",
-	"version": "0.0.40",
+	"version": "0.0.41",
 	"type": "module",
 	"license": "Apache-2.0",
 	"bin": {
