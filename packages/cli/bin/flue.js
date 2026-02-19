@@ -527,7 +527,12 @@ async function run() {
 	try {
 		await workflow.default(flue, args);
 	} catch (error) {
-		console.error(error instanceof Error ? error.message : String(error));
+		if (error instanceof Error) {
+			console.error(`[flue] unhandled workflow error: ${error.name}: ${error.message}`);
+			if (error.stack) console.error(error.stack);
+		} else {
+			console.error(`[flue] unhandled workflow error: ${String(error)}`);
+		}
 		process.exit(1);
 	} finally {
 		eventStream.abort();
@@ -557,7 +562,16 @@ async function preflight(workdir, modelOverride) {
 		console.error(`[flue] preflight: failed to fetch providers (HTTP ${res.status})`);
 		process.exit(1);
 	}
-	const data = await res.json();
+	const providersBody = await res.text();
+	let data;
+	try {
+		data = JSON.parse(providersBody);
+	} catch {
+		console.error(
+			`[flue] preflight: /config/providers returned invalid JSON (HTTP ${res.status}, ${providersBody.length} bytes):\n${providersBody.slice(0, 500)}`,
+		);
+		process.exit(1);
+	}
 	const providers = data.providers || [];
 
 	if (providers.length === 0) {
@@ -581,7 +595,16 @@ async function preflight(workdir, modelOverride) {
 		console.error(`[flue] preflight: failed to fetch config (HTTP ${configRes.status})`);
 		process.exit(1);
 	}
-	const config = await configRes.json();
+	const configBody = await configRes.text();
+	let config;
+	try {
+		config = JSON.parse(configBody);
+	} catch {
+		console.error(
+			`[flue] preflight: /config returned invalid JSON (HTTP ${configRes.status}, ${configBody.length} bytes):\n${configBody.slice(0, 500)}`,
+		);
+		process.exit(1);
+	}
 
 	if (!config.model) {
 		console.error(
