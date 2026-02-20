@@ -29,6 +29,9 @@ importers:
 
   apps/astro-triage:
     dependencies:
+      '@cloudflare/sandbox':
+        specifier: ^0.7.1
+        version: 0.7.1(@opencode-ai/sdk@1.1.56)
       '@flue/client':
         specifier: workspace:*
         version: link:../../packages/client
@@ -39,9 +42,6 @@ importers:
         specifier: ^1.0.0
         version: 1.2.0(typescript@5.9.3)
     devDependencies:
-      '@cloudflare/sandbox':
-        specifier: ^0.7.1
-        version: 0.7.1(@opencode-ai/sdk@1.1.56)
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
@@ -52,8 +52,14 @@ importers:
   packages/cli:
     dependencies:
       '@flue/client':
-        specifier: ^0.0.18
-        version: 0.0.18(typescript@5.9.3)
+        specifier: ^0.0.27
+        version: 0.0.27(typescript@5.9.3)
+      '@valibot/to-json-schema':
+        specifier: ^1.0.0
+        version: 1.5.0(valibot@1.2.0(typescript@5.9.3))
+      valibot:
+        specifier: ^1.0.0
+        version: 1.2.0(typescript@5.9.3)
     devDependencies:
       tsdown:
         specifier: ^0.20.3
@@ -89,12 +95,6 @@ importers:
       hono:
         specifier: ^4.0.0
         version: 4.11.9
-
-  packages/core:
-    dependencies:
-      ulidx:
-        specifier: ^2.4.1
-        version: 2.4.1
 
 packages:
 
@@ -560,8 +560,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@flue/client@0.0.18':
-    resolution: {integrity: sha512-DA0ctHnYj57qDGc1H5DvwPlsjlTncxCXX9mXtwfSN80Wa2mp1THYcgZZU+7VrlL0IjoPHNcqSwNF2w3keI9Bdw==}
+  '@flue/client@0.0.27':
+    resolution: {integrity: sha512-fO+UEjHeT8Wxo9Mm5uXXGMSQKCMc91Z4xakgV77/PFiCIK/LCH6vN8u/al/YlT7wzvx/Nmvg/LvwQzUuN3XW3Q==}
 
   '@img/colour@1.0.0':
     resolution: {integrity: sha512-A5P/LfWGFSl6nsckYtjw9da+19jB8hkJ6ACTGcDfEJ0aE+l2n2El7dsVM7UVHZQ9s2lmYMWlrS21YLy2IR1LUw==}
@@ -936,9 +936,6 @@ packages:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
     engines: {node: '>=6'}
 
-  layerr@3.0.0:
-    resolution: {integrity: sha512-tv754Ki2dXpPVApOrjTyRo4/QegVb9eVFq4mjqp4+NM5NaX7syQvN5BBNfV/ZpAHCEHV24XdUVrBAoka4jt3pA==}
-
   miniflare@4.20260205.0:
     resolution: {integrity: sha512-jG1TknEDeFqcq/z5gsOm1rKeg4cNG7ruWxEuiPxl3pnQumavxo8kFpeQC6XKVpAhh2PI9ODGyIYlgd77sTHl5g==}
     engines: {node: '>=18.0.0'}
@@ -1088,10 +1085,6 @@ packages:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
     engines: {node: '>=14.17'}
     hasBin: true
-
-  ulidx@2.4.1:
-    resolution: {integrity: sha512-xY7c8LPyzvhvew0Fn+Ek3wBC9STZAuDI/Y5andCKi9AX6/jvfaX45PhsDX8oxgPL0YFp0Jhr8qWMbS/p9375Xg==}
-    engines: {node: '>=16'}
 
   unconfig-core@7.4.2:
     resolution: {integrity: sha512-VgPCvLWugINbXvMQDf8Jh0mlbvNjNC6eSUziHsBCMpxR05OPrNrvDnyatdMjRgcHaaNsCqz+wjNXxNw1kRLHUg==}
@@ -1426,7 +1419,7 @@ snapshots:
   '@esbuild/win32-x64@0.27.3':
     optional: true
 
-  '@flue/client@0.0.18(typescript@5.9.3)':
+  '@flue/client@0.0.27(typescript@5.9.3)':
     dependencies:
       '@opencode-ai/sdk': 1.1.56
       '@valibot/to-json-schema': 1.5.0(valibot@1.2.0(typescript@5.9.3))
@@ -1749,8 +1742,6 @@ snapshots:
 
   kleur@4.1.5: {}
 
-  layerr@3.0.0: {}
-
   miniflare@4.20260205.0:
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
@@ -1922,10 +1913,6 @@ snapshots:
       turbo-windows-arm64: 2.8.3
 
   typescript@5.9.3: {}
-
-  ulidx@2.4.1:
-    dependencies:
-      layerr: 3.0.0
 
   unconfig-core@7.4.2:
     dependencies:

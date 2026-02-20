@@ -427,6 +427,57 @@ async function run() {
 		process.exit(1);
 	}
 
+	// Validate args against workflow's exported `args` schema (valibot), if present.
+	if (workflow.args) {
+		const v = await import('valibot');
+		// TODO: Replace JSON Schema with a human-readable TS-like format by walking the valibot schema directly (and drop @valibot/to-json-schema dep).
+		const { toJsonSchema } = await import('@valibot/to-json-schema');
+		const jsonSchema = toJsonSchema(workflow.args, { errorMode: 'ignore' });
+		const { $schema: _, ...schemaBody } = jsonSchema;
+		const schemaStr = JSON.stringify(schemaBody, null, 2)
+			.split('\n')
+			.map((l) => `    ${l}`)
+			.join('\n');
+
+		if (!argsJson) {
+			console.error(
+				`[flue] Error: This workflow requires --args but none were provided.\n` +
+					`\n` +
+					`  Expected schema:\n` +
+					`${schemaStr}\n` +
+					`\n` +
+					`  Pass --args with a JSON value matching the schema above:\n` +
+					`    flue run ${workflowPath} --args '<json>'\n`,
+			);
+			process.exit(1);
+		}
+
+		const result = v.safeParse(workflow.args, args);
+		if (!result.success) {
+			const issues = result.issues
+				.map((issue) => {
+					const pathStr = issue.path?.map((p) => p.key).join('.') || '(root)';
+					return `  - ${pathStr}: ${issue.message} (received ${JSON.stringify(issue.input)})`;
+				})
+				.join('\n');
+			console.error(
+				`[flue] Error: --args does not match the workflow's expected schema.\n` +
+					`\n` +
+					`  Validation errors:\n` +
+					`${issues}\n` +
+					`\n` +
+					`  Expected schema:\n` +
+					`${schemaStr}\n` +
+					`\n` +
+					`  Provided: ${argsJson}\n`,
+			);
+			process.exit(1);
+		}
+
+		// Use validated (and possibly coerced/transformed) output
+		args = result.output;
+	}
+
 	// Resolve proxy declarations.
 	// workflow.proxies can be:
 	//   - an object of ProxyFactory instances: { anthropic: ProxyFactory, github: ProxyFactory }
