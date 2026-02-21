@@ -1,0 +1,250 @@
+---
+import "../styles/global.css";
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Flue — The Sandbox Agent Framework</title>
+    <meta name="description" content="Build AI agents that can safely run code, triage issues, review PRs, and more — powered by OpenCode, running on your infrastructure." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body class="bg-white text-gray-950 font-[Inter,system-ui,sans-serif] antialiased">
+
+    <!-- NAV -->
+    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-100">
+      <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+        <a href="/" class="text-lg font-semibold tracking-tight">Flue</a>
+        <div class="flex items-center gap-6">
+          <a href="https://github.com/FredKSchott/flue#quick-start" class="text-sm text-gray-500 hover:text-gray-950 transition-colors">Docs</a>
+          <a href="https://github.com/FredKSchott/flue" class="text-gray-400 hover:text-gray-950 transition-colors" aria-label="GitHub">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- HERO (white bg) -->
+    <section class="bg-white pb-px shadow-[0_1px_2px_0_rgba(0,0,0,0.03)]">
+      <div class="max-w-6xl mx-auto px-6 pt-20 pb-16 lg:pt-28 lg:pb-20">
+        <div class="max-w-2xl">
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]">
+            The Sandbox Agent Framework
+          </h1>
+          <p class="mt-6 text-lg text-gray-500 leading-relaxed">
+            Build AI agents that can safely run code, triage issues, review PRs, and more — powered by <a href="https://opencode.ai" class="text-gray-950 underline decoration-gray-300 underline-offset-2 hover:decoration-gray-950 transition-colors">OpenCode</a>, running on your infrastructure.
+          </p>
+          <div class="mt-8 flex items-center">
+            <button
+              id="copy-btn"
+              class="group flex items-center gap-3 bg-gray-950 hover:bg-gray-800 text-white rounded-lg px-5 py-3 font-mono text-sm cursor-pointer transition-colors"
+            >
+              <span class="text-gray-400">$</span>
+              <span>npm install @flue/client</span>
+              <svg class="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Full-width code snippet (no blank lines) -->
+        <div class="mt-14">
+          <div class="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
+            <pre class="p-5 text-[13px] leading-relaxed overflow-x-auto"><code class="font-[JetBrains_Mono,monospace]" set:html={`<span class="text-gray-400">export const</span> <span class="text-gray-950">proxies</span> <span class="text-gray-400">=</span> { <span class="text-gray-950">anthropic</span>: <span class="text-gray-600">anthropic</span>() }
+<span class="text-gray-400">export const</span> <span class="text-gray-950">args</span> <span class="text-gray-400">=</span> <span class="text-gray-600">v</span>.<span class="text-gray-600">object</span>({ <span class="text-gray-700">issueNumber</span>: <span class="text-gray-600">v</span>.<span class="text-gray-600">number</span>() })
+
+<span class="text-gray-400">export default async function</span> <span class="text-gray-950 font-medium">triage</span>(<span class="text-gray-700">flue</span>, { <span class="text-gray-700">issueNumber</span> }) {
+  <span class="text-gray-400">const</span> <span class="text-gray-950">issue</span> = <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh issue view \${issueNumber} --json title,body,comments\`</span>)
+  <span class="text-gray-400">const</span> <span class="text-gray-950">result</span> = <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">skill</span>(<span class="text-emerald-700">'triage'</span>, { <span class="text-gray-700">args</span>: { <span class="text-gray-700">issue</span> } })
+  <span class="text-gray-400">const</span> <span class="text-gray-950">comment</span> = <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">prompt</span>(<span class="text-emerald-700">\`Summarize the triage for issue #\${issueNumber}: \${result}\`</span>)
+  <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh issue comment \${issueNumber} --body-file -\`</span>, { <span class="text-gray-700">stdin</span>: <span class="text-gray-950">comment</span> })
+}`} /></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Everything below hero: cool off-white bg -->
+    <div class="bg-[#f8f9fb]">
+
+    <!-- SECTION 1: Capability -->
+    <section>
+      <div class="max-w-6xl mx-auto px-6 py-24 lg:py-32">
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <div>
+            <h2 class="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
+              A real environment.<br />Full autonomy.
+            </h2>
+            <p class="mt-6 text-lg text-gray-500 leading-relaxed">
+              Every Flue agent runs inside its own container — with a terminal, a file system, and your actual codebase. It clones your repo, installs dependencies, runs your build, edits files, executes tests, and pushes commits.
+            </p>
+            <p class="mt-4 text-lg text-gray-500 leading-relaxed">
+              Powered by <a href="https://opencode.ai" class="text-gray-950 underline decoration-gray-300 underline-offset-2 hover:decoration-gray-950 transition-colors">OpenCode</a> — the same coding agent developers use interactively — running autonomously, on your infrastructure.
+            </p>
+          </div>
+
+          <!-- Diagram: Host → Sandbox Container -->
+          <div class="flex justify-center">
+            <svg viewBox="0 0 400 310" class="w-full max-w-sm" xmlns="http://www.w3.org/2000/svg">
+              <!-- Host card -->
+              <rect x="4" y="4" width="372" height="124" rx="12" fill="white" stroke="#e5e7eb" stroke-width="1.5" />
+              <text x="20" y="30" font-family="Inter, system-ui, sans-serif" font-size="11" font-weight="600" fill="#9ca3af" letter-spacing="0.05em">HOST</text>
+
+              <!-- Command (larger) -->
+              <text x="20" y="58" font-family="JetBrains Mono, monospace" font-size="13" fill="#9ca3af">$</text>
+              <text x="36" y="58" font-family="JetBrains Mono, monospace" font-size="13" fill="#111827" font-weight="500">flue .flue/workflows/triage.ts</text>
+
+              <!-- Detail lines (higher contrast) -->
+              <text x="20" y="86" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#6b7280">ANTHROPIC_API_KEY=...</text>
+              <text x="20" y="106" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#6b7280">GITHUB_TOKEN=...</text>
+
+              <!-- Arrow down -->
+              <line x1="190" y1="128" x2="190" y2="152" stroke="#93c5fd" stroke-width="1.5" />
+              <polygon points="186,150 194,150 190,157" fill="#93c5fd" />
+
+              <!-- Sandbox Container card (blue border + shadow, white body, same height as Host: 124) -->
+              <rect x="2" y="162" width="376" height="124" rx="14" fill="#93c5fd" fill-opacity="0.12" />
+              <rect x="4" y="160" width="372" height="124" rx="12" fill="white" stroke="#93c5fd" stroke-width="1.5" />
+              <text x="20" y="186" font-family="Inter, system-ui, sans-serif" font-size="11" font-weight="600" fill="#9ca3af" letter-spacing="0.05em">SANDBOX (SECURED BY FLUE)</text>
+
+              <!-- Command (larger) -->
+              <text x="20" y="214" font-family="JetBrains Mono, monospace" font-size="13" fill="#9ca3af">$</text>
+              <text x="36" y="214" font-family="JetBrains Mono, monospace" font-size="13" fill="#111827" font-weight="500">opencode serve --port 48765</text>
+
+              <!-- Detail lines (higher contrast, matching order: anthropic then github) -->
+              <text x="20" y="242" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#6b7280">Proxy: api.anthropic.com</text>
+              <text x="20" y="262" font-family="JetBrains Mono, monospace" font-size="10.5" fill="#6b7280">Proxy: api.github.com</text>
+
+              <!-- Shield icon (bottom-right, floating) -->
+              <g transform="translate(324, 228)">
+                <path d="M18 2L4 8V18C4 26.4 10 33.2 18 36C26 33.2 32 26.4 32 18V8L18 2Z" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5" stroke-linejoin="round" />
+                <path d="M12 19L16 23L24 15" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: Build Your Own -->
+    <section class="border-t border-gray-200/60">
+      <div class="max-w-6xl mx-auto px-6 py-24 lg:py-32">
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+          <div class="lg:sticky lg:top-24">
+            <h2 class="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
+              Your agents should know your codebase better than any third party.
+            </h2>
+            <p class="mt-6 text-lg text-gray-500 leading-relaxed">
+              Every coding agent product is a workflow running an LLM against your code in a sandbox. With Flue, you build that yourself — and because you own the code, you can customize it in ways no third-party tool will ever support.
+            </p>
+            <p class="mt-4 text-gray-500 leading-relaxed">
+              We built Astro's issue triage agent with Flue. It outperforms every third-party tool we tried, because the skills encode how <em>we</em> debug Astro — not some generic heuristic.
+            </p>
+          </div>
+
+          <div>
+            <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <pre class="p-5 text-[13px] leading-relaxed overflow-x-auto"><code class="font-[JetBrains_Mono,monospace]" set:html={`<span class="text-gray-400">export default async function</span> <span class="text-gray-950 font-medium">review</span>(<span class="text-gray-700">flue</span>, { <span class="text-gray-700">prNumber</span> }) {
+  <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh pr checkout \${prNumber}\`</span>)
+  <span class="text-gray-400">const</span> <span class="text-gray-950">diff</span> = <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh pr diff \${prNumber}\`</span>)
+  <span class="text-gray-400">const</span> <span class="text-gray-950">issue</span> = <span class="text-gray-400">await</span> <span class="text-gray-600">getLinkedIssue</span>(<span class="text-gray-700">flue</span>, <span class="text-gray-700">prNumber</span>)
+  <span class="text-gray-400">const</span> <span class="text-gray-950">tests</span> = <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">'pnpm test --reporter json'</span>)
+  <span class="text-gray-400">const</span> <span class="text-gray-950">review</span> = <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">skill</span>(<span class="text-emerald-700">'review'</span>, {
+    <span class="text-gray-700">args</span>: { <span class="text-gray-700">diff</span>, <span class="text-gray-700">issue</span>, <span class="text-gray-700">tests</span> },
+    <span class="text-gray-700">result</span>: <span class="text-gray-600">ReviewSchema</span>,
+  })
+  <span class="text-gray-400">for</span> (<span class="text-gray-400">const</span> <span class="text-gray-950">c</span> <span class="text-gray-400">of</span> <span class="text-gray-950">review</span>.<span class="text-gray-950">inlineComments</span>) {
+    <span class="text-gray-400">await</span> <span class="text-gray-600">postInlineComment</span>(<span class="text-gray-700">flue</span>, <span class="text-gray-700">prNumber</span>, <span class="text-gray-950">c</span>)
+  }
+  <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh pr review \${prNumber} --body-file -\`</span>, { <span class="text-gray-700">stdin</span>: <span class="text-gray-950">review</span>.<span class="text-gray-950">summary</span> })
+}`} /></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURE GRID + CTA -->
+    <section class="border-t border-gray-200/60">
+      <div class="max-w-6xl mx-auto px-6 py-24 lg:py-32">
+        <div class="grid sm:grid-cols-3 gap-4">
+          <!-- TypeScript-native (wide) -->
+          <div class="sm:col-span-2 bg-white border border-gray-200 rounded-xl p-6">
+            <h3 class="text-lg font-semibold">TypeScript-native</h3>
+            <p class="mt-2 text-gray-500 leading-relaxed">
+              Workflows are TypeScript — with full type safety, autocomplete, and intellisense. The <code class="text-sm bg-gray-100 px-1.5 py-0.5 rounded font-mono">FlueClient</code> gives you a typed API for orchestrating sandbox agents. No YAML. No config files.
+            </p>
+          </div>
+
+          <!-- Powered by Skills -->
+          <div class="bg-white border border-gray-200 rounded-xl p-6">
+            <h3 class="text-lg font-semibold">Powered by Skills</h3>
+            <p class="mt-2 text-gray-500 leading-relaxed">
+              Markdown instructions that teach agents how to work with <em>your</em> codebase. Encode your team's expertise.
+            </p>
+          </div>
+
+          <!-- Proxy-based Security -->
+          <div class="bg-white border border-gray-200 rounded-xl p-6">
+            <h3 class="text-lg font-semibold">Proxy-based Security</h3>
+            <p class="mt-2 text-gray-500 leading-relaxed">
+              Credentials injected via proxy — never exposed to the LLM. Policy-based access control, rate limits, all declarative.
+            </p>
+          </div>
+
+          <!-- Run Anywhere (wide) -->
+          <div class="sm:col-span-2 bg-white border border-gray-200 rounded-xl p-6">
+            <h3 class="text-lg font-semibold">Run Anywhere</h3>
+            <p class="mt-2 text-gray-500 leading-relaxed">
+              <code class="text-sm bg-gray-100 px-1.5 py-0.5 rounded font-mono">@flue/cli</code> runs workflows in Docker or GitHub Actions. <code class="text-sm bg-gray-100 px-1.5 py-0.5 rounded font-mono">@flue/cloudflare</code> runs the same workflows on Cloudflare. Same workflow, different runtime.
+            </p>
+          </div>
+        </div>
+
+        <!-- GitHub CTA -->
+        <div class="mt-16 text-center">
+          <a href="https://github.com/FredKSchott/flue" class="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-950 transition-colors">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            View on GitHub &rarr;
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-gray-200/60">
+      <div class="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between text-sm text-gray-400">
+        <span>Flue</span>
+        <span>
+          Built by <a href="https://github.com/FredKSchott" class="text-gray-500 hover:text-gray-700 transition-colors">Fred K. Schott</a>
+        </span>
+      </div>
+    </footer>
+
+    </div><!-- end off-white wrapper -->
+
+    <!-- Copy to clipboard script -->
+    <script>
+      const btn = document.getElementById('copy-btn');
+      if (btn) {
+        btn.addEventListener('click', async () => {
+          await navigator.clipboard.writeText('npm install @flue/client');
+          const span = btn.querySelector('span:nth-child(2)');
+          if (span) {
+            span.textContent = 'Copied!';
+            setTimeout(() => { span.textContent = 'npm install @flue/client'; }, 1500);
+          }
+        });
+      }
+    </script>
+
+  </body>
+</html>
