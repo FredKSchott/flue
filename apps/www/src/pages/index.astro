@@ -20,11 +20,10 @@ import "../styles/global.css";
     <!-- NAV -->
     <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-100">
       <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-        <a href="/" class="text-lg font-semibold tracking-tight">Flue</a>
+        <a href="/" class="flex items-baseline gap-2"><span class="text-xl font-bold tracking-tight text-gray-950">Flue</span><span id="nav-tagline" class="overflow-hidden h-5"><span class="inline-block text-sm text-gray-400 translate-y-full opacity-0 transition-all duration-300 ease-out">The sandbox agent framework.</span></span></a>
         <div class="flex items-center gap-6">
-          <a href="https://github.com/FredKSchott/flue#quick-start" class="text-sm text-gray-500 hover:text-gray-950 transition-colors">Docs</a>
           <a href="https://github.com/FredKSchott/flue" class="text-gray-400 hover:text-gray-950 transition-colors" aria-label="GitHub">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
           </a>
         </div>
       </div>
@@ -32,38 +31,31 @@ import "../styles/global.css";
 
     <!-- HERO (white bg) -->
     <section class="bg-white pb-px shadow-[0_1px_2px_0_rgba(0,0,0,0.03)]">
-      <div class="max-w-6xl mx-auto px-6 pt-20 pb-16 lg:pt-28 lg:pb-20">
+      <div class="max-w-6xl mx-auto px-6 pt-20 pb-16 lg:pt-28 lg:pb-20 border-b border-gray-200">
           <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]">
             The Sandbox Agent Framework
           </h1>
-          <p class="mt-6  max-w-2xl text-lg text-gray-500 leading-relaxed">
-            Build AI agents that can safely run code, triage issues, review PRs, and more — powered by <a href="https://opencode.ai" class="text-gray-950 underline decoration-gray-300 underline-offset-2 hover:decoration-gray-950 transition-colors">OpenCode</a>, running on your infrastructure.
+          <p class="mt-6  max-w-2xl text-xl text-gray-500 leading-relaxed">
+            Build AI agents and workflows that run inside secure sandboxes — powered by <a href="https://opencode.ai" class="text-gray-950 underline decoration-gray-300 underline-offset-2 hover:decoration-gray-950 transition-colors">OpenCode</a>, deployed anywhere.
           </p>
           <div class="mt-8 flex items-center">
-            <button
-              id="copy-btn"
-              class="group flex items-center gap-3 bg-gray-950 hover:bg-gray-800 text-white rounded-lg px-5 py-3 font-mono text-sm cursor-pointer transition-colors"
-            >
-              <span class="text-gray-400">$</span>
-              <span>npm install @flue/client</span>
-              <svg class="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
-              </svg>
-            </button>
+            <a href="https://github.com/FredKSchott/flue#quick-start" class="inline-flex items-center gap-2 bg-gray-950 hover:bg-gray-800 text-white rounded-lg px-5 py-3 text-sm font-medium transition-colors">
+              Get started
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="M12 5l7 7-7 7" /></svg>
+            </a>
         </div>
 
         <!-- Full-width code snippet (no blank lines) -->
         <div class="mt-14">
-          <div class="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
-            <pre class="p-5 text-[13px] leading-relaxed overflow-x-auto"><code class="font-[JetBrains_Mono,monospace]" set:html={`<span class="text-gray-400">export const</span> <span class="text-gray-950">proxies</span> <span class="text-gray-400">=</span> { <span class="text-gray-950">anthropic</span>: <span class="text-gray-600">anthropic</span>() }
-<span class="text-gray-400">export const</span> <span class="text-gray-950">args</span> <span class="text-gray-400">=</span> <span class="text-gray-600">v</span>.<span class="text-gray-600">object</span>({ <span class="text-gray-700">issueNumber</span>: <span class="text-gray-600">v</span>.<span class="text-gray-600">number</span>() })
+          <div class="bg-gray-50 shadow-sm outline outline-black/10 rounded-xl overflow-hidden">
+            <pre class="p-6 text-sm leading-relaxed overflow-x-auto"><code class="font-[JetBrains_Mono,monospace]" set:html={`<span class="text-blue-700">export const</span> <span class="text-gray-950">proxies</span> <span class="text-blue-700">=</span> { <span class="text-gray-950">anthropic</span>: <span class="text-gray-600">anthropic</span>() }
+<span class="text-blue-700">export const</span> <span class="text-gray-950">args</span> <span class="text-blue-700">=</span> <span class="text-gray-600">v</span>.<span class="text-gray-600">object</span>({ <span class="text-gray-700">issueNumber</span>: <span class="text-gray-600">v</span>.<span class="text-gray-600">number</span>() })
 
-<span class="text-gray-400">export default async function</span> <span class="text-gray-950 font-medium">triage</span>(<span class="text-gray-700">flue</span>, { <span class="text-gray-700">issueNumber</span> }) {
-  <span class="text-gray-400">const</span> <span class="text-gray-950">issue</span> = <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh issue view \${issueNumber} --json title,body,comments\`</span>)
-  <span class="text-gray-400">const</span> <span class="text-gray-950">result</span> = <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">skill</span>(<span class="text-emerald-700">'triage'</span>, { <span class="text-gray-700">args</span>: { <span class="text-gray-700">issue</span> } })
-  <span class="text-gray-400">const</span> <span class="text-gray-950">comment</span> = <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">prompt</span>(<span class="text-emerald-700">\`Summarize the triage for issue #\${issueNumber}: \${result}\`</span>)
-  <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh issue comment \${issueNumber} --body-file -\`</span>, { <span class="text-gray-700">stdin</span>: <span class="text-gray-950">comment</span> })
+<span class="text-blue-700">export default async function</span> <span class="text-gray-950 font-medium">triage</span>(<span class="text-gray-700">flue</span>, { <span class="text-gray-700">issueNumber</span> }) {
+  <span class="text-blue-700">const</span> <span class="text-gray-950">issue</span> <span class="text-blue-700">=</span> <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh issue view \${issueNumber} --json title,body,comments\`</span>)
+  <span class="text-blue-700">const</span> <span class="text-gray-950">result</span> <span class="text-blue-700">=</span> <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">skill</span>(<span class="text-emerald-700">'triage'</span>, { <span class="text-gray-700">args</span>: { <span class="text-gray-700">issue</span> } })
+  <span class="text-blue-700">const</span> <span class="text-gray-950">comment</span> <span class="text-blue-700">=</span> <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">prompt</span>(<span class="text-emerald-700">\`Summarize the triage for issue #\${issueNumber}: \${result}\`</span>)
+  <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh issue comment \${issueNumber} --body-file -\`</span>, { <span class="text-gray-700">stdin</span>: <span class="text-gray-950">comment</span> })
 }`} /></pre>
           </div>
         </div>
@@ -79,13 +71,13 @@ import "../styles/global.css";
         <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div>
             <h2 class="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
-              A real environment.<br />Full autonomy.
+              A sandbox for every agent.
             </h2>
             <p class="mt-6 text-lg text-gray-500 leading-relaxed">
-              Every Flue agent runs inside its own container — with a terminal, a file system, and your actual codebase. It clones your repo, installs dependencies, runs your build, edits files, executes tests, and pushes commits.
+              Build agents that can write code, run builds, execute tests, make commits, and push changes — all safely sandboxed away from your sensitive credentials.
             </p>
             <p class="mt-4 text-lg text-gray-500 leading-relaxed">
-              Powered by <a href="https://opencode.ai" class="text-gray-950 underline decoration-gray-300 underline-offset-2 hover:decoration-gray-950 transition-colors">OpenCode</a> — the same coding agent developers use interactively — running autonomously, on your infrastructure.
+              Every Flue agent starts with a workflow — TypeScript that controls what runs, when, and in what order. <a href="https://opencode.ai" class="text-gray-950 underline decoration-gray-300 underline-offset-2 hover:decoration-gray-950 transition-colors">OpenCode</a> handles the complex work inside each step, but your code always controls the flow. That's what makes Flue workflows predictable enough to trust in production.
             </p>
           </div>
 
@@ -93,15 +85,16 @@ import "../styles/global.css";
           <div class="flex justify-center">
             <div class="w-full max-w-sm flex flex-col items-center gap-0">
               <!-- Host card -->
-              <div class="relative z-10 w-full bg-white border border-gray-200 rounded-xl p-4">
+              <div class="relative z-10 w-full bg-white shadow-sm outline outline-black/10 rounded-xl p-4">
                 <div class="flex items-center gap-2 text-[11px] font-semibold font-mono text-gray-400 tracking-wider uppercase">
                   <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg>
                   flue .flue/workflows/triage.ts
                 </div>
                 <div class="mt-2.5 space-y-1 text-[13px] text-gray-500">
-                  <p class="flex items-center gap-2"><svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.78 4.97a.75.75 0 00-1.06 0L7 8.69 5.28 6.97a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25a.75.75 0 000-1.06z"/></svg> Sandbox initialized.</p>
-                  <p class="flex items-center gap-2"><svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.78 4.97a.75.75 0 00-1.06 0L7 8.69 5.28 6.97a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25a.75.75 0 000-1.06z"/></svg> GitHub Issue #4291 fetched.</p>
+                  <p class="flex items-center gap-2"><svg class="w-3.5 h-3.5 text-gray-600 shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.78 4.97a.75.75 0 00-1.06 0L7 8.69 5.28 6.97a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25a.75.75 0 000-1.06z"/></svg> Sandbox initialized.</p>
+                  <p class="flex items-center gap-2"><svg class="w-3.5 h-3.5 text-gray-600 shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.78 4.97a.75.75 0 00-1.06 0L7 8.69 5.28 6.97a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25a.75.75 0 000-1.06z"/></svg> GitHub Issue #4291 fetched.</p>
                   <p class="flex items-center gap-2"><span class="inline-block w-3.5 h-3.5 border-[1.5px] border-blue-200 border-t-blue-500 rounded-full animate-spin shrink-0"></span> Running "triage" skill in sandbox...</p>
+                  <p class="flex items-center gap-2"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 16 16" fill="#CCC" stroke="#CCC" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/></svg> Push fix to GitHub...</p>
                 </div>
               </div>
 
@@ -111,7 +104,7 @@ import "../styles/global.css";
               </div>
 
               <!-- Sandbox card -->
-              <div class="relative z-10 w-full bg-white border border-blue-300 rounded-xl p-4 shadow-[0_2px_8px_-2px_rgba(147,197,253,0.3)]">
+              <div class="relative z-10 w-full bg-white shadow-sm shadow-blue-300 outline outline-blue-700/10 rounded-xl p-4">
                 <div class="flex items-center gap-2 text-[11px] font-semibold text-gray-400 tracking-wider uppercase">
                   <svg class="w-3.5 h-3.5 text-blue-400 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M19 10h-1V7A6 6 0 006 7v3H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2v-8a2 2 0 00-2-2zM8 7a4 4 0 018 0v3H8V7z"/></svg>
                   SECURE SANDBOX
@@ -158,20 +151,20 @@ import "../styles/global.css";
           </div>
 
           <div>
-            <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
-              <pre class="p-5 text-[13px] leading-relaxed overflow-x-auto"><code class="font-[JetBrains_Mono,monospace]" set:html={`<span class="text-gray-400">export default async function</span> <span class="text-gray-950 font-medium">review</span>(<span class="text-gray-700">flue</span>, { <span class="text-gray-700">prNumber</span> }) {
-  <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh pr checkout \${prNumber}\`</span>)
-  <span class="text-gray-400">const</span> <span class="text-gray-950">diff</span> = <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh pr diff \${prNumber}\`</span>)
-  <span class="text-gray-400">const</span> <span class="text-gray-950">issue</span> = <span class="text-gray-400">await</span> <span class="text-gray-600">getLinkedIssue</span>(<span class="text-gray-700">flue</span>, <span class="text-gray-700">prNumber</span>)
-  <span class="text-gray-400">const</span> <span class="text-gray-950">tests</span> = <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">'pnpm test --reporter json'</span>)
-  <span class="text-gray-400">const</span> <span class="text-gray-950">review</span> = <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">skill</span>(<span class="text-emerald-700">'review'</span>, {
+            <div class="bg-white shadow-sm outline outline-black/10 rounded-xl overflow-hidden">
+              <pre class="p-5 text-[13px] leading-relaxed overflow-x-auto"><code class="font-[JetBrains_Mono,monospace]" set:html={`<span class="text-blue-700">export default async function</span> <span class="text-gray-950 font-medium">review</span>(<span class="text-gray-700">flue</span>, { <span class="text-gray-700">prNumber</span> }) {
+  <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh pr checkout \${prNumber}\`</span>)
+  <span class="text-blue-700">const</span> <span class="text-gray-950">diff</span> <span class="text-blue-700">=</span> <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh pr diff \${prNumber}\`</span>)
+  <span class="text-blue-700">const</span> <span class="text-gray-950">issue</span> <span class="text-blue-700">=</span> <span class="text-blue-700">await</span> <span class="text-gray-600">getLinkedIssue</span>(<span class="text-gray-700">flue</span>, <span class="text-gray-700">prNumber</span>)
+  <span class="text-blue-700">const</span> <span class="text-gray-950">tests</span> <span class="text-blue-700">=</span> <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">'pnpm test --reporter json'</span>)
+  <span class="text-blue-700">const</span> <span class="text-gray-950">review</span> <span class="text-blue-700">=</span> <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">skill</span>(<span class="text-emerald-700">'review'</span>, {
     <span class="text-gray-700">args</span>: { <span class="text-gray-700">diff</span>, <span class="text-gray-700">issue</span>, <span class="text-gray-700">tests</span> },
     <span class="text-gray-700">result</span>: <span class="text-gray-600">ReviewSchema</span>,
   })
-  <span class="text-gray-400">for</span> (<span class="text-gray-400">const</span> <span class="text-gray-950">c</span> <span class="text-gray-400">of</span> <span class="text-gray-950">review</span>.<span class="text-gray-950">inlineComments</span>) {
-    <span class="text-gray-400">await</span> <span class="text-gray-600">postInlineComment</span>(<span class="text-gray-700">flue</span>, <span class="text-gray-700">prNumber</span>, <span class="text-gray-950">c</span>)
+  <span class="text-blue-700">for</span> (<span class="text-blue-700">const</span> <span class="text-gray-950">c</span> <span class="text-blue-700">of</span> <span class="text-gray-950">review</span>.<span class="text-gray-950">inlineComments</span>) {
+    <span class="text-blue-700">await</span> <span class="text-gray-600">postInlineComment</span>(<span class="text-gray-700">flue</span>, <span class="text-gray-700">prNumber</span>, <span class="text-gray-950">c</span>)
   }
-  <span class="text-gray-400">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh pr review \${prNumber} --body-file -\`</span>, { <span class="text-gray-700">stdin</span>: <span class="text-gray-950">review</span>.<span class="text-gray-950">summary</span> })
+  <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh pr review \${prNumber} --body-file -\`</span>, { <span class="text-gray-700">stdin</span>: <span class="text-gray-950">review</span>.<span class="text-gray-950">summary</span> })
 }`} /></pre>
             </div>
           </div>
@@ -184,7 +177,7 @@ import "../styles/global.css";
       <div class="max-w-6xl mx-auto px-6 py-24 lg:py-32">
         <div class="grid sm:grid-cols-3 gap-4">
           <!-- TypeScript-native (wide) -->
-          <div class="sm:col-span-2 bg-white border border-gray-200 rounded-xl p-6">
+          <div class="sm:col-span-2 bg-white shadow-sm outline outline-black/10 rounded-xl p-6">
             <h3 class="text-lg font-semibold">TypeScript-native</h3>
             <p class="mt-2 text-gray-500 leading-relaxed">
               Workflows are TypeScript — with full type safety, autocomplete, and intellisense. The <code class="text-sm bg-gray-100 px-1.5 py-0.5 rounded font-mono">FlueClient</code> gives you a typed API for orchestrating sandbox agents. No YAML. No config files.
@@ -192,7 +185,7 @@ import "../styles/global.css";
           </div>
 
           <!-- Powered by Skills -->
-          <div class="bg-white border border-gray-200 rounded-xl p-6">
+          <div class="bg-white shadow-sm outline outline-black/10 rounded-xl p-6">
             <h3 class="text-lg font-semibold">Powered by Skills</h3>
             <p class="mt-2 text-gray-500 leading-relaxed">
               Markdown instructions that teach agents how to work with <em>your</em> codebase. Encode your team's expertise.
@@ -200,7 +193,7 @@ import "../styles/global.css";
           </div>
 
           <!-- Proxy-based Security -->
-          <div class="bg-white border border-gray-200 rounded-xl p-6">
+          <div class="bg-white shadow-sm outline outline-black/10 rounded-xl p-6">
             <h3 class="text-lg font-semibold">Proxy-based Security</h3>
             <p class="mt-2 text-gray-500 leading-relaxed">
               Credentials injected via proxy — never exposed to the LLM. Policy-based access control, rate limits, all declarative.
@@ -226,30 +219,37 @@ import "../styles/global.css";
       </div>
     </section>
 
-    <!-- FOOTER -->
-    <footer class="border-t border-gray-200/60">
-      <div class="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between text-sm text-gray-400">
-        <span>Flue</span>
-        <span>
-          Built by <a href="https://github.com/FredKSchott" class="text-gray-500 hover:text-gray-700 transition-colors">Fred K. Schott</a>
-        </span>
-      </div>
-    </footer>
+    <!-- Little buddy peeking over the bottom -->
+    <div class="flex justify-end max-w-6xl mx-auto px-6 overflow-hidden">
+      <svg class="w-16 h-16 text-gray-300 hover:text-gray-400 transition-colors cursor-default translate-y-[38%]" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- body (squarish, rounded corners) -->
+        <rect x="6" y="16" width="52" height="44" rx="10" fill="currentColor" />
+        <!-- eyes -->
+        <circle cx="22" cy="34" r="4" fill="white" />
+        <circle cx="42" cy="34" r="4" fill="white" />
+        <circle cx="23" cy="35" r="2" fill="#1f2937" />
+        <circle cx="43" cy="35" r="2" fill="#1f2937" />
+        <!-- ears (rounded, Bluey-style) -->
+        <ellipse cx="14" cy="12" rx="8" ry="12" transform="rotate(-15 14 12)" fill="currentColor" />
+        <ellipse cx="50" cy="12" rx="8" ry="12" transform="rotate(15 50 12)" fill="currentColor" />
+      </svg>
+    </div>
 
     </div><!-- end off-white wrapper -->
 
     <!-- Copy to clipboard script -->
     <script>
-      const btn = document.getElementById('copy-btn');
-      if (btn) {
-        btn.addEventListener('click', async () => {
-          await navigator.clipboard.writeText('npm install @flue/client');
-          const span = btn.querySelector('span:nth-child(2)');
-          if (span) {
-            span.textContent = 'Copied!';
-            setTimeout(() => { span.textContent = 'npm install @flue/client'; }, 1500);
+      const tagline = document.querySelector('#nav-tagline span');
+      if (tagline) {
+        window.addEventListener('scroll', () => {
+          if (window.scrollY > 200) {
+            tagline.classList.remove('translate-y-full', 'opacity-0');
+            tagline.classList.add('translate-y-0', 'opacity-100');
+          } else {
+            tagline.classList.add('translate-y-full', 'opacity-0');
+            tagline.classList.remove('translate-y-0', 'opacity-100');
           }
-        });
+        }, { passive: true });
       }
     </script>
 
