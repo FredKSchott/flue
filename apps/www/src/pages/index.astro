@@ -1,5 +1,18 @@
 ---
 import "../styles/global.css";
+import { Code } from "astro:components";
+import CodeTabs from "../components/CodeTabs.astro";
+
+const heroCode = `// .flue/workflows/issue-triage.ts
+export const proxies = { anthropic: anthropic(), github: github({ policy: 'allow-read' }) }
+export const args = v.object({ issueNumber: v.number() })
+
+export default async function triage(flue, { issueNumber }) {
+  const issue = await flue.shell(\`gh issue view \${issueNumber} --json title,body,comments\`)
+  const result = await flue.skill('triage', { args: { issue } })
+  const comment = await flue.prompt(\`Summarize the triage for issue #\${issueNumber}: \${result}\`)
+  await flue.shell(\`gh issue comment \${issueNumber} --body-file -\`, { stdin: comment })
+}`;
 ---
 
 <html lang="en">
@@ -45,18 +58,10 @@ import "../styles/global.css";
             </a>
         </div>
 
-        <!-- Full-width code snippet (no blank lines) -->
+        <!-- Full-width code snippet -->
         <div class="mt-14">
-          <div class="bg-gray-50 shadow-sm outline outline-black/10 rounded-xl overflow-hidden">
-            <pre class="p-6 text-sm leading-relaxed overflow-x-auto"><code class="font-[JetBrains_Mono,monospace]" set:html={`<span class="text-blue-700">export const</span> <span class="text-gray-950">proxies</span> <span class="text-blue-700">=</span> { <span class="text-gray-950">anthropic</span>: <span class="text-gray-600">anthropic</span>() }
-<span class="text-blue-700">export const</span> <span class="text-gray-950">args</span> <span class="text-blue-700">=</span> <span class="text-gray-600">v</span>.<span class="text-gray-600">object</span>({ <span class="text-gray-700">issueNumber</span>: <span class="text-gray-600">v</span>.<span class="text-gray-600">number</span>() })
-
-<span class="text-blue-700">export default async function</span> <span class="text-gray-950 font-medium">triage</span>(<span class="text-gray-700">flue</span>, { <span class="text-gray-700">issueNumber</span> }) {
-  <span class="text-blue-700">const</span> <span class="text-gray-950">issue</span> <span class="text-blue-700">=</span> <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh issue view \${issueNumber} --json title,body,comments\`</span>)
-  <span class="text-blue-700">const</span> <span class="text-gray-950">result</span> <span class="text-blue-700">=</span> <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">skill</span>(<span class="text-emerald-700">'triage'</span>, { <span class="text-gray-700">args</span>: { <span class="text-gray-700">issue</span> } })
-  <span class="text-blue-700">const</span> <span class="text-gray-950">comment</span> <span class="text-blue-700">=</span> <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">prompt</span>(<span class="text-emerald-700">\`Summarize the triage for issue #\${issueNumber}: \${result}\`</span>)
-  <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh issue comment \${issueNumber} --body-file -\`</span>, { <span class="text-gray-700">stdin</span>: <span class="text-gray-950">comment</span> })
-}`} /></pre>
+          <div class="hero-code shadow-sm outline outline-black/10 rounded-xl overflow-hidden [&_pre]:p-6 [&_pre]:text-sm [&_pre]:leading-relaxed [&_pre]:overflow-x-auto [&_pre]:m-0 [&_pre]:rounded-none">
+            <Code code={heroCode} lang="typescript" theme="github-light" />
           </div>
         </div>
       </div>
@@ -68,8 +73,8 @@ import "../styles/global.css";
     <!-- SECTION 1: Capability -->
     <section>
       <div class="max-w-6xl mx-auto px-6 py-24 lg:py-32">
-        <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          <div>
+        <div class="grid lg:grid-cols-12 gap-12 lg:gap-20 items-center">
+          <div class="lg:col-span-7">
             <h2 class="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
               A sandbox for every agent.
             </h2>
@@ -82,7 +87,7 @@ import "../styles/global.css";
           </div>
 
           <!-- Diagram: Host → Sandbox Container -->
-          <div class="flex justify-center">
+          <div class="lg:col-span-5 flex justify-center">
             <div class="w-full max-w-sm flex flex-col items-center gap-0">
               <!-- Host card -->
               <div class="relative z-10 w-full bg-white shadow-sm outline outline-black/10 rounded-xl p-4">
@@ -92,9 +97,8 @@ import "../styles/global.css";
                 </div>
                 <div class="mt-2.5 space-y-1 text-[13px] text-gray-500">
                   <p class="flex items-center gap-2"><svg class="w-3.5 h-3.5 text-gray-600 shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.78 4.97a.75.75 0 00-1.06 0L7 8.69 5.28 6.97a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25a.75.75 0 000-1.06z"/></svg> Sandbox initialized.</p>
-                  <p class="flex items-center gap-2"><svg class="w-3.5 h-3.5 text-gray-600 shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.78 4.97a.75.75 0 00-1.06 0L7 8.69 5.28 6.97a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25a.75.75 0 000-1.06z"/></svg> GitHub Issue #4291 fetched.</p>
+                  <p class="flex items-center gap-2"><svg class="w-3.5 h-3.5 text-gray-600 shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.78 4.97a.75.75 0 00-1.06 0L7 8.69 5.28 6.97a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25a.75.75 0 000-1.06z"/></svg> GitHub Issue data fetched.</p>
                   <p class="flex items-center gap-2"><span class="inline-block w-3.5 h-3.5 border-[1.5px] border-blue-200 border-t-blue-500 rounded-full animate-spin shrink-0"></span> Running "triage" skill in sandbox...</p>
-                  <p class="flex items-center gap-2"><svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 16 16" fill="#CCC" stroke="#CCC" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/></svg> Push fix to GitHub...</p>
                 </div>
               </div>
 
@@ -137,38 +141,7 @@ import "../styles/global.css";
     <!-- SECTION 2: Build Your Own -->
     <section class="border-t border-gray-200/60">
       <div class="max-w-6xl mx-auto px-6 py-24 lg:py-32">
-        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-          <div class="lg:sticky lg:top-24">
-            <h2 class="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
-              Your agents should know your codebase better than any third party.
-            </h2>
-            <p class="mt-6 text-lg text-gray-500 leading-relaxed">
-              Every coding agent product is a workflow running an LLM against your code in a sandbox. With Flue, you build that yourself — and because you own the code, you can customize it in ways no third-party tool will ever support.
-            </p>
-            <p class="mt-4 text-gray-500 leading-relaxed">
-              We built Astro's issue triage agent with Flue. It outperforms every third-party tool we tried, because the skills encode how <em>we</em> debug Astro — not some generic heuristic.
-            </p>
-          </div>
-
-          <div>
-            <div class="bg-white shadow-sm outline outline-black/10 rounded-xl overflow-hidden">
-              <pre class="p-5 text-[13px] leading-relaxed overflow-x-auto"><code class="font-[JetBrains_Mono,monospace]" set:html={`<span class="text-blue-700">export default async function</span> <span class="text-gray-950 font-medium">review</span>(<span class="text-gray-700">flue</span>, { <span class="text-gray-700">prNumber</span> }) {
-  <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh pr checkout \${prNumber}\`</span>)
-  <span class="text-blue-700">const</span> <span class="text-gray-950">diff</span> <span class="text-blue-700">=</span> <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh pr diff \${prNumber}\`</span>)
-  <span class="text-blue-700">const</span> <span class="text-gray-950">issue</span> <span class="text-blue-700">=</span> <span class="text-blue-700">await</span> <span class="text-gray-600">getLinkedIssue</span>(<span class="text-gray-700">flue</span>, <span class="text-gray-700">prNumber</span>)
-  <span class="text-blue-700">const</span> <span class="text-gray-950">tests</span> <span class="text-blue-700">=</span> <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">'pnpm test --reporter json'</span>)
-  <span class="text-blue-700">const</span> <span class="text-gray-950">review</span> <span class="text-blue-700">=</span> <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">skill</span>(<span class="text-emerald-700">'review'</span>, {
-    <span class="text-gray-700">args</span>: { <span class="text-gray-700">diff</span>, <span class="text-gray-700">issue</span>, <span class="text-gray-700">tests</span> },
-    <span class="text-gray-700">result</span>: <span class="text-gray-600">ReviewSchema</span>,
-  })
-  <span class="text-blue-700">for</span> (<span class="text-blue-700">const</span> <span class="text-gray-950">c</span> <span class="text-blue-700">of</span> <span class="text-gray-950">review</span>.<span class="text-gray-950">inlineComments</span>) {
-    <span class="text-blue-700">await</span> <span class="text-gray-600">postInlineComment</span>(<span class="text-gray-700">flue</span>, <span class="text-gray-700">prNumber</span>, <span class="text-gray-950">c</span>)
-  }
-  <span class="text-blue-700">await</span> <span class="text-gray-700">flue</span>.<span class="text-gray-950">shell</span>(<span class="text-emerald-700">\`gh pr review \${prNumber} --body-file -\`</span>, { <span class="text-gray-700">stdin</span>: <span class="text-gray-950">review</span>.<span class="text-gray-950">summary</span> })
-}`} /></pre>
-            </div>
-          </div>
-        </div>
+        <CodeTabs />
       </div>
     </section>
 
@@ -237,8 +210,8 @@ import "../styles/global.css";
 
     </div><!-- end off-white wrapper -->
 
-    <!-- Copy to clipboard script -->
     <script>
+      // Nav tagline scroll effect
       const tagline = document.querySelector('#nav-tagline span');
       if (tagline) {
         window.addEventListener('scroll', () => {
@@ -251,6 +224,8 @@ import "../styles/global.css";
           }
         }, { passive: true });
       }
+
+
     </script>
 
   </body>

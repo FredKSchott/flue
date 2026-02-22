@@ -60,6 +60,9 @@ importers:
       astro:
         specifier: ^5.17.1
         version: 5.17.3(@types/node@22.19.9)(jiti@2.6.1)(lightningcss@1.31.1)(rollup@4.58.0)(tsx@4.21.0)(typescript@5.9.3)
+      shiki:
+        specifier: ^3.22.0
+        version: 3.22.0
       tailwindcss:
         specifier: ^4.2.0
         version: 4.2.0
