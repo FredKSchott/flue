@@ -1,18 +1,25 @@
 ---
 import "../styles/global.css";
 import { Code } from "astro:components";
-import CodeTabs from "../components/CodeTabs.astro";
+import { createHighlighter } from "shiki";
+import { HERO, ISSUE_TRIAGE, CODE_REVIEW, SECURITY_SCAN, AI_ASSISTANT } from "../code-snippets";
 
-const heroCode = `// .flue/workflows/issue-triage.ts
-export const proxies = { anthropic: anthropic(), github: github({ policy: 'allow-read' }) }
-export const args = v.object({ issueNumber: v.number() })
+const tabs = [
+  { id: 'triage', label: 'AI Issue Triage', badgeLabel: 'Issue Triage', code: ISSUE_TRIAGE },
+  { id: 'review', label: 'AI Code Review', badgeLabel: 'Code Review', code: CODE_REVIEW },
+  { id: 'security', label: 'AI Security Scan', badgeLabel: 'Security Scan', code: SECURITY_SCAN },
+  { id: 'general', label: 'AI Assistant', badgeLabel: 'AI Assistant', code: AI_ASSISTANT },
+];
 
-export default async function triage(flue, { issueNumber }) {
-  const issue = await flue.shell(\`gh issue view \${issueNumber} --json title,body,comments\`)
-  const result = await flue.skill('triage', { args: { issue } })
-  const comment = await flue.prompt(\`Summarize the triage for issue #\${issueNumber}: \${result}\`)
-  await flue.shell(\`gh issue comment \${issueNumber} --body-file -\`, { stdin: comment })
-}`;
+const highlighter = await createHighlighter({
+  themes: ['github-light'],
+  langs: ['typescript'],
+});
+
+const highlighted = tabs.map((tab) => ({
+  ...tab,
+  html: highlighter.codeToHtml(tab.code, { lang: 'typescript', theme: 'github-light' }),
+}));
 ---
 
 <html lang="en">
@@ -61,18 +68,19 @@ export default async function triage(flue, { issueNumber }) {
         <!-- Full-width code snippet -->
         <div class="mt-14">
           <div class="hero-code shadow-sm outline outline-black/10 rounded-xl overflow-hidden [&_pre]:p-6 [&_pre]:text-sm [&_pre]:leading-relaxed [&_pre]:overflow-x-auto [&_pre]:m-0 [&_pre]:rounded-none">
-            <Code code={heroCode} lang="typescript" theme="github-light" />
+            <Code code={HERO} lang="typescript" theme="github-light" />
           </div>
         </div>
       </div>
     </section>
 
     <!-- Everything below hero: cool off-white bg -->
+    <div class="bg-gray-300 h-px"></div>
     <div class="bg-[#f8f9fb]">
 
     <!-- SECTION 1: Capability -->
     <section>
-      <div class="max-w-6xl mx-auto px-6 py-24 lg:py-32">
+      <div class="max-w-6xl mx-auto px-6 py-24 pt-36">
         <div class="grid lg:grid-cols-12 gap-12 lg:gap-20 items-center">
           <div class="lg:col-span-7">
             <h2 class="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
@@ -139,45 +147,74 @@ export default async function triage(flue, { issueNumber }) {
     </section>
 
     <!-- SECTION 2: Build Your Own -->
-    <section class="border-t border-gray-200/60">
-      <div class="max-w-6xl mx-auto px-6 py-24 lg:py-32">
-        <CodeTabs />
+    <section class="">
+      <div class="max-w-6xl mx-auto px-6 py-24">
+        <div class="grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+          <div class="lg:col-span-5 lg:self-start">
+            <h2 class="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
+              Build your own <br/><span id="build-label" class="text-blue-700">{highlighted[0].label}</span>.
+            </h2>
+            <p class="mt-6 text-lg text-gray-500 leading-relaxed">
+              Stop paying for generic agents that don't deliver. Build your own specialized agents with just a few lines of TypeScript. Flue gives you the building blocks, what you build is up to you.
+            </p>
+          </div>
+
+          <div class="lg:col-span-7">
+            <div class="shadow-sm outline outline-black/10 rounded-xl overflow-hidden">
+              <div class="flex border-b border-gray-200 [&>button]:flex-1" id="build-badges">
+                {highlighted.map((tab, i) => (
+                  <button
+                    data-build={tab.id}
+                    class:list={[
+                      'build-badge px-4 py-3.5 text-sm font-medium transition-colors relative',
+                      i === 0
+                        ? 'text-gray-950 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-gray-950'
+                        : 'text-gray-400 hover:text-gray-600',
+                    ]}
+                  >
+                    {tab.badgeLabel}
+                  </button>
+                ))}
+              </div>
+              {highlighted.map((tab, i) => (
+                <div
+                  id={`build-code-${tab.id}`}
+                  class:list={['build-code-panel [&_pre]:p-8 [&_pre]:text-sm [&_pre]:leading-loose [&_pre]:overflow-x-auto [&_pre]:min-h-[360px] [&_pre]:m-0 [&_pre]:rounded-none', i !== 0 && 'hidden']}
+                  set:html={tab.html}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- FEATURE GRID + CTA -->
-    <section class="border-t border-gray-200/60">
-      <div class="max-w-6xl mx-auto px-6 py-24 lg:py-32">
-        <div class="grid sm:grid-cols-3 gap-4">
-          <!-- TypeScript-native (wide) -->
-          <div class="sm:col-span-2 bg-white shadow-sm outline outline-black/10 rounded-xl p-6">
-            <h3 class="text-lg font-semibold">TypeScript-native</h3>
-            <p class="mt-2 text-gray-500 leading-relaxed">
-              Workflows are TypeScript — with full type safety, autocomplete, and intellisense. The <code class="text-sm bg-gray-100 px-1.5 py-0.5 rounded font-mono">FlueClient</code> gives you a typed API for orchestrating sandbox agents. No YAML. No config files.
-            </p>
-          </div>
-
-          <!-- Powered by Skills -->
+    <section class="">
+      <div class="max-w-6xl mx-auto px-6 py-24">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div class="bg-white shadow-sm outline outline-black/10 rounded-xl p-6">
-            <h3 class="text-lg font-semibold">Powered by Skills</h3>
-            <p class="mt-2 text-gray-500 leading-relaxed">
-              Markdown instructions that teach agents how to work with <em>your</em> codebase. Encode your team's expertise.
+            <h3 class="text-base font-semibold">TypeScript</h3>
+            <p class="mt-1.5 text-sm text-gray-500 leading-relaxed">
+              Workflows are TypeScript with full type safety. No YAML. No config files.
             </p>
           </div>
-
-          <!-- Proxy-based Security -->
           <div class="bg-white shadow-sm outline outline-black/10 rounded-xl p-6">
-            <h3 class="text-lg font-semibold">Proxy-based Security</h3>
-            <p class="mt-2 text-gray-500 leading-relaxed">
-              Credentials injected via proxy — never exposed to the LLM. Policy-based access control, rate limits, all declarative.
+            <h3 class="text-base font-semibold">OpenCode</h3>
+            <p class="mt-1.5 text-sm text-gray-500 leading-relaxed">
+              Every agent is powered by OpenCode — a production-grade coding agent, built in.
             </p>
           </div>
-
-          <!-- Run Anywhere (wide) -->
-          <div class="sm:col-span-2 bg-white border border-gray-200 rounded-xl p-6">
-            <h3 class="text-lg font-semibold">Run Anywhere</h3>
-            <p class="mt-2 text-gray-500 leading-relaxed">
-              <code class="text-sm bg-gray-100 px-1.5 py-0.5 rounded font-mono">@flue/cli</code> runs workflows in Docker or GitHub Actions. <code class="text-sm bg-gray-100 px-1.5 py-0.5 rounded font-mono">@flue/cloudflare</code> runs the same workflows on Cloudflare. Same workflow, different runtime.
+          <div class="bg-white shadow-sm outline outline-black/10 rounded-xl p-6">
+            <h3 class="text-base font-semibold">Skills</h3>
+            <p class="mt-1.5 text-sm text-gray-500 leading-relaxed">
+              Markdown instructions that teach agents how to work with your codebase.
+            </p>
+          </div>
+          <div class="bg-white shadow-sm outline outline-black/10 rounded-xl p-6">
+            <h3 class="text-base font-semibold">Run Anywhere</h3>
+            <p class="mt-1.5 text-sm text-gray-500 leading-relaxed">
+              Docker, GitHub Actions, or Cloudflare. Same workflow, different runtime.
             </p>
           </div>
         </div>
@@ -225,8 +262,44 @@ export default async function triage(flue, { issueNumber }) {
         }, { passive: true });
       }
 
+      // Build Your Own — tab switching
+      const label = document.getElementById('build-label');
+      const badges = document.querySelectorAll('.build-badge');
+      const panels = document.querySelectorAll('.build-code-panel');
 
+      const labels: Record<string, string> = {
+        triage: 'AI Issue Triage',
+        review: 'AI Code Review',
+        security: 'AI Security Scan',
+        general: 'AI Assistant',
+      };
+
+      function setActiveBuild(key: string) {
+        if (!labels[key] || !label) return;
+        label.textContent = labels[key];
+        panels.forEach((p) => {
+          p.classList.toggle('hidden', !p.id.endsWith(key));
+        });
+        badges.forEach((b) => {
+          const el = b as HTMLElement;
+          if (el.dataset.build === key) {
+            el.className = 'build-badge px-4 py-3.5 text-sm font-medium transition-colors relative text-gray-950 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-gray-950';
+          } else {
+            el.className = 'build-badge px-4 py-3.5 text-sm font-medium transition-colors relative text-gray-400 hover:text-gray-600';
+          }
+        });
+      }
+
+      badges.forEach((b) => {
+        b.addEventListener('click', () => setActiveBuild((b as HTMLElement).dataset.build!));
+      });
     </script>
+
+    <style is:global>
+      .build-code-panel .shiki {
+        background-color: white !important;
+      }
+    </style>
 
   </body>
 </html>
