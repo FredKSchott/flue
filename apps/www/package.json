@@ -13,5 +13,8 @@
     "astro": "^5.17.1",
     "shiki": "^3.22.0",
     "tailwindcss": "^4.2.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.59.3"
   }
 }
