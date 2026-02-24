@@ -14,10 +14,7 @@ const tabs: Tab[] = [
     id: 'triage',
     label: 'AI Issue Triage',
     badgeLabel: 'Issue Triage',
-    code: `export const proxies = { anthropic: anthropic(), github: github({ policy: 'allow-read' }) }
-export const args = v.object({ issueNumber: v.number(), branch: v.string() })
-
-export default async function triage(flue, { issueNumber, branch }) {
+    code: `export default async function triage(flue, { issueNumber, branch }) {
   const issue = await flue.shell(\`gh issue view \${issueNumber} --json title,body,author,labels,comments\`)
   const result = await flue.skill('triage/reproduce.md', {
     args: { issueNumber, issue },
@@ -128,27 +125,27 @@ const highlighted = tabs.map((tab) => ({
       Build your own <br/><span id="build-label" class="text-blue-700">{highlighted[0].label}</span>.
     </h2>
     <p class="mt-6 text-lg text-gray-500 leading-relaxed">
-      Stop paying for generic agents that don't deliver. Build your own specialized agents with just a few lines of TypeScript. Flue gives you the building blocks, what you build is up to you.
+      Stop paying for generic agents that don't deliver. Build specialized agents with just a few lines of TypeScript, in a codebase that you control. Flue gives you the building blocks, what you build is up to you.
     </p>
-    <div class="mt-6 flex flex-wrap gap-2" id="build-badges">
-      {highlighted.map((tab, i) => (
-        <button
-          data-build={tab.id}
-          class:list={[
-            'build-badge rounded-full px-3 py-1 text-sm font-medium transition-colors',
-            i === 0
-              ? 'bg-gray-950 text-white'
-              : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-400',
-          ]}
-        >
-          {tab.badgeLabel}
-        </button>
-      ))}
-    </div>
   </div>
 
   <div class="lg:col-span-7">
     <div class="shadow-sm outline outline-black/10 rounded-xl overflow-hidden">
+      <div class="flex border-b border-gray-200 [&>button]:flex-1" id="build-badges">
+        {highlighted.map((tab, i) => (
+          <button
+            data-build={tab.id}
+            class:list={[
+              'build-badge px-4 py-2.5 text-sm font-medium transition-colors relative',
+              i === 0
+                ? 'text-gray-950 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-gray-950'
+                : 'text-gray-400 hover:text-gray-600',
+            ]}
+          >
+            {tab.badgeLabel}
+          </button>
+        ))}
+      </div>
       {highlighted.map((tab, i) => (
         <div
           id={`build-code-${tab.id}`}
@@ -181,9 +178,9 @@ const highlighted = tabs.map((tab) => ({
     badges.forEach((b) => {
       const el = b as HTMLElement;
       if (el.dataset.build === key) {
-        el.className = 'build-badge rounded-full px-3 py-1 text-sm font-medium transition-colors bg-gray-950 text-white';
+        el.className = 'build-badge px-4 py-2.5 text-sm font-medium transition-colors relative text-gray-950 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-gray-950';
       } else {
-        el.className = 'build-badge rounded-full px-3 py-1 text-sm font-medium transition-colors bg-white text-gray-500 border border-gray-200 hover:border-gray-400';
+        el.className = 'build-badge px-4 py-2.5 text-sm font-medium transition-colors relative text-gray-400 hover:text-gray-600';
       }
     });
   }

@@ -4,11 +4,18 @@ import { Code } from "astro:components";
 import { createHighlighter } from "shiki";
 import { HERO, ISSUE_TRIAGE, CODE_REVIEW, SECURITY_SCAN, AI_ASSISTANT } from "../code-snippets";
 
+const replaces: Record<string, string[]> = {
+  triage: ['Dosu', 'Sweep', 'Ellipsis'],
+  review: ['CodeRabbit', 'Qodo', 'Sourcery', 'Bugbot', 'Ellipsis'],
+  security: ['Snyk', 'SonarQube', 'Checkmarx', 'Veracode', 'Semgrep'],
+  general: ['Devin', 'GitHub Copilot', 'Cursor', 'Windsurf', 'Augment'],
+};
+
 const tabs = [
-  { id: 'triage', label: 'AI Issue Triage', badgeLabel: 'Issue Triage', code: ISSUE_TRIAGE },
-  { id: 'review', label: 'AI Code Review', badgeLabel: 'Code Review', code: CODE_REVIEW },
-  { id: 'security', label: 'AI Security Scan', badgeLabel: 'Security Scan', code: SECURITY_SCAN },
-  { id: 'general', label: 'AI Assistant', badgeLabel: 'AI Assistant', code: AI_ASSISTANT },
+  { id: 'review', label: 'AI code review', badgeLabel: 'Code Review', code: CODE_REVIEW, lines: CODE_REVIEW.split('\n').length },
+  { id: 'triage', label: 'AI issue triage', badgeLabel: 'Issue Triage', code: ISSUE_TRIAGE, lines: ISSUE_TRIAGE.split('\n').length },
+  { id: 'security', label: 'AI security scan', badgeLabel: 'Security Scan', code: SECURITY_SCAN, lines: SECURITY_SCAN.split('\n').length },
+  { id: 'general', label: 'AI assistant', badgeLabel: 'Repo Assistant', code: AI_ASSISTANT, lines: AI_ASSISTANT.split('\n').length },
 ];
 
 const highlighter = await createHighlighter({
@@ -20,6 +27,8 @@ const highlighted = tabs.map((tab) => ({
   ...tab,
   html: highlighter.codeToHtml(tab.code, { lang: 'typescript', theme: 'github-light' }),
 }));
+
+highlighter.dispose();
 ---
 
 <html lang="en">
@@ -33,14 +42,16 @@ const highlighted = tabs.map((tab) => ({
     <meta name="description" content="Build AI agents that can safely run code, triage issues, review PRs, and more — powered by OpenCode, running on your infrastructure." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   </head>
-  <body class="bg-white text-gray-950 font-[Inter,system-ui,sans-serif] antialiased">
+  <body class="bg-white text-gray-950 font-[system-ui,sans-serif] antialiased">
 
     <!-- NAV -->
     <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-100">
       <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-        <a href="/" class="flex items-baseline gap-2"><span class="text-xl font-bold tracking-tight text-gray-950">Flue</span><span id="nav-tagline" class="overflow-hidden h-5"><span class="inline-block text-sm text-gray-400 translate-y-full opacity-0 transition-all duration-300 ease-out">The sandbox agent framework.</span></span></a>
+        <a href="/" class="flex items-baseline gap-2">
+          <span class="text-2xl font-extrabold tracking-tight text-gray-950">Flue</span><span id="nav-tagline" class="overflow-hidden h-8"><span class="inline-block text-lg text-gray-500 translate-y-full opacity-0 transition-all duration-300 ease-out">The sandbox agent framework.</span></span>
+        </a>
         <div class="flex items-center gap-6">
           <a href="https://github.com/FredKSchott/flue" class="text-gray-400 hover:text-gray-950 transition-colors" aria-label="GitHub">
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -50,16 +61,16 @@ const highlighted = tabs.map((tab) => ({
     </nav>
 
     <!-- HERO (white bg) -->
-    <section class="bg-white pb-px shadow-[0_1px_2px_0_rgba(0,0,0,0.03)]">
-      <div class="max-w-6xl mx-auto px-6 pt-20 pb-16 lg:pt-28 lg:pb-20 border-b border-gray-200">
-          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]">
+    <section class="bg-white">
+      <div class="max-w-6xl mx-auto px-6 pt-20 pb-16 lg:pt-28 lg:pb-20">
+          <h1 class="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]">
             The Sandbox Agent Framework
           </h1>
-          <p class="mt-6  max-w-2xl text-xl text-gray-500 leading-relaxed">
-            Build AI agents and workflows that run inside secure sandboxes — powered by <a href="https://opencode.ai" class="text-gray-950 underline decoration-gray-300 underline-offset-2 hover:decoration-gray-950 transition-colors">OpenCode</a>, deployed anywhere.
+          <p class="mt-6  max-w-2xl text-xl lg:text-2xl text-gray-500 text-balance">
+            Build advanced AI agents and CI workflows with OpenCode. Write once, deploy anywhere.
           </p>
           <div class="mt-8 flex items-center">
-            <a href="https://github.com/FredKSchott/flue#quick-start" class="inline-flex items-center gap-2 bg-gray-950 hover:bg-gray-800 text-white rounded-lg px-5 py-3 text-sm font-medium transition-colors">
+            <a href="https://github.com/FredKSchott/flue#quick-start" class="inline-flex items-center gap-2 bg-gray-950 hover:bg-gray-800 text-white rounded-sm px-5 py-3 text-sm font-medium transition-colors">
               Get started
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="M12 5l7 7-7 7" /></svg>
             </a>
@@ -67,7 +78,7 @@ const highlighted = tabs.map((tab) => ({
 
         <!-- Full-width code snippet -->
         <div class="mt-14">
-          <div class="hero-code shadow-sm outline outline-black/10 rounded-xl overflow-hidden [&_pre]:p-6 [&_pre]:text-sm [&_pre]:leading-relaxed [&_pre]:overflow-x-auto [&_pre]:m-0 [&_pre]:rounded-none">
+          <div class="hero-code border border-gray-300 rounded-sm overflow-hidden [&_pre]:p-6 [&_pre]:text-sm [&_pre]:leading-relaxed [&_pre]:overflow-x-auto [&_pre]:m-0 [&_pre]:rounded-none">
             <Code code={HERO} lang="typescript" theme="github-light" />
           </div>
         </div>
@@ -75,7 +86,7 @@ const highlighted = tabs.map((tab) => ({
     </section>
 
     <!-- Everything below hero: cool off-white bg -->
-    <div class="bg-gray-300 h-px"></div>
+    <div class="bg-gray-200 h-px"></div>
     <div class="bg-[#f8f9fb]">
 
     <!-- SECTION 1: Capability -->
@@ -83,8 +94,8 @@ const highlighted = tabs.map((tab) => ({
       <div class="max-w-6xl mx-auto px-6 py-24 pt-36">
         <div class="grid lg:grid-cols-12 gap-12 lg:gap-20 items-center">
           <div class="lg:col-span-7">
-            <h2 class="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
-              A sandbox for every agent.
+            <h2 class="font-heading text-3xl sm:text-4xl font-bold tracking-tight leading-tight text-balance">
+               Give your agents a secure place to work.
             </h2>
             <p class="mt-6 text-lg text-gray-500 leading-relaxed">
               Build agents that can write code, run builds, execute tests, make commits, and push changes — all safely sandboxed away from your sensitive credentials.
@@ -98,15 +109,10 @@ const highlighted = tabs.map((tab) => ({
           <div class="lg:col-span-5 flex justify-center">
             <div class="w-full max-w-sm flex flex-col items-center gap-0">
               <!-- Host card -->
-              <div class="relative z-10 w-full bg-white shadow-sm outline outline-black/10 rounded-xl p-4">
-                <div class="flex items-center gap-2 text-[11px] font-semibold font-mono text-gray-400 tracking-wider uppercase">
-                  <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg>
+              <div class="relative z-10 w-full bg-white border border-gray-300 rounded-sm p-4">
+                <div class="flex items-center gap-2.5 text-[13px] font-mono text-gray-600 tracking-wider uppercase">
+                  <svg class="w-4 h-4 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg>
                   flue .flue/workflows/triage.ts
-                </div>
-                <div class="mt-2.5 space-y-1 text-[13px] text-gray-500">
-                  <p class="flex items-center gap-2"><svg class="w-3.5 h-3.5 text-gray-600 shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.78 4.97a.75.75 0 00-1.06 0L7 8.69 5.28 6.97a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25a.75.75 0 000-1.06z"/></svg> Sandbox initialized.</p>
-                  <p class="flex items-center gap-2"><svg class="w-3.5 h-3.5 text-gray-600 shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.78 4.97a.75.75 0 00-1.06 0L7 8.69 5.28 6.97a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25a.75.75 0 000-1.06z"/></svg> GitHub Issue data fetched.</p>
-                  <p class="flex items-center gap-2"><span class="inline-block w-3.5 h-3.5 border-[1.5px] border-blue-200 border-t-blue-500 rounded-full animate-spin shrink-0"></span> Running "triage" skill in sandbox...</p>
                 </div>
               </div>
 
@@ -116,7 +122,7 @@ const highlighted = tabs.map((tab) => ({
               </div>
 
               <!-- Sandbox card -->
-              <div class="relative z-10 w-full bg-white shadow-sm shadow-blue-300 outline outline-blue-700/10 rounded-xl p-4">
+              <div class="relative z-10 w-full bg-white border border-blue-300 rounded-sm p-4">
                 <div class="flex items-center gap-2 text-[11px] font-semibold text-gray-400 tracking-wider uppercase">
                   <svg class="w-3.5 h-3.5 text-blue-400 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M19 10h-1V7A6 6 0 006 7v3H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2v-8a2 2 0 00-2-2zM8 7a4 4 0 018 0v3H8V7z"/></svg>
                   SECURE SANDBOX
@@ -151,25 +157,33 @@ const highlighted = tabs.map((tab) => ({
       <div class="max-w-6xl mx-auto px-6 py-24">
         <div class="grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           <div class="lg:col-span-5 lg:self-start">
-            <h2 class="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
-              Build your own <br/><span id="build-label" class="text-blue-700">{highlighted[0].label}</span>.
+            <h2 class="font-heading text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
+              Build your own <span id="build-label" class="text-blue-700">{highlighted[0].label}</span> in <span id="build-lines">{highlighted[0].lines}</span> lines of TypeScript.
             </h2>
             <p class="mt-6 text-lg text-gray-500 leading-relaxed">
               Stop paying for generic agents that don't deliver. Build your own specialized agents with just a few lines of TypeScript. Flue gives you the building blocks, what you build is up to you.
             </p>
+            <div class="mt-8">
+              <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Replaces</p>
+              <div id="build-replaces" class="mt-3 flex flex-wrap items-center gap-2">
+                {replaces[tabs[0].id].map((name) => (
+                  <span class="replaces-badge inline-flex items-center rounded-full bg-gray-200/70 px-3 py-1 text-xs font-medium text-gray-600 transition-all duration-300">{name}</span>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div class="lg:col-span-7">
-            <div class="shadow-sm outline outline-black/10 rounded-xl overflow-hidden">
-              <div class="flex border-b border-gray-200 [&>button]:flex-1" id="build-badges">
+            <div class="bg-white border border-gray-300 rounded-sm overflow-hidden">
+              <div class="flex gap-1 p-2 [&>button]:flex-1" id="build-badges" data-tabdata={JSON.stringify(Object.fromEntries(highlighted.map(t => [t.id, { label: t.label, lines: t.lines, replaces: replaces[t.id] }])))}>
                 {highlighted.map((tab, i) => (
                   <button
                     data-build={tab.id}
                     class:list={[
-                      'build-badge px-4 py-3.5 text-sm font-medium transition-colors relative',
+                      'build-badge px-3 py-2 text-sm font-medium transition-colors rounded-sm',
                       i === 0
-                        ? 'text-gray-950 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-gray-950'
-                        : 'text-gray-400 hover:text-gray-600',
+                        ? 'text-gray-950 bg-gray-200/70'
+                        : 'text-gray-500 hover:text-gray-700',
                     ]}
                   >
                     {tab.badgeLabel}
@@ -179,7 +193,7 @@ const highlighted = tabs.map((tab) => ({
               {highlighted.map((tab, i) => (
                 <div
                   id={`build-code-${tab.id}`}
-                  class:list={['build-code-panel [&_pre]:p-8 [&_pre]:text-sm [&_pre]:leading-loose [&_pre]:overflow-x-auto [&_pre]:min-h-[360px] [&_pre]:m-0 [&_pre]:rounded-none', i !== 0 && 'hidden']}
+                  class:list={['build-code-panel [&_pre]:p-6 [&_pre]:pt-2 [&_pre]:text-sm [&_pre]:leading-loose [&_pre]:overflow-x-auto [&_pre]:min-h-[360px] [&_pre]:m-0 [&_pre]:rounded-none', i !== 0 && 'hidden']}
                   set:html={tab.html}
                 />
               ))}
@@ -189,61 +203,15 @@ const highlighted = tabs.map((tab) => ({
       </div>
     </section>
 
-    <!-- FEATURE GRID + CTA -->
-    <section class="">
-      <div class="max-w-6xl mx-auto px-6 py-24">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="bg-white shadow-sm outline outline-black/10 rounded-xl p-6">
-            <h3 class="text-base font-semibold">TypeScript</h3>
-            <p class="mt-1.5 text-sm text-gray-500 leading-relaxed">
-              Workflows are TypeScript with full type safety. No YAML. No config files.
-            </p>
-          </div>
-          <div class="bg-white shadow-sm outline outline-black/10 rounded-xl p-6">
-            <h3 class="text-base font-semibold">OpenCode</h3>
-            <p class="mt-1.5 text-sm text-gray-500 leading-relaxed">
-              Every agent is powered by OpenCode — a production-grade coding agent, built in.
-            </p>
-          </div>
-          <div class="bg-white shadow-sm outline outline-black/10 rounded-xl p-6">
-            <h3 class="text-base font-semibold">Skills</h3>
-            <p class="mt-1.5 text-sm text-gray-500 leading-relaxed">
-              Markdown instructions that teach agents how to work with your codebase.
-            </p>
-          </div>
-          <div class="bg-white shadow-sm outline outline-black/10 rounded-xl p-6">
-            <h3 class="text-base font-semibold">Run Anywhere</h3>
-            <p class="mt-1.5 text-sm text-gray-500 leading-relaxed">
-              Docker, GitHub Actions, or Cloudflare. Same workflow, different runtime.
-            </p>
-          </div>
-        </div>
-
-        <!-- GitHub CTA -->
-        <div class="mt-16 text-center">
-          <a href="https://github.com/FredKSchott/flue" class="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-950 transition-colors">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-            View on GitHub &rarr;
-          </a>
-        </div>
+    <!-- GitHub CTA -->
+    <section>
+      <div class="max-w-6xl mx-auto px-6 py-24 text-center">
+        <a href="https://github.com/FredKSchott/flue" class="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-950 transition-colors">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          View on GitHub &rarr;
+        </a>
       </div>
     </section>
-
-    <!-- Little buddy peeking over the bottom -->
-    <div class="flex justify-end max-w-6xl mx-auto px-6 overflow-hidden">
-      <svg class="w-16 h-16 text-gray-300 hover:text-gray-400 transition-colors cursor-default translate-y-[38%]" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- body (squarish, rounded corners) -->
-        <rect x="6" y="16" width="52" height="44" rx="10" fill="currentColor" />
-        <!-- eyes -->
-        <circle cx="22" cy="34" r="4" fill="white" />
-        <circle cx="42" cy="34" r="4" fill="white" />
-        <circle cx="23" cy="35" r="2" fill="#1f2937" />
-        <circle cx="43" cy="35" r="2" fill="#1f2937" />
-        <!-- ears (rounded, Bluey-style) -->
-        <ellipse cx="14" cy="12" rx="8" ry="12" transform="rotate(-15 14 12)" fill="currentColor" />
-        <ellipse cx="50" cy="12" rx="8" ry="12" transform="rotate(15 50 12)" fill="currentColor" />
-      </svg>
-    </div>
 
     </div><!-- end off-white wrapper -->
 
@@ -264,30 +232,67 @@ const highlighted = tabs.map((tab) => ({
 
       // Build Your Own — tab switching
       const label = document.getElementById('build-label');
+      const linesEl = document.getElementById('build-lines');
       const badges = document.querySelectorAll('.build-badge');
       const panels = document.querySelectorAll('.build-code-panel');
 
-      const labels: Record<string, string> = {
-        triage: 'AI Issue Triage',
-        review: 'AI Code Review',
-        security: 'AI Security Scan',
-        general: 'AI Assistant',
-      };
+      const tabData: Record<string, { label: string; lines: number; replaces: string[] }> = JSON.parse(
+        document.getElementById('build-badges')!.dataset.tabdata!
+      );
+      const replacesContainer = document.getElementById('build-replaces');
+      const STAGGER_OUT_MS = 25;
+      const STAGGER_IN_MS = 50;
+      const FADE_OUT_MS = 100;
+
+      function animateReplaces(newItems: string[]) {
+        if (!replacesContainer) return;
+        const oldBadges = Array.from(replacesContainer.querySelectorAll('.replaces-badge'));
+
+        // Staggered fade out L→R (fast)
+        oldBadges.forEach((badge, i) => {
+          const el = badge as HTMLElement;
+          el.style.transition = `all ${FADE_OUT_MS}ms ease-out`;
+          setTimeout(() => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(4px)';
+          }, i * STAGGER_OUT_MS);
+        });
+
+        // After all have faded out, swap content and fade in L→R
+        const totalOutTime = oldBadges.length * STAGGER_OUT_MS + FADE_OUT_MS;
+        setTimeout(() => {
+          replacesContainer.innerHTML = '';
+          newItems.forEach((name, i) => {
+            const badge = document.createElement('span');
+            badge.className = 'replaces-badge inline-flex items-center rounded-full bg-gray-200/70 px-3 py-1 text-xs font-medium text-gray-600 transition-all duration-200';
+            badge.style.opacity = '0';
+            badge.style.transform = 'translateY(4px)';
+            badge.textContent = name;
+            replacesContainer.appendChild(badge);
+            setTimeout(() => {
+              badge.style.opacity = '1';
+              badge.style.transform = 'translateY(0)';
+            }, i * STAGGER_IN_MS + 20);
+          });
+        }, totalOutTime);
+      }
 
       function setActiveBuild(key: string) {
-        if (!labels[key] || !label) return;
-        label.textContent = labels[key];
+        if (!tabData[key] || !label || !linesEl) return;
+        label.textContent = tabData[key].label;
+        linesEl.textContent = String(tabData[key].lines);
         panels.forEach((p) => {
           p.classList.toggle('hidden', !p.id.endsWith(key));
         });
         badges.forEach((b) => {
           const el = b as HTMLElement;
           if (el.dataset.build === key) {
-            el.className = 'build-badge px-4 py-3.5 text-sm font-medium transition-colors relative text-gray-950 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-gray-950';
+            el.className = 'build-badge px-3 py-2 text-sm font-medium transition-colors rounded-sm text-gray-950 bg-gray-200/70';
           } else {
-            el.className = 'build-badge px-4 py-3.5 text-sm font-medium transition-colors relative text-gray-400 hover:text-gray-600';
+            el.className = 'build-badge px-3 py-2 text-sm font-medium transition-colors rounded-sm text-gray-500 hover:text-gray-700';
           }
         });
+        animateReplaces(tabData[key].replaces);
       }
 
       badges.forEach((b) => {

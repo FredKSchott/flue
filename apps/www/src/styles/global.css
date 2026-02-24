@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+@theme {
+	--font-heading: system-ui, -apple-system, sans-serif;
+}
+
 .animated-dash {
 	background-image: repeating-linear-gradient(
 		to bottom,

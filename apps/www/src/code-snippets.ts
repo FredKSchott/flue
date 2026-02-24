@@ -1,6 +1,5 @@
 export const HERO = `// .flue/workflows/issue-triage.ts
 export const proxies = { anthropic: anthropic(), github: github({ policy: 'allow-read' }) }
-export const args = v.object({ issueNumber: v.number() })
 
 export default async function triage(flue, { issueNumber }) {
   const issue = await flue.shell(\`gh issue view \${issueNumber} --json title,body,comments\`)
