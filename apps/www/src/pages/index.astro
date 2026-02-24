@@ -34,12 +34,26 @@ highlighter.dispose();
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
     <title>Flue — The Sandbox Agent Framework</title>
     <meta name="description" content="Build AI agents that can safely run code, triage issues, review PRs, and more — powered by OpenCode, running on your infrastructure." />
+    <meta name="theme-color" content="#ffffff" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Flue — The Sandbox Agent Framework" />
+    <meta property="og:description" content="Build AI agents that can safely run code, triage issues, review PRs, and more — powered by OpenCode, running on your infrastructure." />
+    <meta property="og:url" content="https://flue.dev" />
+    <!-- TODO: Add og:image once an OG image is created (1200x630) -->
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Flue — The Sandbox Agent Framework" />
+    <meta name="twitter:description" content="Build AI agents that can safely run code, triage issues, review PRs, and more — powered by OpenCode, running on your infrastructure." />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -53,7 +67,7 @@ highlighter.dispose();
           <span class="text-2xl font-extrabold tracking-tight text-gray-950">Flue</span><span id="nav-tagline" class="overflow-hidden h-8"><span class="inline-block text-lg text-gray-500 translate-y-full opacity-0 transition-all duration-300 ease-out">The sandbox agent framework.</span></span>
         </a>
         <div class="flex items-center gap-6">
-          <a href="https://github.com/FredKSchott/flue" class="text-gray-400 hover:text-gray-950 transition-colors" aria-label="GitHub">
+          <a href="https://github.com/FredKSchott/flue" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-gray-950 transition-colors" aria-label="GitHub">
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
           </a>
         </div>
@@ -67,12 +81,12 @@ highlighter.dispose();
             The Sandbox Agent Framework
           </h1>
           <p class="mt-6  max-w-2xl text-xl lg:text-2xl text-gray-500 text-balance">
-            Build advanced AI agents and CI workflows with OpenCode. Write once, deploy anywhere.
+            Build advanced AI agents and CI workflows with <a href="https://opencode.ai/" target="_blank" rel="noopener noreferrer" class="text-gray-950 underline decoration-gray-300 underline-offset-2 hover:decoration-gray-950 transition-colors">OpenCode</a>. Write once, deploy anywhere.
           </p>
           <div class="mt-8 flex items-center">
-            <a href="https://github.com/FredKSchott/flue#quick-start" class="inline-flex items-center gap-2 bg-gray-950 hover:bg-gray-800 text-white rounded-sm px-5 py-3 text-sm font-medium transition-colors">
-              Get started
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="M12 5l7 7-7 7" /></svg>
+            <a href="https://github.com/FredKSchott/flue" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2.5 bg-gray-950 hover:bg-gray-800 rounded-sm px-5 py-3 text-sm font-medium text-white transition-colors">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              View on GitHub
             </a>
         </div>
 
@@ -97,11 +111,11 @@ highlighter.dispose();
             <h2 class="font-heading text-3xl sm:text-4xl font-bold tracking-tight leading-tight text-balance">
                Give your agents a secure place to work.
             </h2>
-            <p class="mt-6 text-lg text-gray-500 leading-relaxed">
-              Build agents that can write code, run builds, execute tests, make commits, and push changes — all safely sandboxed away from your sensitive credentials.
-            </p>
             <p class="mt-4 text-lg text-gray-500 leading-relaxed">
-              Every Flue agent starts with a workflow — TypeScript that controls what runs, when, and in what order. <a href="https://opencode.ai" class="text-gray-950 underline decoration-gray-300 underline-offset-2 hover:decoration-gray-950 transition-colors">OpenCode</a> handles the complex work inside each step, but your code always controls the flow. That's what makes Flue workflows predictable enough to trust in production.
+              Every Flue agent starts with a workflow — TypeScript that controls exactly what runs and in what order. <a href="https://opencode.ai" target="_blank" rel="noopener noreferrer" class="text-gray-950 underline decoration-gray-300 underline-offset-2 hover:decoration-gray-950 transition-colors">OpenCode</a> directs the autonomous agent inside each step, while your deterministic workflow stays in control of the overall flow. 
+            </p>
+            <p class="mt-6 text-lg text-gray-500 leading-relaxed">
+              Flue lets you build agents that write code, run builds, execute tests, make commits, and push changes — all managed for you with the guaranteed safety of a secure sandbox container.
             </p>
           </div>
 
@@ -161,11 +175,14 @@ highlighter.dispose();
               Build your own <span id="build-label" class="text-blue-700">{highlighted[0].label}</span> in <span id="build-lines">{highlighted[0].lines}</span> lines of TypeScript.
             </h2>
             <p class="mt-6 text-lg text-gray-500 leading-relaxed">
-              Stop paying for generic agents that don't deliver. Build your own specialized agents with just a few lines of TypeScript. Flue gives you the building blocks, what you build is up to you.
-            </p>
+               Off-the-shelf AI tools treat every repo the same. Flue helps you build something better with <a href="https://agentskills.io/" target="_blank" rel="noopener noreferrer" class="text-gray-950 underline decoration-gray-300 underline-offset-2 hover:decoration-gray-950 transition-colors">agent skills</a> that customize your agents and workflows to your exact specification.
+             </p>
+             <p class="mt-4 text-lg text-gray-500 leading-relaxed">
+                You own everything. Bring your own API keys, run on your own infrastructure, and customize every line of code. No vendor lock-in, no black boxes.
+             </p>
             <div class="mt-8">
               <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Replaces</p>
-              <div id="build-replaces" class="mt-3 flex flex-wrap items-center gap-2">
+              <div id="build-replaces" class="mt-3 -ml-1f flex flex-wrap items-center gap-2">
                 {replaces[tabs[0].id].map((name) => (
                   <span class="replaces-badge inline-flex items-center rounded-full bg-gray-200/70 px-3 py-1 text-xs font-medium text-gray-600 transition-all duration-300">{name}</span>
                 ))}
@@ -180,7 +197,7 @@ highlighter.dispose();
                   <button
                     data-build={tab.id}
                     class:list={[
-                      'build-badge px-3 py-2 text-sm font-medium transition-colors rounded-sm',
+                      'build-badge px-3 py-2 text-sm font-medium transition-colors rounded-sm cursor-pointer',
                       i === 0
                         ? 'text-gray-950 bg-gray-200/70'
                         : 'text-gray-500 hover:text-gray-700',
@@ -209,31 +226,30 @@ highlighter.dispose();
         <p class="text-xs font-medium text-gray-400 uppercase tracking-wider text-center">Deploy now</p>
         <div class="mt-6 grid grid-cols-3 border border-gray-300 rounded-sm">
           <!-- GitHub Actions -->
-          <div class="runner-cell group flex flex-col items-center justify-center gap-3 py-10 px-6">
-            <svg class="w-12 h-12 grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" viewBox="0 0 24 24" fill="#181717"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-            <span class="inline-flex items-center rounded-full bg-gray-200/70 px-3 py-1 text-xs font-medium text-gray-600">GitHub Actions</span>
-          </div>
+          <a href="https://github.com/FredKSchott/flue/blob/main/docs/deploy-github-actions.md" target="_blank" rel="noopener noreferrer" class="runner-cell group relative overflow-hidden flex flex-col items-center justify-center gap-4 py-10 px-6 hover:bg-white transition-colors duration-300">
+            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style="background: radial-gradient(circle at 80% 80%, rgba(24,23,23,0.1) 0%, transparent 60%);"></div>
+            <svg class="relative w-10 h-10 grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" viewBox="0 0 24 24" fill="#181717"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            <span class="relative inline-flex items-center rounded-full bg-gray-200/70 px-3 py-1 text-xs font-medium text-gray-600">GitHub Actions</span>
+          </a>
           <!-- GitLab CI/CD -->
-          <div class="runner-cell group flex flex-col items-center justify-center gap-3 py-10 px-6 border-x border-gray-300">
-            <svg class="w-12 h-12 grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" viewBox="0 0 1000 963.197"><defs><style>.gl1{fill:#e24329}.gl2{fill:#fc6d26}.gl3{fill:#fca326}</style></defs><g transform="matrix(5.2068817,0,0,5.2068817,-489.30756,-507.76085)"><path class="gl1" d="m282.83 170.73-.27-.69-26.14-68.22a6.81 6.81 0 00-2.69-3.24 7 7 0 00-8 .43 7 7 0 00-2.32 3.52l-17.65 54h-71.47l-17.65-54a6.86 6.86 0 00-2.32-3.53 7 7 0 00-8-.43 6.87 6.87 0 00-2.69 3.24L97.44 170l-.26.69a48.54 48.54 0 0016.1 56.1l.09.07.24.17 39.82 29.82 19.7 14.91 12 9.06a8.07 8.07 0 009.76 0l12-9.06 19.7-14.91 40.06-30 .1-.08a48.56 48.56 0 0016.08-56.04z"/><path class="gl2" d="m282.83 170.73-.27-.69a88.3 88.3 0 00-35.15 15.8L190 229.25c19.55 14.79 36.57 27.64 36.57 27.64l40.06-30 .1-.08a48.56 48.56 0 0016.1-56.08z"/><path class="gl3" d="m153.43 256.89 19.7 14.91 12 9.06a8.07 8.07 0 009.76 0l12-9.06 19.7-14.91s-17.04-12.89-36.59-27.64c-19.55 14.75-36.57 27.64-36.57 27.64z"/><path class="gl2" d="M132.58 185.84A88.19 88.19 0 0097.44 170l-.26.69a48.54 48.54 0 0016.1 56.1l.09.07.24.17 39.82 29.82s17-12.85 36.57-27.64z"/></g></svg>
-            <span class="inline-flex items-center rounded-full bg-gray-200/70 px-3 py-1 text-xs font-medium text-gray-600">GitLab CI/CD</span>
-          </div>
+          <a href="https://github.com/FredKSchott/flue/blob/main/docs/deploy-gitlab-ci.md" target="_blank" rel="noopener noreferrer" class="runner-cell group relative overflow-hidden flex flex-col items-center justify-center gap-4 py-10 px-6 border-x border-gray-300 hover:bg-white transition-colors duration-300">
+            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style="background: radial-gradient(circle at 80% 80%, rgba(226,67,41,0.1) 0%, transparent 60%), radial-gradient(circle at 20% 20%, rgba(252,163,38,0.1) 0%, transparent 60%);"></div>
+            <svg class="relative w-10 h-10 grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" viewBox="0 0 1000 963.197"><defs><style>.gl1{fill:#e24329}.gl2{fill:#fc6d26}.gl3{fill:#fca326}</style></defs><g transform="matrix(5.2068817,0,0,5.2068817,-489.30756,-507.76085)"><path class="gl1" d="m282.83 170.73-.27-.69-26.14-68.22a6.81 6.81 0 00-2.69-3.24 7 7 0 00-8 .43 7 7 0 00-2.32 3.52l-17.65 54h-71.47l-17.65-54a6.86 6.86 0 00-2.32-3.53 7 7 0 00-8-.43 6.87 6.87 0 00-2.69 3.24L97.44 170l-.26.69a48.54 48.54 0 0016.1 56.1l.09.07.24.17 39.82 29.82 19.7 14.91 12 9.06a8.07 8.07 0 009.76 0l12-9.06 19.7-14.91 40.06-30 .1-.08a48.56 48.56 0 0016.08-56.04z"/><path class="gl2" d="m282.83 170.73-.27-.69a88.3 88.3 0 00-35.15 15.8L190 229.25c19.55 14.79 36.57 27.64 36.57 27.64l40.06-30 .1-.08a48.56 48.56 0 0016.1-56.08z"/><path class="gl3" d="m153.43 256.89 19.7 14.91 12 9.06a8.07 8.07 0 009.76 0l12-9.06 19.7-14.91s-17.04-12.89-36.59-27.64c-19.55 14.75-36.57 27.64-36.57 27.64z"/><path class="gl2" d="M132.58 185.84A88.19 88.19 0 0097.44 170l-.26.69a48.54 48.54 0 0016.1 56.1l.09.07.24.17 39.82 29.82s17-12.85 36.57-27.64z"/></g></svg>
+            <span class="relative inline-flex items-center rounded-full bg-gray-200/70 px-3 py-1 text-xs font-medium text-gray-600">GitLab CI/CD</span>
+          </a>
           <!-- Cloudflare -->
-          <div class="runner-cell group flex flex-col items-center justify-center gap-3 py-10 px-6">
-            <svg class="w-12 h-12 grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" viewBox="0 0 24 24" fill="#F38020"><path d="M16.5088 16.8447c.1475-.5068.0908-.9707-.1553-1.3154-.2246-.3164-.6045-.499-1.0615-.5205l-8.6592-.1123a.1559.1559 0 0 1-.1333-.0713c-.0283-.042-.0351-.0986-.021-.1553.0278-.084.1123-.1484.2036-.1562l8.7359-.1123c1.0351-.0489 2.1601-.8868 2.5537-1.9136l.499-1.3013c.0215-.0561.0293-.1128.0147-.168-.5625-2.5463-2.835-4.4453-5.5499-4.4453-2.5039 0-4.6284 1.6177-5.3876 3.8614-.4927-.3658-1.1187-.5625-1.794-.499-1.2026.119-2.1665 1.083-2.2861 2.2856-.0283.31-.0069.6128.0635.894C1.5683 13.171 0 14.7754 0 16.752c0 .1748.0142.3515.0352.5273.0141.083.0844.1475.1689.1475h15.9814c.0909 0 .1758-.0645.2032-.1553l.12-.4268zm2.7568-5.5634c-.0771 0-.1611 0-.2383.0112-.0566 0-.1054.0415-.127.0976l-.3378 1.1744c-.1475.5068-.0918.9707.1543 1.3164.2256.3164.6055.498 1.0625.5195l1.8437.1133c.0557 0 .1055.0263.1329.0703.0283.043.0351.1074.0214.1562-.0283.084-.1132.1485-.204.1553l-1.921.1123c-1.041.0488-2.1582.8867-2.5527 1.914l-.1406.3585c-.0283.0713.0215.1416.0986.1416h6.5977c.0771 0 .1474-.0489.169-.126.1122-.4082.1757-.837.1757-1.2803 0-2.6025-2.125-4.727-4.7344-4.727"/></svg>
-            <span class="inline-flex items-center rounded-full bg-gray-200/70 px-3 py-1 text-xs font-medium text-gray-600">Cloudflare</span>
-          </div>
+          <a href="https://github.com/FredKSchott/flue/blob/main/docs/deploy-cloudflare.md" target="_blank" rel="noopener noreferrer" class="runner-cell group relative overflow-hidden flex flex-col items-center justify-center gap-4 py-10 px-6 hover:bg-white transition-colors duration-300">
+            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style="background: radial-gradient(circle at 80% 80%, rgba(244,129,32,0.1) 0%, transparent 60%), radial-gradient(circle at 20% 20%, rgba(250,173,63,0.1) 0%, transparent 60%);"></div>
+            <svg class="relative h-10 w-auto grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" viewBox="0 -8 52 26" fill="none"><path fill="#f48120" d="M34.9,14.1a2.86,2.86,0,0,0-.3-2.6,3.09,3.09,0,0,0-2.1-1.1L15.1,10.2c-.1,0-.2-.1-.3-.1a.19.19,0,0,1,0-.3c.1-.2.2-.3.4-.3l17.5-.2a6.29,6.29,0,0,0,5.1-3.8l1-2.6c0-.1.1-.2,0-.3A11.4,11.4,0,0,0,16.9,1.4a5.46,5.46,0,0,0-3.6-1A5.21,5.21,0,0,0,8.7,5a5.46,5.46,0,0,0,.1,1.8A7.3,7.3,0,0,0,1.7,14.1a4.1,4.1,0,0,0,.1,1.1.32.32,0,0,0,.3.3H34.2c.2,0,.4-.1.4-.3Z"/><path fill="#faad3f" d="M40.4,2.9h-.5c-.1,0-.2.1-.3.2l-.7,2.4a2.86,2.86,0,0,0,.3,2.6,3.09,3.09,0,0,0,2.1,1.1l3.7.2c.1,0,.2.1.3.1a.19.19,0,0,1,0,.3c-.1.2-.2.3-.4.3l-3.8.2a6.29,6.29,0,0,0-5.1,3.8l-.2.9c-.1.1,0,.3.2.3H49.2a.27.27,0,0,0,.3-.3,10.87,10.87,0,0,0,.4-2.6A9.56,9.56,0,0,0,40.4,2.9"/></svg>
+            <span class="relative inline-flex items-center rounded-full bg-gray-200/70 px-3 py-1 text-xs font-medium text-gray-600">Cloudflare</span>
+          </a>
         </div>
-      </div>
-    </section>
-
-    <!-- GitHub CTA -->
-    <section>
-      <div class="max-w-6xl mx-auto px-6 min-h-[50vh] flex items-center justify-center text-center">
-        <a href="https://github.com/FredKSchott/flue" class="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-950 transition-colors">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          View on GitHub &rarr;
-        </a>
+        <div class="mt-8 text-center">
+          <a href="https://github.com/FredKSchott/flue" class="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-950 transition-colors">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            View on GitHub &rarr;
+          </a>
+        </div>
       </div>
     </section>
 
