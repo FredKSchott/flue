@@ -1,0 +1,20 @@
+{
+	"name": "@flue/cloudflare",
+	"version": "0.0.1",
+	"type": "module",
+	"license": "Apache-2.0",
+	"private": true,
+	"exports": {
+		".": "./src/index.ts",
+		"./worker": "./src/worker.ts"
+	},
+	"scripts": {
+		"check:types": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@cloudflare/sandbox": "^0.7.1",
+		"@flue/client": "workspace:*",
+		"@opencode-ai/sdk": "^1.1.56",
+		"hono": "^4.0.0"
+	}
+}

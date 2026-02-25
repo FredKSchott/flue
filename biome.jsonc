@@ -1,0 +1,57 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
+	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"complexity": {
+				"noForEach": "off"
+			},
+			"correctness": {
+				"noUnusedImports": "warn",
+				"useImportExtensions": "warn"
+			},
+			"suspicious": {
+				"noExplicitAny": "warn",
+				"noConsole": "warn",
+				"noDebugger": "warn"
+			},
+			"style": {
+				"noInferrableTypes": "off",
+				"noUnusedTemplateLiteral": "off",
+				"useNodejsImportProtocol": "warn",
+				"noNonNullAssertion": "warn"
+			}
+		}
+	},
+	"vcs": {
+		"clientKind": "git",
+		"enabled": true,
+		"useIgnoreFile": true
+	},
+	"formatter": {
+		"enabled": false
+	},
+	"overrides": [
+		{
+			"includes": ["**/tsconfig.json", "**/tsconfig.*.json"],
+			"json": {
+				"parser": {
+					"allowComments": true,
+					"allowTrailingCommas": true
+				}
+			}
+		},
+		{
+			"includes": ["packages/sdk/src/**", "apps/astro-triage/src/**"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noConsole": "off"
+					}
+				}
+			}
+		}
+	]
+}
