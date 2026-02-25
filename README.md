@@ -2,7 +2,9 @@
 
 > **Experimental** -- Flue is under active development. APIs may change.
 
-The sandbox agent framework. Connect a full [OpenCode](https://opencode.ai) session to your AI agents and CI workflows. Secure, autonomous, and fully customizable.
+The sandbox agent framework.  
+Connect a full [OpenCode](https://opencode.ai) session to your AI agents and CI workflows.  
+Secure, autonomous, and fully customizable.
 
 ## Packages
 
