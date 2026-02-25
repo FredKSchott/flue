@@ -1,6 +1,6 @@
 # @flue/cli
 
-CLI for running [Flue](https://github.com/FredKSchott/flue) AI-enabled workflows, locally or in GitHub Actions.
+CLI for running [Flue](https://github.com/withastro/flue) AI-enabled workflows, locally or in GitHub Actions.
 
 ## Install
 
