@@ -11,7 +11,7 @@ A minimal Worker with one route that provisions a sandbox and runs a command.
 ```bash
 mkdir my-flue-worker && cd my-flue-worker
 npm init -y
-npm install -D @flue/cloudflare @flue/client @flue/cli @cloudflare/sandbox hono wrangler
+npm install -D @flue/cloudflare @flue/client @cloudflare/sandbox valibot wrangler
 ```
 
 ### `src/app.ts`
