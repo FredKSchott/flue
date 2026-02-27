@@ -3,18 +3,32 @@
 	"version": "0.0.1",
 	"type": "module",
 	"license": "Apache-2.0",
-	"private": true,
 	"exports": {
-		".": "./src/index.ts",
-		"./worker": "./src/worker.ts"
+		".": {
+			"types": "./dist/index.d.mts",
+			"import": "./dist/index.mjs"
+		},
+		"./worker": {
+			"types": "./dist/worker.d.mts",
+			"import": "./dist/worker.mjs"
+		}
 	},
+	"main": "./dist/index.mjs",
+	"types": "./dist/index.d.mts",
+	"files": [
+		"dist"
+	],
 	"scripts": {
+		"build": "tsdown",
 		"check:types": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@cloudflare/sandbox": "^0.7.1",
-		"@flue/client": "workspace:*",
+		"@flue/client": "^0.0.27",
 		"@opencode-ai/sdk": "^1.1.56",
 		"hono": "^4.0.0"
+	},
+	"devDependencies": {
+		"tsdown": "^0.20.3"
 	}
 }
