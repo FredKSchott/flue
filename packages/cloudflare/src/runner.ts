@@ -74,6 +74,7 @@ export class FlueRuntime {
 		const opencodeConfig = this.buildOpencodeConfig();
 		console.log(`[flue] setup: starting OpenCode server (workdir: ${this.workdir})`);
 		const result = await createOpencode(this.sandbox, {
+			port: 48765,
 			directory: this.workdir,
 			config: {
 				...opencodeConfig,
