@@ -23,6 +23,8 @@ export interface SkillOptions<S extends v.GenericSchema | undefined = undefined>
 	result?: S;
 	/** Override model for this skill. */
 	model?: { providerID: string; modelID: string };
+	/** Max time to wait for the skill to complete (ms). Defaults to 60 minutes. */
+	timeout?: number;
 }
 
 export interface PromptOptions<S extends v.GenericSchema | undefined = undefined> {
@@ -30,6 +32,8 @@ export interface PromptOptions<S extends v.GenericSchema | undefined = undefined
 	result?: S;
 	/** Override model for this prompt. */
 	model?: { providerID: string; modelID: string };
+	/** Max time to wait for the prompt to complete (ms). Defaults to 60 minutes. */
+	timeout?: number;
 }
 
 export interface ShellOptions {

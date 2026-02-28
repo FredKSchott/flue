@@ -10,8 +10,8 @@ const POLL_INTERVAL = 15_000;
 /** Max times we'll see 0 assistant messages before giving up. */
 const MAX_EMPTY_POLLS = 20; // 20 polls * 15s = 5 minutes
 
-/** Max time to poll before timing out (ms) - 45 minutes. */
-const MAX_POLL_TIME = 45 * 60 * 1000;
+/** Default max time to poll before timing out (ms) - 60 minutes. */
+const DEFAULT_POLL_TIMEOUT = 60 * 60 * 1000;
 
 /**
  * Low-level primitive: send a fully-formed prompt to OpenCode, poll until
@@ -27,7 +27,7 @@ export async function runPrompt<S extends v.GenericSchema | undefined = undefine
 	prompt: string,
 	options?: PromptOptions<S>,
 ): Promise<S extends v.GenericSchema ? v.InferOutput<S> : void> {
-	const { result: schema, model } = options ?? {};
+	const { result: schema, model, timeout } = options ?? {};
 
 	console.log(`[flue] ${label}: starting`);
 
@@ -75,7 +75,7 @@ export async function runPrompt<S extends v.GenericSchema | undefined = undefine
 	await confirmSessionStarted(client, sessionId, workdir, label);
 
 	console.log(`[flue] ${label}: starting polling`);
-	const parts = await pollUntilIdle(client, sessionId, workdir, label, promptStart);
+	const parts = await pollUntilIdle(client, sessionId, workdir, label, promptStart, timeout);
 	const promptElapsed = ((Date.now() - promptStart) / 1000).toFixed(1);
 
 	console.log(`[flue] ${label}: completed (${promptElapsed}s)`);
@@ -100,14 +100,14 @@ export async function runSkill<S extends v.GenericSchema | undefined = undefined
 	options?: SkillOptions<S>,
 	proxyInstructions?: string[],
 ): Promise<S extends v.GenericSchema ? v.InferOutput<S> : void> {
-	const { args, result: schema, model } = options ?? {};
+	const { args, result: schema, model, timeout } = options ?? {};
 	const prompt = buildSkillPrompt(
 		name,
 		args,
 		schema as v.GenericSchema | undefined,
 		proxyInstructions,
 	);
-	return runPrompt(client, workdir, `skill("${name}")`, prompt, { result: schema, model });
+	return runPrompt(client, workdir, `skill("${name}")`, prompt, { result: schema, model, timeout });
 }
 
 /**
@@ -158,7 +158,9 @@ async function pollUntilIdle(
 	workdir: string,
 	label: string,
 	startTime: number,
+	timeout?: number,
 ): Promise<Part[]> {
+	const maxPollTime = timeout ?? DEFAULT_POLL_TIMEOUT;
 	let emptyPolls = 0;
 	let pollCount = 0;
 
@@ -168,7 +170,7 @@ async function pollUntilIdle(
 
 		const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
 
-		if (Date.now() - startTime > MAX_POLL_TIME) {
+		if (Date.now() - startTime > maxPollTime) {
 			throw new Error(
 				`"${label}" timed out after ${elapsed}s. Session never went idle. This may indicate a stuck session or OpenCode bug.`,
 			);
