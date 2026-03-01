@@ -24,7 +24,6 @@ export function buildResultInstructions(schema: v.GenericSchema): string {
 	const { $schema: _, ...schemaWithoutMeta } = jsonSchema;
 	return [
 		'',
-		'When complete, you MUST output your result between these exact delimiters conforming to this schema:',
 		'```json',
 		JSON.stringify(schemaWithoutMeta, null, 2),
 		'```',
@@ -47,6 +46,21 @@ export function buildResultInstructions(schema: v.GenericSchema): string {
 export function buildProxyInstructions(instructions: string[]): string {
 	if (instructions.length === 0) return '';
 	return '\n\n' + instructions.join('\n');
+}
+
+/**
+ * Build a standalone follow-up prompt that asks the LLM to return its result.
+ *
+ * Used when the initial response is missing the ---RESULT_START--- /
+ * ---RESULT_END--- block. Sent as a second message in the same session so the
+ * format instructions are fresh in context.
+ */
+export function buildResultExtractionPrompt(schema: v.GenericSchema): string {
+	return [
+		'Your task is complete. Now respond with ONLY your final result.',
+		'No explanation, no preamble — just the result in the following format, conforming to this schema:',
+		buildResultInstructions(schema),
+	].join('\n');
 }
 
 /**
@@ -77,6 +91,9 @@ export function buildSkillPrompt(
 	}
 
 	if (schema) {
+		parts.push(
+			'When complete, you MUST output your result between these exact delimiters conforming to this schema:',
+		);
 		parts.push(buildResultInstructions(schema));
 	}
 

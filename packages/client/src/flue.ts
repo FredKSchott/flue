@@ -64,6 +64,7 @@ export class FlueClient {
 			parts.push(buildProxyInstructions(this.proxyInstructions));
 		}
 		if (schema) {
+			parts.push('When complete, you MUST output your result between these exact delimiters conforming to this schema:');
 			parts.push(buildResultInstructions(schema));
 		}
 		const fullPrompt = parts.join('\n');

@@ -1,6 +1,7 @@
 import type { OpencodeClient, Part } from '@opencode-ai/sdk';
 import type * as v from 'valibot';
-import { buildSkillPrompt } from './prompt.ts';
+import { SkillOutputError } from './errors.ts';
+import { buildResultExtractionPrompt, buildSkillPrompt } from './prompt.ts';
 import { extractResult } from './result.ts';
 import type { PromptOptions, SkillOptions } from './types.ts';
 
@@ -84,9 +85,50 @@ export async function runPrompt<S extends v.GenericSchema | undefined = undefine
 		return undefined as S extends v.GenericSchema ? v.InferOutput<S> : undefined;
 	}
 
-	return extractResult(parts, schema as v.GenericSchema, sessionId) as S extends v.GenericSchema
-		? v.InferOutput<S>
-		: undefined;
+	try {
+		return extractResult(parts, schema as v.GenericSchema, sessionId) as S extends v.GenericSchema
+			? v.InferOutput<S>
+			: undefined;
+	} catch (error) {
+		if (!(error instanceof SkillOutputError)) throw error;
+		if (!error.message.includes('---RESULT_START---')) throw error;
+		// The LLM forgot to include the RESULT_START/RESULT_END block.
+		// Send a follow-up message in the same session to ask for the result
+		// while the format instructions are fresh in context.
+		console.log(
+			`[flue] ${label}: result extraction failed, sending follow-up prompt to request result`,
+		);
+
+		const followUpResult = await client.session.promptAsync({
+			path: { id: sessionId },
+			query: { directory: workdir },
+			body: {
+				...(model ? { model } : {}),
+				parts: [
+					{
+						type: 'text',
+						text: buildResultExtractionPrompt(schema as v.GenericSchema),
+					},
+				],
+			},
+		});
+
+		if (followUpResult.error) {
+			if ((followUpResult.error instanceof Error)) {
+				followUpResult.error.cause = error;
+			}
+			throw followUpResult.error;
+		}
+
+		await confirmSessionStarted(client, sessionId, workdir, label);
+		const allParts = await pollUntilIdle(client, sessionId, workdir, label, Date.now(), timeout);
+
+		return extractResult(
+			allParts,
+			schema as v.GenericSchema,
+			sessionId,
+		) as S extends v.GenericSchema ? v.InferOutput<S> : undefined;
+	}
 }
 
 /**
