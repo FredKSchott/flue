@@ -698,8 +698,6 @@ function startOpenCodeServer() {
 				'*': 'allow',
 				// Disable questions, they can block the session
 				question: 'deny',
-				// Disable tasks, they are problematic for multi-step workflows
-				task: 'deny',
 			}),
 		},
 	});

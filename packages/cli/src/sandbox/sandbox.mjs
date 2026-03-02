@@ -210,7 +210,6 @@ export function startSandboxContainer(workdir, image, handles) {
 		`OPENCODE_PERMISSION=${JSON.stringify({
 			'*': 'allow',
 			question: 'deny',
-			task: 'deny',
 		})}`,
 	);
 

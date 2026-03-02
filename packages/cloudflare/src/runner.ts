@@ -79,7 +79,7 @@ export class FlueRuntime {
 			config: {
 				...opencodeConfig,
 				// Headless agent — no human to approve permission prompts.
-				permission: { '*': 'allow', question: 'deny', task: 'deny' } as Record<string, string>,
+				permission: { '*': 'allow', question: 'deny' } as Record<string, string>,
 			},
 		});
 		this.opencodeServer = result.server;
