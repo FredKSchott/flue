@@ -1,0 +1,76 @@
+---
+import { Icon } from "astro-icon/components";
+import { cn } from "@/lib/cn";
+import type { HTMLAttributes } from "astro/types";
+
+interface Props extends HTMLAttributes<"aside"> {
+  // Keeps `type` (not `variant`) for Starlight compatibility — Starlight's <Aside> uses `type`.
+  type?: "note" | "tip" | "caution" | "danger";
+  title?: string;
+}
+
+const { type = "note", title, class: className, ...attrs } = Astro.props;
+
+const config: Record<string, { label: string; color: string; tint: string }> = {
+  note:    { label: "Note",    color: "var(--nb-info)",    tint: "var(--nb-info-muted)" },
+  tip:     { label: "Tip",     color: "var(--nb-success)", tint: "var(--nb-success-muted)" },
+  caution: { label: "Caution", color: "var(--nb-warning)", tint: "var(--nb-warning-muted)" },
+  danger:  { label: "Danger",  color: "var(--nb-danger)",  tint: "var(--nb-danger-muted)" },
+};
+
+const c = config[type] ?? config.note;
+const displayTitle = title ?? c.label;
+---
+
+<aside
+  role="note"
+  aria-label={displayTitle}
+  class={cn("aside-card flex items-start gap-3 rounded-lg px-4 py-3 my-4", className)}
+  style={`--_c: ${c.color}; --_t: ${c.tint};`}
+  {...attrs}
+>
+  <span class="shrink-0 flex items-center h-[1.375em]" aria-hidden="true">
+    {type === "note" && <Icon name="ph:info" class="w-[1em] h-[1em]" />}
+    {type === "tip" && <Icon name="ph:lightbulb" class="w-[1em] h-[1em]" />}
+    {type === "caution" && <Icon name="ph:warning" class="w-[1em] h-[1em]" />}
+    {type === "danger" && <Icon name="ph:warning-circle" class="w-[1em] h-[1em]" />}
+  </span>
+  <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+    <p class="m-0 text-base font-semibold leading-snug">{displayTitle}</p>
+    <div class="aside-card-body text-sm leading-normal">
+      <slot />
+    </div>
+  </div>
+</aside>
+
+<style>
+  .aside-card {
+    border: 1px solid color-mix(in oklch, var(--_c) 25%, transparent);
+    background: var(--_t);
+  }
+
+  /* Icon + title stay in semantic color; body text stays readable */
+  .aside-card > :global(:first-child) { color: var(--_c); }
+  .aside-card > :global(:last-child) > :global(:first-child) { color: var(--_c); }
+  .aside-card-body { color: var(--nb-foreground); }
+
+  .aside-card-body :global(p) { margin: 0; }
+  .aside-card-body :global(p + p) { margin-top: 0.375rem; }
+  .aside-card-body :global(a) { text-decoration: underline; text-underline-offset: 2px; }
+
+  /* Inline code only — exclude code inside Expressive Code pre blocks */
+  .aside-card-body :global(code:not(:where(pre *))) {
+    font-family: var(--nb-font-mono);
+    font-size: 0.8125em;
+    background: color-mix(in oklch, var(--_c) 10%, transparent);
+    border: 1px solid color-mix(in oklch, var(--_c) 15%, transparent);
+    border-radius: 0.25rem;
+    padding: 0.0625rem 0.3125rem;
+  }
+  .aside-card-body :global(strong) { font-weight: 600; color: inherit; }
+
+  /* Shiki code blocks inside Asides */
+  .aside-card-body :global(.astro-code) {
+    margin: 0.75rem 0;
+  }
+</style>

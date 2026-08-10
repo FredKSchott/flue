@@ -1,0 +1,49 @@
+---
+import { Icon } from "astro-icon/components";
+import { cn } from "@/lib/cn";
+import type { HTMLAttributes } from "astro/types";
+
+interface Props extends HTMLAttributes<"div"> {
+  markdownUrl?: string;
+  lastUpdated?: Date;
+}
+
+const { markdownUrl, lastUpdated, class: className, ...attrs } = Astro.props;
+
+const baseBtn =
+  "inline-flex cursor-pointer items-center gap-1.5 rounded-md bg-transparent px-2 py-1 text-muted-foreground no-underline transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2";
+
+const formattedDate = lastUpdated
+  ? lastUpdated.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })
+  : null;
+---
+
+{(markdownUrl || lastUpdated) && (
+  <div
+    class={cn("not-prose -ml-2 flex flex-wrap items-center gap-y-1 text-[0.8125rem]", className)}
+    {...attrs}
+  >
+    {lastUpdated && (
+      <span class="inline-flex items-center gap-1.5 px-2 py-1 text-muted-foreground">
+        <Icon name="ph:clock" class="w-3.5 h-3.5" />
+        Last updated <time datetime={lastUpdated.toISOString().slice(0, 10)}>{formattedDate}</time>
+      </span>
+    )}
+
+    {markdownUrl && lastUpdated && (
+      <span aria-hidden="true" class="select-none text-muted-foreground/40">|</span>
+    )}
+
+    {markdownUrl && (
+      <a
+        href={markdownUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class={baseBtn}
+      >
+        <Icon name="ph:markdown-logo" class="w-3.5 h-3.5" />
+        View as Markdown
+      </a>
+    )}
+  </div>
+)}

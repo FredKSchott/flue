@@ -1,225 +1,316 @@
 ---
-import type { MarkdownHeading } from 'astro';
-import DocsCover from '../components/docs/DocsCover.astro';
-import DocsHeader from '../components/docs/DocsHeader.astro';
-import DocsSidebar from '../components/docs/DocsSidebar.astro';
-import DocsTableOfContents from '../components/docs/DocsTableOfContents.astro';
-import MobileDocsNavigation from '../components/docs/MobileDocsNavigation.astro';
-import { docsHref, docsSections, getDocsSection } from '../lib/docs-navigation';
-import '../styles/global.css';
+/**
+ * DocsLayout — three-column docs layout.
+ *
+ * Named slots for overrides (all optional, defaults render otherwise):
+ *   header, sidebar, toc, page-title, content-footer, pagination
+ */
+import { Icon } from "astro-icon/components";
+import BaseLayout from "./BaseLayout.astro";
+import Header from "@/components/Header.astro";
+import { Banner } from "@/components/ui/banner";
+import { Sidebar, SidebarFilter } from "@/components/ui/sidebar";
+import { TOC, MobileTOC } from "@/components/ui/toc";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { Pagination } from "@/components/ui/pagination";
+import { PageActions } from "@/components/ui/page-actions";
+import { Badge } from "@/components/ui/badge";
+import type { DocsPageProps } from "@cloudflare/nimbus-docs/types";
+import { getVersionStatus, getVersionAlternates } from "@cloudflare/nimbus-docs";
 
-interface Props {
-	title: string;
-	description?: string;
-	subtitle?: string;
-	packageLink?: {
-		name: string;
-		href: string;
-	};
-	lastReviewedAt?: Date;
-	currentSlug: string;
-	headings: MarkdownHeading[];
-	showTableOfContents?: boolean;
-	variant?: 'default' | 'directory';
+type Props = DocsPageProps & { audience?: "human" };
+
+const { title, description, sidebar, headings, breadcrumbs, prevNext, mode = "doc", banner, head = [], searchable, noindex, markdownUrl, socialImage, lastUpdated, editUrl, draft, audience, collection, entryId } = Astro.props;
+
+// `searchable` derives from `noindex` when omitted: a non-crawlable page is
+// by default not in the site search either. Explicit `searchable: true`
+// overrides for the edge case of "no search engines, yes internal search."
+const effectiveSearchable = searchable ?? !noindex;
+const isCustom = mode === "custom";
+
+// `sidebar: false` / `tableOfContents: false` in frontmatter come through
+// from the route as literal `false` (not coerced to `[]`). They drive
+// per-column suppression — chrome, mobile dialog, header menu button.
+const showSidebar = sidebar !== false;
+
+// Versioning: per-page status drives Pagefind faceting, deprecation
+// banner, and the data-pagefind-ignore exclusion for hidden versions.
+const versionStatus = collection ? await getVersionStatus(collection) : null;
+const versionAlternates = collection && entryId
+  ? await getVersionAlternates(collection, entryId)
+  : null;
+const currentSiblingUrl = versionAlternates?.canonical?.url ?? null;
+
+// Page-body attribute resolution:
+//   - If the user opted out via `searchable: false` (or `noindex: true`
+//     with no explicit override) → ignore.
+//   - If the page is in a hidden version → ignore unconditionally
+//     (hidden takes precedence; you can't index hidden content even
+//     if the page frontmatter says searchable=true).
+//   - Otherwise → mark as a Pagefind body, plus emit per-version and
+//     per-status filters so the search UI can scope by them.
+const pagefindAttrs: Record<string, string> = {};
+if (!effectiveSearchable || versionStatus?.isHidden) {
+  pagefindAttrs["data-pagefind-ignore"] = "";
+} else {
+  pagefindAttrs["data-pagefind-body"] = "";
+  if (versionStatus) {
+    pagefindAttrs["data-pagefind-filter"] = `version:${versionStatus.version}`;
+    if (versionStatus.isDeprecated) {
+      // Pagefind supports multiple filter attributes on the same element
+      // via `data-pagefind-filter` repeated as a comma-separated list in
+      // the value. The status filter pairs with the version filter so a
+      // search UI can offer "exclude deprecated" as a default toggle.
+      pagefindAttrs["data-pagefind-filter"] += `, status:deprecated`;
+    }
+  }
 }
 
-const {
-	title,
-	description,
-	subtitle,
-	packageLink,
-	lastReviewedAt,
-	currentSlug,
-	headings,
-	showTableOfContents = true,
-	variant = 'default',
-} = Astro.props;
-const tableOfContents = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
-const coverVariant = currentSlug === 'introduction/why-flue' ? 'workflows' : undefined;
-const currentSection = getDocsSection(currentSlug);
-const markdownUrl = `${import.meta.env.BASE_URL}${currentSlug}/index.md`;
-const pageTitle = `${title} | Flue`;
-const pageDescription = description ?? 'Flue framework documentation.';
-const canonicalUrl = new URL(Astro.url.pathname, 'https://flueframework.com').href;
-const reviewedDate = lastReviewedAt?.toISOString().slice(0, 10);
-const formattedReviewedDate = lastReviewedAt?.toLocaleDateString('en-US', {
-	month: 'short',
-	day: 'numeric',
-	year: 'numeric',
-	timeZone: 'UTC',
-});
+const hasHeader = Astro.slots.has("header");
+const hasSidebar = Astro.slots.has("sidebar");
+const hasToc = Astro.slots.has("toc");
+const hasPageTitle = Astro.slots.has("page-title");
+const hasContentFooter = Astro.slots.has("content-footer");
+const hasPagination = Astro.slots.has("pagination");
 ---
 
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<link rel="icon" type="image/png" href={`${import.meta.env.BASE_URL}favicon-96x96.png`} sizes="96x96" />
-		<link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
-		<link rel="shortcut icon" href={`${import.meta.env.BASE_URL}favicon.ico`} />
-		<link rel="apple-touch-icon" sizes="180x180" href={`${import.meta.env.BASE_URL}apple-touch-icon.png`} />
-		<link rel="manifest" href={`${import.meta.env.BASE_URL}site.webmanifest`} />
-		<meta name="generator" content={Astro.generator} />
-		<meta name="theme-color" content="#ffffff" />
-		<meta name="description" content={pageDescription} />
-		<link rel="canonical" href={canonicalUrl} />
-		<meta property="og:type" content="website" />
-		<meta property="og:site_name" content="Flue" />
-		<meta property="og:title" content={pageTitle} />
-		<meta property="og:description" content={pageDescription} />
-		<meta property="og:url" content={canonicalUrl} />
-		<meta property="og:image" content="https://flueframework.com/docs/og4.jpg" />
-		<meta property="og:image:alt" content="Flue framework logo" />
-		<meta name="twitter:card" content="summary_large_image" />
-		<meta name="twitter:title" content={pageTitle} />
-		<meta name="twitter:description" content={pageDescription} />
-		<meta name="twitter:image" content="https://flueframework.com/docs/og4.jpg" />
-		<meta name="twitter:image:alt" content="Flue framework logo" />
-		<title>{pageTitle}</title>
-		<link rel="alternate" type="text/markdown" href={markdownUrl} />
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-	</head>
-	<body>
-		<a class="fixed left-4 -top-16 z-[100] rounded-lg bg-blue-500 px-3 py-2 text-white focus:top-4" href="#main-content">Skip to content</a>
-		<DocsHeader currentSlug={currentSlug} />
-		<MobileDocsNavigation groups={currentSection.groups} currentSlug={currentSlug} sectionTitle={currentSection.title} />
-		<div
-			class:list={[
-				'mx-auto grid min-h-[calc(100vh-var(--docs-header-height))] w-[min(100%,var(--docs-frame-width))] max-docs-desktop:block',
-				variant === 'directory'
-					? 'grid-cols-[254px_minmax(0,1fr)] max-2xl:grid-cols-[232px_minmax(0,1fr)]'
-					: 'grid-cols-[254px_minmax(0,820px)_16.5rem] max-2xl:grid-cols-[232px_minmax(0,1fr)]',
-			]}
-		>
-			<aside class="border-r border-docs-border pt-[var(--docs-aside-top)] pr-8 pb-8 pl-5 max-docs-desktop:hidden">
-				<DocsSidebar groups={currentSection.groups} currentSlug={currentSlug} />
-			</aside>
-			<main
-				id="main-content"
-				class:list={[
-					'min-w-0 pb-14 max-docs-desktop:px-4 max-docs-desktop:pb-10',
-					variant === 'directory' ? 'px-[clamp(2rem,3vw,3.5rem)] pt-10 max-docs-desktop:pt-7' : 'px-[clamp(2.6rem,4vw,4.45rem)]',
-					variant !== 'directory' && (coverVariant ? 'pt-8 max-docs-desktop:pt-5' : 'pt-12 max-docs-desktop:pt-8'),
-				]}
-			>
-				<article data-markdown-content class:list={['mx-auto', variant === 'directory' ? 'max-w-200' : 'max-w-175']}>
-					{
-						variant === 'default' && (
-							<header class="mb-8 border-b border-docs-border pb-3 max-docs-desktop:mb-7">
-								{coverVariant && <DocsCover variant={coverVariant} />}
-								<h1 data-pagefind-body class="m-0 text-5xl font-bold leading-[1.08] tracking-[-0.05em] text-gray-950 max-docs-desktop:text-[2.375rem]">{title}</h1>
-								{subtitle && <p data-pagefind-body class="mt-4 mb-0 text-lg leading-7 text-gray-600">{subtitle}</p>}
-								<div class:list={['flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-gray-500 max-docs-desktop:gap-x-4 mt-4 max-docs-desktop:mt-3 place-content-between sm:place-content-start']}>
-									{
-										lastReviewedAt ? (
-												<span>Last updated <time datetime={reviewedDate} data-review-date title={formattedReviewedDate}>{formattedReviewedDate}</time></span>
-										) : (
-											<span>AI-generated, awaiting review</span>
-										)
-									}
-									<a class="inline-flex items-center gap-2 text-gray-500 transition-colors hover:text-gray-800" href={markdownUrl}>
-										<svg class="size-[1.25rem] shrink-0 fill-current" aria-hidden="true" viewBox="0 0 640 640"><path d="M593.8 123.1L46.2 123.1C20.7 123.1 0 143.8 0 169.2L0 470.7C0 496.2 20.7 516.9 46.2 516.9L593.9 516.9C619.4 516.9 640.1 496.2 640 470.8L640 169.2C640 143.8 619.3 123.1 593.8 123.1zM338.5 424.6L277 424.6L277 304.6L215.5 381.5L154 304.6L154 424.6L92.3 424.6L92.3 215.4L153.8 215.4L215.3 292.3L276.8 215.4L338.3 215.4L338.3 424.6L338.5 424.6zM473.8 427.7L381.5 320L443 320L443 215.4L504.5 215.4L504.5 320L566 320L473.8 427.7z" /></svg>
-										View as Markdown
-									</a>
-									{
-										packageLink && (
-											<a class="inline-flex items-center gap-2 text-gray-500 transition-colors hover:text-gray-800" href={packageLink.href} target="_blank" rel="noopener noreferrer">
-												<svg class="h-[0.8rem] w-[2.05rem] shrink-0" aria-hidden="true" viewBox="0 0 18 7">
-													<path fill="currentColor" d="M0,0h18v6H9v1H5V6H0V0z M1,5h2V2h1v3h1V1H1V5z M6,1v5h2V5h2V1H6z M8,2h1v2H8V2z M11,1v4h2V2h1v3h1V2h1v3h1V1H11z" />
-													<polygon fill="#fff" points="1,5 3,5 3,2 4,2 4,5 5,5 5,1 1,1" />
-													<path fill="#fff" d="M6,1v5h2V5h2V1H6z M9,4H8V2h1V4z" />
-													<polygon fill="#fff" points="11,1 11,5 13,5 13,2 14,2 14,5 15,5 15,2 16,2 16,5 17,5 17,1" />
-												</svg>
-												{packageLink.name}
-											</a>
-										)
-									}
-								</div>
-							</header>
-						)
-					}
-					<div class:list={[variant === 'default' && 'docs-content']} data-pagefind-body>
-						<slot />
-					</div>
-				</article>
-				<section data-markdown-navigation class="hidden">
-					<h2>Docs Navigation</h2>
-					<p>Current page: <a href={docsHref(currentSlug)}>{title}</a></p>
-					<h3>Sections</h3>
-					<ul>
-						{docsSections.map((section) => <li><a href={docsHref(section.landingSlug)}>{section.title}</a></li>)}
-					</ul>
-					<DocsSidebar groups={currentSection.groups} currentSlug={currentSlug} groupHeadingLevel={3} />
-				</section>
-			</main>
-			{
-				variant === 'default' && (
-					<aside class="pt-[var(--docs-aside-top)] pr-2 pb-8 pl-7 max-2xl:hidden">
-						{showTableOfContents && <DocsTableOfContents headings={tableOfContents} />}
-					</aside>
-				)
-			}
-		</div>
-		<script is:inline>
-			const setActiveSidebarLink = () => {
-				const currentUrl = new URL(window.location.href);
+<BaseLayout title={title} description={description} noindex={noindex || draft} markdownUrl={markdownUrl} socialImage={socialImage} lastUpdated={lastUpdated} head={head} collection={collection} entryId={entryId}>
+  <div class="flex flex-col min-h-screen">
+    {hasHeader ? <slot name="header" /> : <Header collection={collection} entryId={entryId} showSidebar={showSidebar} />}
 
-				for (const link of document.querySelectorAll('[data-docs-sidebar-link]')) {
-					const linkUrl = new URL(link.href);
-					const pageActive = linkUrl.pathname === currentUrl.pathname && linkUrl.hash === '';
-					const locationActive = linkUrl.pathname === currentUrl.pathname && linkUrl.hash !== '' && linkUrl.hash === currentUrl.hash;
-					const visuallyActive = pageActive || locationActive;
-					link.classList.toggle('font-medium', visuallyActive);
-					link.classList.toggle('text-blue-600', pageActive);
-					link.classList.toggle('text-black', locationActive);
-					link.classList.toggle('text-gray-600', !visuallyActive);
-					link.classList.toggle('hover:text-gray-950', !visuallyActive);
-					link.parentElement?.classList.toggle('docs-sidebar-location-active', locationActive);
+    {isCustom ? (
+      <main id="main-content" class="flex-1">
+        <slot />
+      </main>
+    ) : (
+      <div class="flex-1 mx-auto w-full">
+        <div class="flex">
+          {showSidebar && (
+            <aside id="desktop-sidebar" data-nb-desktop-sidebar class="hidden lg:flex w-(--nb-sidebar-width) shrink-0 border-r border-border bg-background sticky top-14 h-[calc(100vh-3.5rem)] flex-col overflow-y-auto overscroll-contain relative">
+              {hasSidebar ? (
+                <slot name="sidebar" />
+              ) : (
+                <nav class="px-4 pb-12 pt-5 flex-1">
+                  <SidebarFilter />
+                  <Sidebar items={sidebar} persist />
+                </nav>
+              )}
+              <div class="pointer-events-none sticky bottom-0 h-8 bg-gradient-to-t from-base to-transparent" />
+            </aside>
+          )}
 
-					if (locationActive) {
-						link.setAttribute('aria-current', 'location');
-					} else if (pageActive && currentUrl.hash === '') {
-						link.setAttribute('aria-current', 'page');
-					} else {
-						link.removeAttribute('aria-current');
-					}
-				}
-			};
+          {/* Sidebar scroll restore — keeps the active section in view across nav.
+              Only emit when the sidebar is rendered; otherwise the script is
+              dead code (the `desktop-sidebar` element doesn't exist). */}
+          {showSidebar && (
+          <script is:inline aria-hidden="true">
+          (function () {
+            try {
+              if (!matchMedia("(min-width: 64rem)").matches) return;
+              const sidebar = document.getElementById("desktop-sidebar");
+              if (!sidebar) return;
+              const content = sidebar.querySelector("[data-nb-sidebar]");
+              if (!content) return;
 
-			setActiveSidebarLink();
-			window.addEventListener('hashchange', setActiveSidebarLink);
+              const raw = sessionStorage.getItem("sidebar-state");
+              let state;
+              if (raw) {
+                state = JSON.parse(raw);
+              }
 
-			for (const heading of document.querySelectorAll('.docs-content :is(h2, h3, h4, h5, h6)[id]')) {
-				if (!heading.id) continue;
+              const active = sidebar.querySelector("[aria-current='page']");
+              if (raw && state && state.hash === content.dataset.nbSidebarHash && state.scroll) {
+                sidebar.scrollTop = state.scroll;
+              } else if (active) {
+                const sr = sidebar.getBoundingClientRect();
+                const ar = active.getBoundingClientRect();
+                sidebar.scrollTop += ar.top - sr.top - sr.height / 2 + ar.height / 2;
+              }
+            } catch (_) {}
+          })();
+          </script>
+          )}
 
-				const anchor = document.createElement('a');
-				anchor.className = 'docs-heading-anchor';
-				anchor.href = `#${heading.id}`;
-				anchor.setAttribute('aria-label', `Link to ${heading.textContent ?? 'section'}`);
-				anchor.textContent = '#';
-				heading.append(anchor);
-			}
+          <main id="main-content" class="flex-1 min-w-0">
+            <div class="mx-auto max-w-(--nb-content-max) px-4 lg:px-6 pt-6 pb-12">
+              {versionStatus?.isDeprecated && (
+                <Banner
+                  variant="caution"
+                  content={
+                    currentSiblingUrl
+                      ? `This is the <strong>${versionStatus.version}</strong> version of the docs and is no longer maintained. The latest version of this page is at <a href="${currentSiblingUrl}">${currentSiblingUrl}</a>.`
+                      : `This is the <strong>${versionStatus.version}</strong> version of the docs and is no longer maintained. See the <a href="/">current docs</a> for up-to-date content.`
+                  }
+                />
+              )}
+              {banner && <Banner content={banner.content} variant={banner.type} dismissible={banner.dismissible} />}
+              <Breadcrumbs items={breadcrumbs} class="pb-2" />
+              <div {...pagefindAttrs}>
+                {hasPageTitle ? (
+                  <slot name="page-title" />
+                ) : (
+                  <Fragment>
+                    <div class="flex items-center gap-3 flex-wrap mt-6">
+                      <h1 class="text-foreground mb-0 leading-tight [text-wrap:balance]" style={`font-size:var(--nb-h1-size);font-weight:var(--nb-h1-weight);letter-spacing:var(--nb-h1-tracking)`}>{title}</h1>
+                      {draft && <Badge text="Draft" variant="warning" size="medium" />}
+                    </div>
+                    <PageActions markdownUrl={markdownUrl} lastUpdated={lastUpdated} class="mt-3" />
+                    {headings !== false && headings.length > 0 && (
+                      <div class="border-border bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-14 z-20 -mx-4 mt-3 border-y px-4 py-2 backdrop-blur lg:-mx-6 lg:px-6 xl:hidden">
+                        <MobileTOC headings={headings} />
+                      </div>
+                    )}
+                    {(markdownUrl || audience === "human") && (
+                      audience === "human" ? (
+                        <div class="mt-3 mb-6 flex items-center gap-3" role="none">
+                          <div class="h-px flex-1 bg-border"></div>
+                          <Badge text="For humans" variant="success" size="small" class="font-mono uppercase border border-success/15" />
+                          <div class="h-px flex-1 bg-border"></div>
+                        </div>
+                      ) : (
+                        <div class="mt-3 mb-6 h-px w-full bg-border" role="none" />
+                      )
+                    )}
+                    {!description && !markdownUrl && audience !== "human" && <div class="mb-4" />}
+                  </Fragment>
+                )}
+                <article class="docs-content max-w-none">
+                  <slot />
+                </article>
+                {hasContentFooter ? (
+                  <slot name="content-footer" />
+                ) : editUrl && (
+                  <div class="mt-8 mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    <a href={editUrl} class="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors no-underline" target="_blank" rel="noopener">
+                      <Icon name="ph:pencil-simple" class="w-3.5 h-3.5" />
+                      Edit this page
+                    </a>
+                  </div>
+                )}
+              </div>
+              {hasPagination ? <slot name="pagination" /> : <Pagination prevNext={prevNext} />}
+            </div>
+          </main>
 
-			for (const time of document.querySelectorAll('[data-review-date]')) {
-				if (!time.dateTime) continue;
+          {headings !== false && (hasToc || headings.length > 0) && (
+            <aside data-nb-toc-scroll-host class="hidden xl:block w-(--nb-toc-width) shrink-0 sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto">
+              <div class="pt-6 pb-8 pl-8 pr-6">
+                {hasToc ? <slot name="toc" /> : <TOC headings={headings} />}
+              </div>
+            </aside>
+          )}
+        </div>
+      </div>
+    )}
 
-				const reviewedAt = new Date(`${time.dateTime}T00:00:00Z`);
-				const now = new Date();
-				const dayDifference = Math.floor((Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - reviewedAt.getTime()) / 86_400_000);
+  </div>
 
-				if (dayDifference < 0 || dayDifference >= 30) continue;
+  {showSidebar && (
+    /* Mobile sidebar — native <dialog> for free focus trap, escape, backdrop. */
+    <dialog
+      data-mobile-sidebar
+      data-state="closed"
+      class="group fixed inset-0 m-0 h-full w-full max-h-full max-w-full border-0 bg-transparent p-0 [&::backdrop]:bg-transparent"
+      aria-label="Site navigation"
+    >
+      <div data-mobile-sidebar-panel class="h-full w-(--nb-sidebar-width) max-w-[85vw] -translate-x-full overflow-y-auto overscroll-contain border-r border-border bg-card transition-transform duration-250 ease-out group-data-[state=open]:translate-x-0 motion-reduce:transition-none">
+        <div class="sticky top-0 z-[1] flex items-center justify-between border-b border-border bg-card px-4 py-3">
+          <span class="font-semibold text-sm text-foreground">Navigation</span>
+          <button data-close-sidebar class="flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" aria-label="Close sidebar">
+            <Icon name="ph:x" class="w-5 h-5" />
+          </button>
+        </div>
+        <nav class="px-4 pb-8 pt-5">
+          {hasSidebar ? <slot name="sidebar" /> : (
+            <Fragment>
+              <SidebarFilter />
+              <Sidebar items={sidebar} />
+            </Fragment>
+          )}
+        </nav>
+      </div>
+    </dialog>
+  )}
 
-				if (dayDifference === 0) {
-					time.textContent = 'today';
-				} else if (dayDifference === 1) {
-					time.textContent = 'yesterday';
-				} else {
-					time.textContent = `${dayDifference} days ago`;
-				}
-			}
-		</script>
-	</body>
-</html>
+  <script>
+    import { mount, lockScroll, unlockScroll } from "@cloudflare/nimbus-docs/client";
+
+    const CLOSE_DURATION_MS = 250;
+
+    // mount() re-binds on every astro:page-load and tears down on
+    // astro:before-swap, so the hamburger survives client-side navigation
+    // (a one-shot module script would go dead after the first swap).
+    mount("[data-mobile-sidebar]", (root) => {
+      const menuBtn = document.querySelector<HTMLElement>("[data-menu-btn]");
+      if (!(root instanceof HTMLDialogElement) || !menuBtn) return () => {};
+      const dialog = root;
+
+      const controller = new AbortController();
+      const { signal } = controller;
+      let closeTimer: ReturnType<typeof setTimeout> | undefined;
+
+      const openSidebar = () => {
+        if (closeTimer) {
+          clearTimeout(closeTimer);
+          closeTimer = undefined;
+        }
+        if (dialog.open) return;
+
+        dialog.showModal();
+        dialog.dataset.state = "closed";
+        lockScroll();
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            dialog.dataset.state = "open";
+          });
+        });
+
+        dialog.querySelector<HTMLElement>("[data-close-sidebar]")?.focus();
+      };
+
+      const closeSidebar = () => {
+        if (!dialog.open || dialog.dataset.state === "closing") return;
+
+        dialog.dataset.state = "closing";
+        closeTimer = setTimeout(() => {
+          dialog.close();
+        }, CLOSE_DURATION_MS);
+      };
+
+      menuBtn.addEventListener("click", openSidebar, { signal });
+
+      dialog.addEventListener("cancel", (event) => {
+        event.preventDefault();
+        closeSidebar();
+      }, { signal });
+
+      // Fires for Escape, close button, and backdrop click.
+      dialog.addEventListener("close", () => {
+        if (closeTimer) {
+          clearTimeout(closeTimer);
+          closeTimer = undefined;
+        }
+
+        dialog.dataset.state = "closed";
+        unlockScroll();
+        menuBtn.focus();
+      }, { signal });
+
+      dialog.querySelector("[data-close-sidebar]")
+        ?.addEventListener("click", closeSidebar, { signal });
+
+      dialog.addEventListener("click", (e) => {
+        if (e.target === dialog) closeSidebar();
+      }, { signal });
+
+      return () => {
+        controller.abort();
+        if (closeTimer) clearTimeout(closeTimer);
+        // A swap while open never fires `close`; balance the scroll lock.
+        if (dialog.open) unlockScroll();
+      };
+    });
+  </script>
+
+</BaseLayout>

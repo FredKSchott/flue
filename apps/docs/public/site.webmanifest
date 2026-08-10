@@ -1,6 +1,6 @@
 {
-	"name": "MyWebSite",
-	"short_name": "MySite",
+	"name": "Flue",
+	"short_name": "Flue",
 	"icons": [
 		{
 			"src": "/docs/web-app-manifest-192x192.png",

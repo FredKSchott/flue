@@ -1,0 +1,38 @@
+---
+import { cn } from "@/lib/cn";
+import { withBase } from "@/lib/with-base";
+import type { HTMLAttributes } from "astro/types";
+import { Badge } from "@/components/ui/badge";
+import type { SidebarBadge } from "@cloudflare/nimbus-docs/types";
+
+interface Props extends HTMLAttributes<"a"> {
+  label: string;
+  href: string;
+  isCurrent?: boolean;
+  badge?: SidebarBadge;
+}
+
+const { label, href, isCurrent, badge, class: className, ...attrs } = Astro.props;
+---
+
+<a
+  href={withBase(href)}
+  aria-current={isCurrent ? "page" : undefined}
+  data-nb-sidebar-link
+  class={cn(
+    "flex min-h-[2rem] items-center gap-2 rounded-lg px-3 py-1 text-[0.8125rem] font-medium no-underline focus-visible:outline-offset-[-2px]",
+    isCurrent
+      ? "font-medium text-nav-active-fg bg-nav-active-bg"
+      : "text-muted-foreground transition-colors duration-150 hover:text-foreground",
+    className,
+  )}
+  {...attrs}
+>
+  <span class="break-words">{label}</span>
+  {badge &&
+    (typeof badge === "string" ? (
+      <Badge text={badge} />
+    ) : (
+      <Badge text={badge.text} variant={badge.variant} />
+    ))}
+</a>

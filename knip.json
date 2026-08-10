@@ -31,6 +31,15 @@
 				"src/layouts/**/*.astro"
 			]
 		},
+		"apps/docs": {
+			"entry": [
+				"astro.config.ts",
+				"src/pages/**/*.{astro,ts,md,mdx}",
+				"src/layouts/**/*.astro",
+				"src/components.ts",
+				"src/content.config.ts"
+			]
+		},
 		"packages/runtime": {
 			"entry": ["test/fixtures/durable-boundary-child.mjs"],
 			"ignoreDependencies": ["@hono/node-server"]

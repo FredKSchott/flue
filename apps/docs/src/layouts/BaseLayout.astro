@@ -1,0 +1,118 @@
+---
+import "@fontsource-variable/inter";
+import "@fontsource-variable/jetbrains-mono";
+import "../styles/globals.css";
+import "../styles/prose.css";
+import { config } from "virtual:nimbus/config";
+import { getCollectionLlmsUrl, getVersionStatus } from "@cloudflare/nimbus-docs";
+import AgentDirective from "@/components/AgentDirective.astro";
+import { SearchDialog } from "@/components/ui/search";
+import NimbusHead from "@cloudflare/nimbus-docs/components/NimbusHead.astro";
+import type { BasePageProps } from "@cloudflare/nimbus-docs/types";
+
+type Props = BasePageProps;
+
+const {
+  title,
+  description,
+  noindex,
+  markdownUrl,
+  socialImage,
+  lastUpdated,
+  head: pageHead = [],
+  collection,
+  entryId,
+} = Astro.props;
+
+const lang = config.locale ?? "en";
+// Per-page agent-index pointer. For pages in non-primary or version
+// collections, this resolves to `/<prefix>/llms.txt` (e.g. `/v0/llms.txt`
+// for a v0 docs page, `/blog/llms.txt` for a blog post). Falls back to
+// the root `/llms.txt` when no collection is provided.
+// Hidden-version pages don't advertise an agent index (the per-version
+// llms.txt isn't emitted for them); suppress the AgentDirective entirely.
+const versionStatus = collection ? await getVersionStatus(collection) : null;
+const isHiddenVersion = versionStatus?.isHidden === true;
+const llmsIndexPath = collection
+  ? await getCollectionLlmsUrl(collection)
+  : "/llms.txt";
+const llmsUrl = Astro.site
+  ? new URL(llmsIndexPath, Astro.site).href
+  : llmsIndexPath;
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <script is:inline>
+      (() => {
+        const KEY = "ui-mode";
+        const media = window.matchMedia("(prefers-color-scheme: dark)");
+
+        const readPref = () => {
+          try {
+            const v = localStorage.getItem(KEY);
+            return v === "dark" || v === "light" ? v : null;
+          } catch {
+            return null;
+          }
+        };
+
+        const resolveMode = () => readPref() ?? (media.matches ? "dark" : "light");
+
+        const applyTheme = () => {
+          const root = document.documentElement;
+          const mode = resolveMode();
+          if (mode === "dark") root.setAttribute("data-mode", "dark");
+          else root.removeAttribute("data-mode");
+          root.style.colorScheme = mode;
+          document.querySelectorAll("[data-nb-theme-toggle]").forEach((b) => {
+            b.setAttribute("data-nb-state", mode);
+          });
+        };
+
+        applyTheme();
+        media.addEventListener("change", () => {
+          if (!readPref()) applyTheme();
+        });
+        window.addEventListener("storage", (e) => {
+          if (e.key === KEY) applyTheme();
+        });
+
+        window.__nbApplyTheme = applyTheme;
+      })();
+    </script>
+
+    <NimbusHead
+      title={title}
+      description={description}
+      noindex={noindex}
+      markdownUrl={markdownUrl}
+      socialImage={socialImage}
+      lastUpdated={lastUpdated}
+      head={pageHead}
+      collection={collection}
+      entryId={entryId}
+    />
+  </head>
+  <body class="min-h-screen bg-background text-foreground antialiased">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-100 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground focus:no-underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+    >
+      Skip to content
+    </a>
+    {markdownUrl && !isHiddenVersion && <AgentDirective markdownUrl={markdownUrl} llmsUrl={llmsUrl} />}
+    <slot />
+    {config.search !== false && <SearchDialog />}
+
+    <script>
+      import { codeCopy, headingAnchors } from "@cloudflare/nimbus-docs/client";
+      codeCopy();
+      headingAnchors();
+    </script>
+  </body>
+</html>

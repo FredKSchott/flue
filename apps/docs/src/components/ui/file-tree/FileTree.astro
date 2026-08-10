@@ -1,0 +1,177 @@
+---
+/**
+ * FileTree — collapsible file/directory tree from a nested <ul>.
+ *
+ * Usage:
+ *   <FileTree>
+ *   - src/
+ *     - components/
+ *       - **Header.astro**
+ *       - Footer.astro
+ *   - package.json
+ *   - ...
+ *   </FileTree>
+ *
+ * Conventions:
+ *   - Trailing `/` → directory (collapsible, folder icon)
+ *   - `**name**` → highlighted entry
+ *   - `...` → placeholder ellipsis
+ *   - ` # comment` → dimmed inline annotation (delimiter is space-hash-space;
+ *     first occurrence wins; not combinable with `**highlight**` on the same row)
+ */
+import { Icon } from "astro-icon/components";
+import { cn } from "@/lib/cn";
+import type { HTMLAttributes } from "astro/types";
+
+interface Props extends HTMLAttributes<"div"> {}
+
+const { class: className, ...attrs } = Astro.props;
+---
+
+<div class={cn("file-tree", className)} data-file-tree {...attrs}>
+  <template data-ft-icon-chev><Icon name="ph:caret-right" class="ft-chev" is:inline /></template>
+  <template data-ft-icon-folder><Icon name="ph:folder" class="ft-icon" is:inline /></template>
+  <template data-ft-icon-file><Icon name="ph:file" class="ft-icon" is:inline /></template>
+  <slot />
+</div>
+
+<style>
+  .file-tree {
+    margin: 1rem 0;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-family: var(--nb-font-mono);
+    font-size: 0.875rem;
+    line-height: 1;
+    background: var(--nb-card);
+    box-shadow: 0 0 0 1px var(--nb-border);
+    overflow-x: auto;
+  }
+
+  /* Inline any <p> wrappers from markdown */
+  .file-tree :global(p) { display: inline; margin: 0; }
+
+  .file-tree :global(ul) {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 1.25rem;
+  }
+
+  .file-tree > :global(ul) { padding-left: 0; }
+
+  /* Guide lines on nested lists */
+  .file-tree :global(ul ul) { position: relative; }
+  .file-tree :global(ul ul)::before {
+    content: "";
+    position: absolute;
+    left: 0.4375rem;
+    top: 0;
+    bottom: 0.25rem;
+    width: 1px;
+    background: var(--nb-border);
+    pointer-events: none;
+  }
+
+  .file-tree :global(li) {
+    position: relative;
+    margin: 0;
+    padding-top: 0.0625rem;
+    padding-bottom: 0.0625rem;
+    color: var(--nb-foreground);
+  }
+
+  /* Directory rows — details/summary */
+  .file-tree :global(details) { margin: 0; }
+
+  .file-tree :global(summary) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3125rem 0.375rem;
+    margin: 0 -0.375rem;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    border-radius: 0.375rem;
+    transition: background 0.12s ease;
+  }
+
+  .file-tree :global(summary::-webkit-details-marker) { display: none; }
+  .file-tree :global(summary::marker) { display: none; content: ""; }
+
+  .file-tree :global(summary:hover) {
+    background: var(--nb-accent);
+  }
+
+  /* File rows */
+  .file-tree :global([data-file]) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3125rem 0.375rem;
+    margin: 0 -0.375rem;
+    border-radius: 0.375rem;
+    cursor: default;
+  }
+
+  /* Chevron — rotates when open */
+  .file-tree :global(.ft-chev) {
+    flex-shrink: 0;
+    width: 0.875rem;
+    height: 0.875rem;
+    color: var(--nb-muted-foreground);
+    transition: transform 0.15s ease;
+  }
+
+  .file-tree :global(details[open] > summary > .ft-chev) {
+    transform: rotate(90deg);
+  }
+
+  /* File/folder icons */
+  .file-tree :global(.ft-icon) {
+    flex-shrink: 0;
+    width: 0.875rem;
+    height: 0.875rem;
+    color: var(--nb-muted-foreground);
+  }
+
+  /* Invisible spacer — keeps files aligned with directory names */
+  .file-tree :global(.ft-sp) {
+    flex-shrink: 0;
+    width: 0.875rem;
+  }
+
+  /* Clamp label to one line */
+  .file-tree :global(.ft-label) {
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  /* Inline dimmed annotation: `name # comment` */
+  .file-tree :global(.ft-comment) {
+    margin-left: 0.75rem;
+    color: var(--nb-muted-foreground);
+    white-space: nowrap;
+  }
+
+  /* Highlighted entries */
+  .file-tree :global(strong) {
+    font-weight: 600;
+    color: var(--nb-foreground);
+  }
+
+  /* Placeholder (...) */
+  .file-tree :global([data-placeholder]) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3125rem 0.375rem;
+    margin: 0 -0.375rem;
+    color: var(--nb-muted-foreground);
+    letter-spacing: 0.1em;
+  }
+</style>
+
+<script>
+  import "./file-tree.client";
+</script>

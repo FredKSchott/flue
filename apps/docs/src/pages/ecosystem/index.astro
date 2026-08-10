@@ -1,33 +1,53 @@
 ---
-import DocsLayout from '../../layouts/DocsLayout.astro';
-import { channels, databases, deploy, sandboxes, tooling } from '../../../../ecosystem-catalog';
+import DocsLayout from "../../layouts/DocsLayout.astro";
+import { getSidebar } from "@cloudflare/nimbus-docs";
+import { channels, databases, deploy, ecosystemMeta, sandboxes, tooling } from "../../lib/ecosystem-catalog";
+import { dropSectionLead } from "../../lib/sidebar";
+
+export const prerender = true;
+
+let sidebar: Awaited<ReturnType<typeof getSidebar>> | false = false;
+try {
+	sidebar = await getSidebar("/ecosystem", { collection: "ecosystem", transform: dropSectionLead });
+} catch {
+	sidebar = false;
+}
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const breadcrumbs = [
+	{ label: "Home", href: `${base}/` },
+	{ label: "Ecosystem" },
+];
+const prevNext = { prev: undefined, next: undefined };
 ---
 
 <DocsLayout
-	title="Ecosystem"
-	description="Browse deployment guides, channels, databases, sandbox adapters, and developer tooling for Flue applications."
-	currentSlug="ecosystem"
-	headings={[]}
-	showTableOfContents={false}
-	variant="directory"
+	title={ecosystemMeta.title}
+	description={ecosystemMeta.description}
+	sidebar={sidebar}
+	headings={false}
+	breadcrumbs={breadcrumbs}
+	prevNext={prevNext}
+	collection="ecosystem"
 >
+	<Fragment slot="page-title" />
 	<div class="ecosystem-directory">
 		<header class="mb-4">
-			<h1 class="m-0 text-5xl font-bold leading-[1.08] tracking-[-0.05em] text-gray-950 max-docs-desktop:text-[2.375rem]">Ecosystem</h1>
-			<p class="mt-4 max-w-175 text-base leading-7 text-gray-600">Deploy Flue applications and extend them with channels, databases, sandbox environments, and the tools your agents already use.</p>
+			<h1 class="m-0 text-[2.375rem] font-bold leading-[1.08] tracking-[-0.05em]">{ecosystemMeta.title}</h1>
+			<p class="mt-4 max-w-175 text-base leading-7">{ecosystemMeta.intro}</p>
 		</header>
 
 		<label class="relative mb-14 block" for="ecosystem-search">
 			<span class="sr-only">Search ecosystem</span>
-			<svg class="pointer-events-none absolute top-1/2 left-3.5 size-4.5 -translate-y-1/2 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+			<svg class="pointer-events-none absolute top-1/2 left-3.5 size-4.5 -translate-y-1/2 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
 				<circle cx="11" cy="11" r="7"></circle>
 				<path d="m20 20-3.8-3.8"></path>
 			</svg>
-			<input id="ecosystem-search" class="h-11 w-full rounded-lg border border-transparent bg-docs-code pr-3.5 pl-10.5 text-base leading-none text-gray-950 outline-none transition-colors duration-150 placeholder:text-gray-500 hover:border-gray-300 focus:border-gray-500 focus:bg-white" type="search" placeholder="Search ecosystem..." autocomplete="off" />
+			<input id="ecosystem-search" class="h-11 w-full rounded-lg border border-border bg-muted pr-3.5 pl-10.5 text-base leading-none text-foreground transition-colors duration-150 placeholder:text-muted-foreground hover:border-border-strong focus:border-border-strong focus:bg-background focus-visible:outline-2 focus-visible:outline-ring" type="search" placeholder="Search ecosystem..." autocomplete="off" />
 		</label>
 
 		<section class="ecosystem-section mb-14" data-ecosystem-section>
-			<h2 id="channels" class="mb-6 scroll-mt-20 text-3xl font-semibold tracking-[-0.03em] text-gray-950">Channels</h2>
+			<h2 id="channels" class="mb-6 scroll-mt-20 text-3xl font-semibold tracking-[-0.03em]">Channels</h2>
 			<ul class="ecosystem-grid" role="list">
 				{channels.map((item) => (
 					<li data-ecosystem-item data-search={`${item.name} ${item.keywords ?? ''}`.toLowerCase()}>
@@ -62,7 +82,7 @@ import { channels, databases, deploy, sandboxes, tooling } from '../../../../eco
 		</section>
 
 		<section class="ecosystem-section mb-14" data-ecosystem-section>
-			<h2 id="sandboxes" class="mb-6 scroll-mt-20 text-3xl font-semibold tracking-[-0.03em] text-gray-950">Sandboxes</h2>
+			<h2 id="sandboxes" class="mb-6 scroll-mt-20 text-3xl font-semibold tracking-[-0.03em]">Sandboxes</h2>
 			<ul class="ecosystem-grid" role="list">
 				{sandboxes.map((item) => (
 					<li data-ecosystem-item data-search={`${item.name} ${item.keywords ?? ''}`.toLowerCase()}>
@@ -117,7 +137,7 @@ import { channels, databases, deploy, sandboxes, tooling } from '../../../../eco
 		</section>
 
 		<section class="ecosystem-section mb-14" data-ecosystem-section>
-			<h2 id="deploy" class="mb-6 scroll-mt-20 text-3xl font-semibold tracking-[-0.03em] text-gray-950">Deploy</h2>
+			<h2 id="deploy" class="mb-6 scroll-mt-20 text-3xl font-semibold tracking-[-0.03em]">Deploy</h2>
 			<ul class="ecosystem-grid" role="list">
 				{deploy.map((item) => (
 					<li data-ecosystem-item data-search={`${item.name} ${item.keywords ?? ''}`.toLowerCase()}>
@@ -137,7 +157,7 @@ import { channels, databases, deploy, sandboxes, tooling } from '../../../../eco
 		</section>
 
 		<section class="ecosystem-section mb-14" data-ecosystem-section>
-			<h2 id="databases" class="mb-6 scroll-mt-20 text-3xl font-semibold tracking-[-0.03em] text-gray-950">Databases</h2>
+			<h2 id="databases" class="mb-6 scroll-mt-20 text-3xl font-semibold tracking-[-0.03em]">Databases</h2>
 			<ul class="ecosystem-grid" role="list">
 				{databases.map((item) => (
 					<li data-ecosystem-item data-search={`${item.name} ${item.keywords ?? ''}`.toLowerCase()}>
@@ -174,7 +194,7 @@ import { channels, databases, deploy, sandboxes, tooling } from '../../../../eco
 		</section>
 
 		<section class="ecosystem-section mb-14" data-ecosystem-section>
-			<h2 id="tooling" class="mb-6 scroll-mt-20 text-3xl font-semibold tracking-[-0.03em] text-gray-950">Tooling</h2>
+			<h2 id="tooling" class="mb-6 scroll-mt-20 text-3xl font-semibold tracking-[-0.03em]">Tooling</h2>
 			<ul class="ecosystem-grid" role="list">
 				{tooling.map((item) => (
 					<li data-ecosystem-item data-search={`${item.name} ${item.keywords ?? ''}`.toLowerCase()}>
@@ -194,7 +214,7 @@ import { channels, databases, deploy, sandboxes, tooling } from '../../../../eco
 		</section>
 
 
-		<p class="ecosystem-empty hidden rounded-2xl border border-dashed border-gray-300 py-12 text-center text-gray-500" data-ecosystem-empty>No ecosystem integrations match that search.</p>
+		<p class="ecosystem-empty hidden rounded-2xl border border-dashed border-border py-12 text-center text-muted-foreground" data-ecosystem-empty>No ecosystem integrations match that search.</p>
 	</div>
 </DocsLayout>
 
@@ -202,14 +222,11 @@ import { channels, databases, deploy, sandboxes, tooling } from '../../../../eco
 	const search = document.querySelector<HTMLInputElement>('#ecosystem-search');
 	const items = [...document.querySelectorAll<HTMLElement>('[data-ecosystem-item]')];
 	const sections = [...document.querySelectorAll<HTMLElement>('[data-ecosystem-section]')];
-	const grids = [...document.querySelectorAll<HTMLElement>('.ecosystem-grid')];
 	const empty = document.querySelector<HTMLElement>('[data-ecosystem-empty]');
 
 	search?.addEventListener('input', () => {
 		const query = search.value.trim().toLowerCase();
 		let visibleCount = 0;
-
-		for (const grid of grids) grid.classList.toggle('is-filtering', query.length > 0);
 
 		for (const item of items) {
 			const visible = (item.dataset.search ?? '').includes(query);
@@ -226,6 +243,32 @@ import { channels, databases, deploy, sandboxes, tooling } from '../../../../eco
 </script>
 
 <style>
+	.ecosystem-directory h1 {
+		margin: 0;
+		font-size: 2.375rem;
+		font-weight: 700;
+		line-height: 1.08;
+		letter-spacing: -0.05em;
+		color: var(--nb-foreground);
+	}
+
+	.ecosystem-directory header p {
+		margin-top: 1rem;
+		max-width: 43.75rem;
+		font-size: 1rem;
+		line-height: 1.75rem;
+		color: var(--nb-muted-foreground);
+	}
+
+	.ecosystem-directory h2 {
+		margin-bottom: 1.5rem;
+		font-size: 1.875rem;
+		font-weight: 600;
+		letter-spacing: -0.03em;
+		color: var(--nb-foreground);
+		scroll-margin-top: 5rem;
+	}
+
 	.ecosystem-grid {
 		--ecosystem-tile-size: clamp(5.25rem, 6.4vw, 5.875rem);
 		display: grid;
@@ -258,7 +301,7 @@ import { channels, databases, deploy, sandboxes, tooling } from '../../../../eco
 		aspect-ratio: 1;
 		place-items: center;
 		overflow: hidden;
-		border: 1px solid rgb(17 24 39 / 0.09);
+		border: 1px solid var(--nb-border);
 		border-radius: 1.45rem;
 		background: var(--ecosystem-icon-bg);
 		box-shadow:
@@ -272,7 +315,7 @@ import { channels, databases, deploy, sandboxes, tooling } from '../../../../eco
 
 	.ecosystem-item:hover .ecosystem-icon,
 	.ecosystem-item:focus-visible .ecosystem-icon {
-		border-color: rgb(37 99 235 / 0.65);
+		border-color: var(--nb-link);
 		box-shadow:
 			inset 0 1px 0 rgb(255 255 255 / 0.24),
 			0 1px 2px rgb(17 24 39 / 0.14),
@@ -370,7 +413,7 @@ import { channels, databases, deploy, sandboxes, tooling } from '../../../../eco
 
 	.ecosystem-name {
 		max-width: none;
-		color: #25262b;
+		color: var(--nb-foreground);
 		font-size: 0.74rem;
 		font-weight: 500;
 		line-height: 1.2;
@@ -378,7 +421,7 @@ import { channels, databases, deploy, sandboxes, tooling } from '../../../../eco
 	}
 
 	.ecosystem-item:hover .ecosystem-name {
-		color: #1d4ed8;
+		color: var(--nb-link);
 	}
 
 	[hidden] {

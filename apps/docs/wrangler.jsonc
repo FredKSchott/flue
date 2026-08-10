@@ -1,18 +1,12 @@
 {
 	"name": "flue-docs",
 	"compatibility_date": "2026-06-01",
-	"main": "./src/worker.ts",
-	"ai": {
-		"binding": "AI"
-	},
 	"routes": [
 		{ "pattern": "flueframework.com/docs", "zone_name": "flueframework.com" },
 		{ "pattern": "flueframework.com/docs/*", "zone_name": "flueframework.com" }
 	],
 	"assets": {
 		"directory": "./dist",
-		"binding": "ASSETS",
-		"run_worker_first": ["/docs/*/index.md"],
 		"html_handling": "auto-trailing-slash",
 		"not_found_handling": "404-page"
 	}

@@ -1,36 +1,75 @@
 ---
-import { getCollection, render, type CollectionEntry } from 'astro:content';
-import Callout from '../components/docs/Callout.astro';
-import DocsLayout from '../layouts/DocsLayout.astro';
+import DocsLayout from "../layouts/DocsLayout.astro";
+import {
+  getDocsPageProps,
+  getRouteFlags,
+  getSidebar,
+  getPrevNext,
+  getBreadcrumbs,
+  getEditUrl,
+  getTOC,
+} from "@cloudflare/nimbus-docs";
+import { getCollection } from "astro:content";
+import { components } from "../components";
+import { dropSectionLead } from "../lib/sidebar";
 
-interface Props {
-	entry: CollectionEntry<'docs'>;
-	slug: string;
-}
+export const prerender = true;
 
 export async function getStaticPaths() {
-	const entries = await getCollection('docs');
-
-	return entries.map((entry) => ({
-		params: { slug: entry.id },
-		props: { entry, slug: entry.id },
-	}));
+  const sections = ["guide", "reference", "cli", "sdk", "ecosystem"] as const;
+  const paths = [];
+  for (const collection of sections) {
+    const entries = await getCollection(collection, (e) => !e.data.draft);
+    for (const entry of entries) {
+      paths.push({ params: { slug: `${collection}/${entry.id}` }, props: { entry } });
+    }
+  }
+  return paths;
 }
 
-const { entry, slug } = Astro.props;
-const { Content, headings } = await render(entry);
-const showTableOfContents = entry.data.tableOfContents !== false;
+const { entry, Content, headings } = await getDocsPageProps(Astro);
+
+const currentSlug = `/${entry.collection}/${entry.id}`;
+
+const { sidebar: sidebarOn, tableOfContents: tocOn } = await getRouteFlags(entry);
+
+const sidebar = sidebarOn
+  ? await getSidebar(currentSlug, {
+      collection: entry.collection,
+      transform: dropSectionLead,
+    })
+  : false;
+const prevNext = await getPrevNext(currentSlug, {
+  sidebarTree: sidebar === false ? [] : sidebar,
+  overrides: { prev: entry.data.prev, next: entry.data.next },
+});
+const breadcrumbs = await getBreadcrumbs(currentSlug, { collection: entry.collection });
+const editUrl = await getEditUrl(entry);
+const lastUpdated = entry.data.lastReviewedAt;
+const tocConfig = entry.data.tableOfContents;
+const toc = tocOn && tocConfig !== false ? getTOC(headings, tocConfig) : false;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const markdownUrl = `${base}/${entry.collection}/${entry.id}/index.md`;
 ---
 
 <DocsLayout
-	title={entry.data.title}
-	description={entry.data.description}
-	subtitle={entry.data.subtitle}
-	packageLink={entry.data.package}
-	lastReviewedAt={entry.data.lastReviewedAt}
-	currentSlug={slug}
-	headings={headings}
-	showTableOfContents={showTableOfContents}
+  title={entry.data.title}
+  description={entry.data.description}
+  sidebar={sidebar}
+  headings={toc}
+  breadcrumbs={breadcrumbs}
+  prevNext={prevNext}
+  mode={entry.data.mode}
+  banner={entry.data.banner}
+  head={entry.data.head}
+  searchable={entry.data.searchable}
+  noindex={entry.data.noindex}
+  markdownUrl={markdownUrl}
+  lastUpdated={lastUpdated}
+  editUrl={editUrl}
+  draft={entry.data.draft}
+  collection={entry.collection}
+  entryId={entry.id}
 >
-	<Content components={{ Callout }} />
+  <Content components={components} />
 </DocsLayout>

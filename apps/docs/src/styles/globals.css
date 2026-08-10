@@ -1,0 +1,537 @@
+@import "tailwindcss";
+
+/* ============================================================
+ * Nimbus Theme — THE file you edit to customize your site.
+ *
+ * Architecture:
+ *   1. CSS custom properties (--nb-*) define the design tokens
+ *   2. `@theme` block exposes them to Tailwind so utilities like
+ *      `bg-card`, `text-foreground`, `border-border` work
+ *   3. Dark mode uses the `[data-mode="dark"]` attribute
+ *   4. All colors use oklch for perceptual uniformity
+ *
+ * Naming convention:
+ *   - Surfaces paired with foregrounds: `card` / `card-foreground`
+ *   - Functional names: `primary` (action), `accent` (hover surface),
+ *     `muted` (de-emphasized), not visual relationships
+ *   - Reserved Tailwind keywords avoided (no `text-base`, `font-sans`,
+ *     `shadow-lg`, etc. as color names — they collide with built-ins)
+ * ============================================================ */
+
+/* ---- Light mode (default) ---- */
+:root {
+	color-scheme: light;
+
+	/* Surfaces (paired with foregrounds for contrast) — Flue palette */
+	--nb-background: #ffffff;
+	--nb-foreground: #1b1b1f;
+
+	--nb-card: #ffffff;
+	--nb-card-foreground: var(--nb-foreground);
+
+	--nb-muted: #f6f6f7;
+	--nb-muted-foreground: #61636b;
+
+	--nb-accent: #f7f8fa;
+	--nb-accent-foreground: var(--nb-foreground);
+
+	/* Primary action / brand */
+	--nb-primary: #1b1b1f;
+	--nb-primary-foreground: #ffffff;
+	--nb-primary-hover: #3b3b42;
+
+	/* Borders / focus */
+	--nb-border: #e7e7eb;
+	--nb-border-strong: #d5d6db;
+	--nb-selected: #dfe7fb;
+	--nb-ring: rgb(59 130 246 / 0.35);
+
+	/* Brand accent — Flue blue for links/active states, purple for inline code */
+	--nb-link: #2563eb;
+	--nb-link-underline: #b4c9f8;
+	--nb-code-inline: #5133bf;
+	--nb-nav-active-bg: #dfe7fb;
+	--nb-nav-active-fg: #1d4ed8;
+	--nb-sidebar-heading: #374151;
+
+	/* Status colors — paired (saturated for text/border + muted for bg) */
+	--nb-info: #2563eb;
+	--nb-info-foreground: #2563eb;
+	--nb-info-muted: #eff4ff;
+
+	--nb-success: #0f7d52;
+	--nb-success-foreground: #0f7d52;
+	--nb-success-muted: #eefbf5;
+
+	--nb-warning: #9a6700;
+	--nb-warning-foreground: #9a6700;
+	--nb-warning-muted: #fff9ed;
+
+	--nb-danger: oklch(0.47 0.18 25);
+	--nb-danger-foreground: oklch(0.47 0.18 25);
+	--nb-danger-muted: oklch(0.965 0.015 25);
+
+	/* Layout */
+	--nb-sidebar-width: 18.75rem;
+	--nb-toc-width: 18rem;
+	--nb-content-max: 43.5rem;
+
+	/* Typography — self-hosted via @fontsource-variable in BaseLayout.astro */
+	--nb-font-sans:
+		"Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+		sans-serif;
+	--nb-font-mono:
+		"JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "Cascadia Code",
+		"Source Code Pro", Menlo, Consolas, monospace;
+	--nb-h1-size: 2.1875rem;
+	--nb-h1-weight: 600;
+	--nb-h1-tracking: -0.025em;
+	--nb-h2-size: 1.3rem;
+	--nb-h2-weight: 650;
+	--nb-h2-tracking: -0.015em;
+	--nb-h3-size: 1.1rem;
+	--nb-h3-weight: 600;
+	--nb-h3-tracking: -0.01em;
+	--nb-h4-weight: 600;
+
+	/* Shadows */
+	--nb-shadow-sm: 0 1px 2px oklch(0 0 0 / 0.04);
+	--nb-shadow: 0 1px 3px oklch(0 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.04);
+	--nb-shadow-lg: 0 4px 12px oklch(0 0 0 / 0.08), 0 2px 4px oklch(0 0 0 / 0.04);
+}
+
+/* Wider content area on large displays (e.g. MacBook Pro 16″) */
+@media (min-width: 1536px) {
+	:root {
+		--nb-content-max: 52rem;
+	}
+}
+
+/* ---- Dark mode ---- */
+[data-mode="dark"] {
+	color-scheme: dark;
+
+	--nb-background: oklch(0.085 0 0);
+	--nb-foreground: oklch(0.97 0 0);
+
+	--nb-card: #0F0F0F;
+	--nb-card-foreground: var(--nb-foreground);
+
+	--nb-muted: #060606;
+	--nb-muted-foreground: oklch(0.556 0 0);
+
+	--nb-accent: oklch(0.269 0 0);
+	--nb-accent-foreground: var(--nb-foreground);
+
+	--nb-primary: oklch(0.9 0 0);
+	--nb-primary-foreground: oklch(0.085 0 0);
+	--nb-primary-hover: oklch(0.7 0 0);
+
+	--nb-border: oklch(0.269 0 0);
+	--nb-border-strong: oklch(0.371 0 0);
+	--nb-selected: oklch(0.371 0 0);
+	--nb-ring: oklch(0.75 0.12 255 / 0.4);
+
+	--nb-link: oklch(0.75 0.12 255);
+	--nb-link-underline: oklch(0.5 0.1 255);
+	--nb-code-inline: oklch(0.8 0.12 300);
+	--nb-nav-active-bg: oklch(0.32 0.06 255);
+	--nb-nav-active-fg: oklch(0.85 0.11 255);
+	--nb-sidebar-heading: oklch(0.72 0 0);
+
+	--nb-info: oklch(0.75 0.12 255);
+	--nb-info-foreground: oklch(0.75 0.12 255);
+	--nb-info-muted: oklch(0.17 0.03 260);
+
+	--nb-success: oklch(0.72 0.12 150);
+	--nb-success-foreground: oklch(0.72 0.12 150);
+	--nb-success-muted: oklch(0.17 0.025 153);
+
+	--nb-warning: oklch(0.78 0.11 80);
+	--nb-warning-foreground: oklch(0.78 0.11 80);
+	--nb-warning-muted: oklch(0.19 0.03 70);
+
+	--nb-danger: oklch(0.72 0.14 25);
+	--nb-danger-foreground: oklch(0.72 0.14 25);
+	--nb-danger-muted: oklch(0.17 0.03 25);
+
+	--nb-shadow-sm: 0 1px 2px oklch(0 0 0 / 0.2);
+	--nb-shadow: 0 1px 3px oklch(0 0 0 / 0.3), 0 1px 2px oklch(0 0 0 / 0.2);
+	--nb-shadow-lg: 0 4px 12px oklch(0 0 0 / 0.4), 0 2px 4px oklch(0 0 0 / 0.2);
+}
+
+/* ---- Tailwind theme mapping ----
+ * These generate Tailwind utility classes:
+ *   bg-card, text-foreground, border-border, ring-ring, etc.
+ */
+@theme {
+	--color-background: var(--nb-background);
+	--color-foreground: var(--nb-foreground);
+
+	--color-card: var(--nb-card);
+	--color-card-foreground: var(--nb-card-foreground);
+
+	--color-muted: var(--nb-muted);
+	--color-muted-foreground: var(--nb-muted-foreground);
+
+	--color-accent: var(--nb-accent);
+	--color-accent-foreground: var(--nb-accent-foreground);
+
+	--color-primary: var(--nb-primary);
+	--color-primary-foreground: var(--nb-primary-foreground);
+	--color-primary-hover: var(--nb-primary-hover);
+
+	--color-border: var(--nb-border);
+	--color-border-strong: var(--nb-border-strong);
+	--color-selected: var(--nb-selected);
+	--color-ring: var(--nb-ring);
+	--color-link: var(--nb-link);
+	--color-nav-active-bg: var(--nb-nav-active-bg);
+	--color-nav-active-fg: var(--nb-nav-active-fg);
+	--color-sidebar-heading: var(--nb-sidebar-heading);
+
+	--color-info: var(--nb-info);
+	--color-info-foreground: var(--nb-info-foreground);
+	--color-info-muted: var(--nb-info-muted);
+
+	--color-success: var(--nb-success);
+	--color-success-foreground: var(--nb-success-foreground);
+	--color-success-muted: var(--nb-success-muted);
+
+	--color-warning: var(--nb-warning);
+	--color-warning-foreground: var(--nb-warning-foreground);
+	--color-warning-muted: var(--nb-warning-muted);
+
+	--color-danger: var(--nb-danger);
+	--color-danger-foreground: var(--nb-danger-foreground);
+	--color-danger-muted: var(--nb-danger-muted);
+
+	--font-sans: var(--nb-font-sans);
+	--font-mono: var(--nb-font-mono);
+
+	--shadow-sm: var(--nb-shadow-sm);
+	--shadow-default: var(--nb-shadow);
+	--shadow-lg: var(--nb-shadow-lg);
+}
+
+/* ---- Minimal overrides the plugin doesn't cover ---- */
+html {
+	font-family: var(--nb-font-sans);
+	font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+body {
+	opacity: 1;
+}
+
+/* Search-dialog match highlight — Flue blue accent (Pagefind wraps hits in <mark>) */
+[data-search-results] :where(mark) {
+	background: var(--nb-nav-active-bg);
+	color: var(--nb-nav-active-fg);
+	border-radius: 0.18rem;
+	padding: 0 0.1em;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	html:focus-within {
+		scroll-behavior: smooth;
+	}
+}
+
+::selection {
+	background: color-mix(in oklch, var(--nb-primary) 10%, transparent);
+	color: var(--nb-foreground);
+}
+
+/* ---- Focus indicators ---- */
+@layer base {
+	:focus-visible {
+		outline: 2px solid var(--nb-ring);
+		outline-offset: 2px;
+	}
+}
+
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+/* ---- Scroll lock (used by native <dialog> overlays) ---- */
+[data-scroll-locked] {
+	overflow: hidden;
+}
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+::-webkit-scrollbar-thumb {
+	background: color-mix(in oklch, var(--nb-foreground) 20%, transparent);
+	border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+	background: var(--nb-muted-foreground);
+}
+
+/* ---- Shiki code-block styling + copy button ---- */
+
+pre.astro-code {
+	position: relative;
+	margin: 1rem 0;
+	padding: 0.75rem 1rem;
+	border-radius: 0.5rem;
+	border: 1px solid var(--nb-border);
+	background-color: var(--nb-card);
+	overflow-x: auto;
+	font-family: var(--nb-font-mono);
+	font-size: 0.875rem;
+	line-height: 1.625;
+}
+pre.astro-code > code {
+	background: transparent;
+}
+
+/* Classed Shiki tokens set --shiki-light/--shiki-dark once in _nimbus/shiki.css. */
+pre.astro-code span {
+	color: var(--shiki-light, inherit);
+}
+[data-mode="dark"] pre.astro-code span {
+	color: var(--shiki-dark, inherit);
+}
+
+/* Copy button injected by initCodeCopy. */
+.nb-code-copy {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	margin: 0;
+	padding: 0;
+	border: 1px solid var(--nb-border);
+	border-radius: 0.375rem;
+	background: var(--nb-card);
+	color: var(--nb-muted-foreground);
+	cursor: pointer;
+	opacity: 0;
+	transition:
+		opacity 0.15s ease,
+		color 0.15s ease,
+		background 0.15s ease;
+	z-index: 2;
+}
+.nb-code-figure:hover .nb-code-copy,
+.nb-code-copy:focus-visible {
+	opacity: 1;
+}
+.nb-code-copy:hover {
+	color: var(--nb-foreground);
+	background: var(--nb-muted);
+}
+.nb-code-copy svg {
+	width: 0.875rem;
+	height: 0.875rem;
+}
+.nb-code-copy[data-state="copied"] {
+	color: var(--nb-success);
+}
+
+/* ---- Premium code chrome ---- */
+
+/* Every Shiki block is wrapped in a .nb-code-figure (titled or not).
+   Chrome lives on the figure so the language badge + copy button can sit
+   on a non-scrolling ancestor — iOS Safari slides absolutely-positioned
+   children of overflow:auto containers. */
+.nb-code-figure {
+	position: relative;
+	margin: 1rem 0;
+	border: 1px solid var(--nb-border);
+	border-radius: 0.5rem;
+	background-color: var(--nb-card);
+	overflow: hidden;
+}
+.nb-code-figure > pre.astro-code {
+	margin: 0;
+	border: 0;
+	border-radius: 0;
+	background-color: transparent;
+}
+.nb-code-title {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.8125rem 0.875rem;
+	border-bottom: 1px solid var(--nb-border);
+	background: color-mix(in oklch, var(--nb-muted) 50%, transparent);
+	font-family: var(--nb-font-mono);
+	font-size: 0.75rem;
+	line-height: 1.4;
+}
+.nb-code-title-name {
+	color: var(--nb-foreground);
+	font-weight: 500;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.nb-code-title-lang {
+	flex-shrink: 0;
+	padding: 0.0625rem 0.375rem;
+	border-radius: 0.25rem;
+	background: var(--nb-muted);
+	color: var(--nb-muted-foreground);
+	font-size: 0.6875rem;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	transition: opacity 0.15s ease;
+}
+/* Copy button shares the title bar's right edge with the language pill; fade
+   the pill whenever the button is shown so they never overlap. The :hover
+   rule stands alone (universal); the keyboard-focus rule is @supports-guarded
+   so a minifier can't merge it into the :hover group and drop both on
+   browsers lacking :has(). */
+.nb-code-figure-titled:hover .nb-code-title-lang {
+	opacity: 0;
+}
+@supports selector(:has(*)) {
+	.nb-code-figure-titled:has(.nb-code-copy:focus-visible) .nb-code-title-lang {
+		opacity: 0;
+	}
+}
+
+/* Language badge — pinned to the figure (which doesn't scroll), so it
+   stays at top-right even when the pre overflows horizontally. Hidden
+   when a figcaption is already showing the language (titled blocks). */
+.nb-code-figure[data-nb-lang]:not(.nb-code-figure-titled)::before {
+	content: attr(data-nb-lang);
+	position: absolute;
+	top: 0.5rem;
+	right: 0.625rem;
+	padding: 0.0625rem 0.375rem;
+	border-radius: 0.25rem;
+	background: var(--nb-muted);
+	color: var(--nb-muted-foreground);
+	font-family: var(--nb-font-mono);
+	font-size: 0.6875rem;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	pointer-events: none;
+	opacity: 0.75;
+	transition: opacity 0.15s ease;
+	z-index: 1;
+}
+.nb-code-figure[data-nb-lang]:not(.nb-code-figure-titled):hover::before {
+	opacity: 0;
+}
+@supports selector(:has(*)) {
+	.nb-code-figure[data-nb-lang]:not(.nb-code-figure-titled):has(.nb-code-copy:focus-visible)::before {
+		opacity: 0;
+	}
+}
+/* Hide plaintext/text "language" — it's noise. */
+.nb-code-figure[data-nb-lang="text"]::before,
+.nb-code-figure[data-nb-lang="plaintext"]::before,
+.nb-code-figure[data-nb-lang="plain"]::before,
+.nb-code-figure[data-nb-lang="txt"]::before {
+	display: none;
+}
+
+/* Block-level lines so tints + gutters paint across the full row. */
+pre.astro-code code {
+	display: block;
+	width: max-content;
+	min-width: 100%;
+}
+pre.astro-code .line {
+	display: inline-block;
+	width: 100%;
+	padding-inline: 1rem;
+	margin-inline: -1rem;
+	box-sizing: content-box;
+}
+
+/* Highlighted lines (`{1,3-5}` meta or `// [!code highlight]`). */
+pre.astro-code .line.highlighted {
+	background: color-mix(in oklch, var(--nb-info) 12%, transparent);
+	box-shadow: inset 2px 0 0 var(--nb-info);
+}
+
+/* Diff lines (`// [!code ++]` / `// [!code --]`). */
+pre.astro-code .line.diff {
+	position: relative;
+}
+pre.astro-code .line.diff.add {
+	background: color-mix(in oklch, var(--nb-success) 10%, transparent);
+	box-shadow: inset 2px 0 0 var(--nb-success);
+}
+pre.astro-code .line.diff.remove {
+	background: color-mix(in oklch, var(--nb-danger) 10%, transparent);
+	box-shadow: inset 2px 0 0 var(--nb-danger);
+}
+pre.astro-code .line.diff.add::before,
+pre.astro-code .line.diff.remove::before {
+	position: absolute;
+	left: 0.25rem;
+	color: var(--nb-muted-foreground);
+	font-weight: 600;
+}
+pre.astro-code .line.diff.add::before {
+	content: "+";
+	color: var(--nb-success);
+}
+pre.astro-code .line.diff.remove::before {
+	content: "−";
+	color: var(--nb-danger);
+}
+
+/* Focus mode — dim non-focused lines; clears on hover. */
+pre.astro-code.has-focused .line:not(.focused) {
+	opacity: 0.45;
+	filter: blur(0.25px);
+	transition: opacity 0.2s ease, filter 0.2s ease;
+}
+pre.astro-code.has-focused:hover .line:not(.focused) {
+	opacity: 1;
+	filter: none;
+}
+
+/* Error / warning lines — use muted tokens for theme-tuned tints. */
+pre.astro-code .line.highlighted.error {
+	background: var(--nb-danger-muted);
+	box-shadow: inset 2px 0 0 var(--nb-danger);
+}
+pre.astro-code .line.highlighted.warning {
+	background: var(--nb-warning-muted);
+	box-shadow: inset 2px 0 0 var(--nb-warning);
+}
+
+/* Word highlight (`// [!code word:foo]` and meta `/foo/`). */
+pre.astro-code .highlighted-word {
+	padding: 0.0625rem 0.25rem;
+	margin: -0.0625rem -0.125rem;
+	border-radius: 0.25rem;
+	background: color-mix(in oklch, var(--nb-info) 18%, transparent);
+	box-shadow: 0 0 0 1px color-mix(in oklch, var(--nb-info) 30%, transparent);
+}
+
+/* ---- Mobile sidebar toggle ---- */
+
+/* Hide hamburger on pages without a sidebar dialog. */
+body:not(:has([data-mobile-sidebar])) [data-menu-btn] {
+	display: none;
+}

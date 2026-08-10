@@ -1,0 +1,95 @@
+---
+/**
+ * TOC — on-this-page nav with scroll-spy. Static rail rendered inline
+ * (border-l + S-curve SVGs at indent changes); animated active indicator
+ * lives in toc.client.ts.
+ */
+import { cn } from "@/lib/cn";
+import type { HTMLAttributes } from "astro/types";
+import type { TOCItem } from "@cloudflare/nimbus-docs/types";
+
+interface Props extends HTMLAttributes<"div"> {
+  headings: TOCItem[];
+}
+
+const { headings, class: className, ...attrs } = Astro.props;
+---
+
+{headings.length > 0 && (
+  <div data-nb-toc class={cn("toc-container", className)} {...attrs}>
+    <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">On this page</p>
+    <nav aria-label="Table of contents" class="relative">
+      <svg
+        data-nb-toc-rail
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+        fill="none"
+      >
+        <path
+          data-nb-toc-rail-active
+          class="stroke-nav-active-fg opacity-0 transition-[stroke-dasharray,stroke-dashoffset,opacity] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] data-[ready=true]:opacity-100 data-[initial=true]:transition-opacity motion-reduce:transition-opacity"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+
+      <ul class="flex list-none flex-col m-0 p-0">
+        {headings.map((h, i) => {
+          const prevDepth = i > 0 ? headings[i - 1].depth : h.depth;
+          const nextDepth = i < headings.length - 1 ? headings[i + 1].depth : h.depth;
+          const indent = h.depth - 2;
+          const goingDeeper = h.depth > prevDepth;
+          const goingShallower = nextDepth < h.depth;
+
+          return (
+            <li>
+              {goingDeeper && (
+                <svg
+                  aria-hidden="true"
+                  class="block h-2 text-border"
+                  style={`margin-left: calc(${prevDepth - 2}rem - 0.0625rem); width: ${h.depth - prevDepth}rem;`}
+                  viewBox="0 0 1 1"
+                  preserveAspectRatio="none"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  overflow="visible"
+                >
+                  <path d="M 0 0 C 0 0.5, 1 0.5, 1 1" vector-effect="non-scaling-stroke" />
+                </svg>
+              )}
+              <a
+                href={`#${h.slug}`}
+                data-nb-toc-link
+                data-nb-slug={h.slug}
+                class="block border-l-2 border-border pl-5 py-1.5 text-[0.8125rem] leading-snug text-muted-foreground no-underline transition-colors duration-150 hover:border-foreground/20 hover:text-foreground aria-[current=true]:font-medium aria-[current=true]:text-nav-active-fg"
+                style={`margin-left: calc(${indent}rem - 0.125rem);`}
+              >
+                {h.text}
+              </a>
+              {goingShallower && (
+                <svg
+                  aria-hidden="true"
+                  class="block h-2 text-border"
+                  style={`margin-left: calc(${nextDepth - 2}rem - 0.0625rem); width: ${h.depth - nextDepth}rem;`}
+                  viewBox="0 0 1 1"
+                  preserveAspectRatio="none"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  overflow="visible"
+                >
+                  <path d="M 1 0 C 1 0.5, 0 0.5, 0 1" vector-effect="non-scaling-stroke" />
+                </svg>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  </div>
+)}
+
+<script>
+  import "./toc.client";
+</script>
