@@ -212,8 +212,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/runtime
       braintrust:
-        specifier: 3.25.0
-        version: 3.25.0(@aws-sdk/credential-provider-web-identity@3.972.71)(zod@4.4.3)
+        specifier: 3.27.0
+        version: 3.27.0(@aws-sdk/credential-provider-web-identity@3.972.71)(zod@4.4.3)
       hono:
         specifier: ^4.7.0
         version: 4.12.32
@@ -6120,8 +6120,8 @@ packages:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
 
-  braintrust@3.25.0:
-    resolution: {integrity: sha512-0BIk3RDO9nLcvx4C7zaVJV0NfepZlJGi+K4jjUA/D8M9qq6YpCAP2gnBZr4UHAju8+t2Rl7MINim05K0BfaA9Q==}
+  braintrust@3.27.0:
+    resolution: {integrity: sha512-xtWgk4o8OACq6qPhIQSIBeJErj9POUUDcpTWIIjbPNSgpBPMktNLb1cMbk06YsF3goNnOlKaMcOBgwNhy1OSxQ==}
     hasBin: true
     peerDependencies:
       zod: ^3.25.34 || ^4.0
@@ -6549,9 +6549,6 @@ packages:
 
   dayjs@1.11.21:
     resolution: {integrity: sha512-98IT+HOahAisibz/yjKbzuOBwYcjJ7BCLPzARyHiyEBmRz4fatF+KPJszEHXsGYjUG234aH/cOjW1wwTbKUZlA==}
-
-  dc-browser@1.0.4:
-    resolution: {integrity: sha512-7oEtnzNlcE+hr4OvO3GR6Gndgw8BhW+wKOEwMqSleyY7N29jbAxzyW5BaJl7qBCw+6OIxfMWtY0T+6dxq8RWLw==}
 
   debug@4.4.3:
     resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
@@ -13517,7 +13514,7 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
-  braintrust@3.25.0(@aws-sdk/credential-provider-web-identity@3.972.71)(zod@4.4.3):
+  braintrust@3.27.0(@aws-sdk/credential-provider-web-identity@3.972.71)(zod@4.4.3):
     dependencies:
       '@next/env': 14.2.35
       '@vercel/functions': 1.6.0(@aws-sdk/credential-provider-web-identity@3.972.71)
@@ -13530,7 +13527,6 @@ snapshots:
       cli-progress: 3.12.0
       cli-table3: 0.6.5
       cors: 2.8.6
-      dc-browser: 1.0.4
       dotenv: 16.6.1
       esbuild: 0.28.1
       esquery: 1.7.0
@@ -13974,8 +13970,6 @@ snapshots:
   data-uri-to-buffer@4.0.1: {}
 
   dayjs@1.11.21: {}
-
-  dc-browser@1.0.4: {}
 
   debug@4.4.3:
     dependencies:

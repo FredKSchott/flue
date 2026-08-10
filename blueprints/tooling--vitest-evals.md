@@ -213,7 +213,22 @@ FLUE_AGENT_URL=https://preview.example.com/agents/service-status pnpm run evals
 
 Use the project's package-manager equivalents. Provider credentials belong to the Flue server process. Authentication credentials for a protected Flue route belong to the SDK client configuration; do not commit either kind of secret.
 
-`pnpm run evals:json` writes `vitest-results.json`. Inspect it with `pnpm exec vitest-evals serve vitest-results.json`, or publish it with the `getsentry/vitest-evals` GitHub Action. `vitest-evals` has no built-in Braintrust reporter. Flue's Braintrust tooling may be enabled independently to trace the application execution, but it does not replace eval cases, assertions, judges, or CI gates.
+`pnpm run evals:json` writes `vitest-results.json`. Inspect it with `pnpm exec vitest-evals serve vitest-results.json`, or publish it with the `getsentry/vitest-evals` GitHub Action.
+
+If the user wants Braintrust experiment reporting, install Braintrust 3.19.0 or newer and add its Node-only reporter alongside `vitest-evals/reporter`:
+
+```ts
+import BraintrustVitestEvalsReporter from 'braintrust/vitest-evals-reporter';
+
+reporters: [
+  'vitest-evals/reporter',
+  new BraintrustVitestEvalsReporter({
+    projectName: process.env.BRAINTRUST_PROJECT_NAME ?? 'Flue',
+  }),
+],
+```
+
+Keep `BRAINTRUST_API_KEY` in the eval process's secret environment. This reporter publishes eval inputs, outputs, scores, usage, tool calls, and normalized traces as an experiment. It is independent from Flue's Braintrust application instrumentation, which records production-style traces. Neither replaces eval cases, assertions, judges, or CI gates.
 
 ## Verify
 

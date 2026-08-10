@@ -8,7 +8,7 @@
 	},
 	"dependencies": {
 		"@flue/runtime": "workspace:*",
-		"braintrust": "3.25.0",
+		"braintrust": "3.27.0",
 		"hono": "^4.7.0",
 		"valibot": "^1.0.0"
 	},

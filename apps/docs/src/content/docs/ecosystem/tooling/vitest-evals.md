@@ -1,7 +1,7 @@
 ---
 title: Vitest Evals
 description: Add repeatable agent evals to a Flue project with vitest-evals.
-lastReviewedAt: 2026-07-21
+lastReviewedAt: 2026-08-05
 ---
 
 ## Quickstart
@@ -60,7 +60,25 @@ pnpm exec vitest-evals serve vitest-results.json
 
 The same artifact can be published by the `getsentry/vitest-evals` GitHub Action. Reports can contain prompts, outputs, tool arguments and results, errors, and application metadata; review retention and access requirements before uploading them.
 
-`vitest-evals` does not include a Braintrust reporter. Flue's [Braintrust integration](/docs/ecosystem/tooling/braintrust/) can independently trace the application execution, but those traces do not replace eval cases, assertions, judges, or CI gates.
+To publish the same cases as a Braintrust experiment, install `braintrust` and add its reporter beside the normal `vitest-evals` reporter:
+
+```ts title="vitest.evals.config.ts"
+import BraintrustVitestEvalsReporter from 'braintrust/vitest-evals-reporter';
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    reporters: [
+      'vitest-evals/reporter',
+      new BraintrustVitestEvalsReporter({
+        projectName: process.env.BRAINTRUST_PROJECT_NAME ?? 'Flue',
+      }),
+    ],
+  },
+});
+```
+
+Set `BRAINTRUST_API_KEY` in the eval process. The reporter publishes inputs, outputs, pass and judge scores, usage, tool calls, and normalized traces. It is separate from Flue's [Braintrust tracing integration](/docs/ecosystem/tooling/braintrust/): the reporter records eval experiments, while the application integration records production-style traces. Neither replaces eval cases, assertions, judges, or CI gates.
 
 ## Next steps
 

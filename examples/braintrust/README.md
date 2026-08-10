@@ -1,23 +1,10 @@
 # Braintrust tracing for Flue
 
-This example registers Braintrust's public Flue observer against Flue's public `observe(...)` event stream.
-
-## What it demonstrates
-
-- One observer integration traces prompt and skill operations, model turns, tools, delegated tasks, and compactions.
-- Model spans include content, errors, token usage, and estimated cost where available.
-- Flue correlation fields connect agent activity to Braintrust traces.
-- The application continues without trace export when `BRAINTRUST_API_KEY` is absent.
-
-The integration lives in [`src/app.ts`](src/app.ts). Agents do not import Braintrust.
-
-## Integration
-
-The example pins Braintrust 3.17 and registers only the lifecycle events its Flue observer consumes:
+This example uses Braintrust's first-class Flue instrumentation to trace agent operations. Agents do not import Braintrust; the integration is registered once in [`src/app.ts`](src/app.ts):
 
 ```ts
-import { type FlueObservation, observe } from '@flue/runtime';
-import { braintrustFlueObserver, initLogger } from 'braintrust';
+import { instrument } from '@flue/runtime';
+import { braintrustFlueInstrumentation, initLogger } from 'braintrust';
 
 const apiKey = process.env.BRAINTRUST_API_KEY;
 
@@ -27,59 +14,31 @@ if (apiKey) {
     apiKey,
   });
 
-  observe((event, ctx) => {
-    const compatible = compatibleEvent(event);
-    if (compatible) braintrustFlueObserver(compatible, ctx);
-  });
-}
-
-function compatibleEvent(event: FlueObservation): unknown {
-  if (event.type === 'tool') return { ...event, type: 'tool_call' };
-  if (
-    event.type === 'operation_start' ||
-    event.type === 'operation' ||
-    event.type === 'turn_request' ||
-    event.type === 'turn' ||
-    event.type === 'tool_start' ||
-    event.type === 'task_start' ||
-    event.type === 'task' ||
-    event.type === 'compaction_start' ||
-    event.type === 'compaction'
-  ) {
-    return event;
-  }
-  return undefined;
+  instrument(braintrustFlueInstrumentation());
 }
 ```
 
-Braintrust 3.17 expects `tool_call` for a terminal tool event; every other consumed event passes through with its current public shape. The observer was written while Flue still had workflow runs, so its workflow-specific handling (`run_start`/`run_end`) is simply never exercised here — persistent-agent activity is correlated by operation, instance, session, and optional dispatch fields instead.
+The instrumentation installs an execution interceptor so Braintrust's span
+context stays active during model, tool, and task execution.
 
-## Trace shape
-
-For a tool-using agent turn, the generated structure is:
+For a tool-using prompt, Braintrust records a trace like:
 
 ```text
 flue.prompt
-  llm:<model>
+  flue.turn
   tool:lookup_weather
-  llm:<model>
+  flue.turn
 ```
 
-| Flue activity                          | Braintrust representation |
-| -------------------------------------- | ------------------------- |
-| Prompt, skill, or compaction operation | `task` span               |
-| Model turn                             | Nested `llm` span         |
-| Tool call                              | Nested `tool` span        |
-| Delegated task                         | Nested `task` span        |
-| Context compaction                     | Nested compaction span    |
+The spans include model input and output, errors, token usage, cost when available, and Flue correlation fields. Delegated tasks and context compactions receive their own nested spans.
 
 ## Sensitive content
 
-Braintrust's observer is content-bearing. It can export model messages and output, reasoning, system prompts, tool definitions and values, task content, errors, and correlation metadata. Use Braintrust's masking support and review retention and access requirements before enabling it for sensitive workloads. See the [Braintrust ecosystem guide](https://flueframework.com/docs/ecosystem/tooling/braintrust/).
+This integration can export prompts, output, reasoning, system instructions, tool definitions and values, task content, and errors. Review retention and access requirements before enabling it for sensitive workloads. The [Braintrust ecosystem guide](https://flueframework.com/docs/ecosystem/tooling/braintrust/) covers masking and Cloudflare's best-effort final-span delivery.
 
-## Running it
+## Run the example
 
-From the repository root, install workspace dependencies:
+From the repository root, install dependencies:
 
 ```bash
 pnpm install
@@ -93,13 +52,13 @@ export BRAINTRUST_PROJECT_NAME='Flue'
 export ANTHROPIC_API_KEY='<anthropic-api-key>'
 ```
 
-From this example directory, start the Node dev server:
+Start the Node development server from this directory:
 
 ```bash
 pnpm exec vite dev
 ```
 
-Vite prints the local URL it serves (`http://localhost:5173` by default — substitute yours below). Agent prompts are fire-and-forget: `POST` returns a `202` admission, and a `GET` of the same URL streams the conversation. Trigger each example agent:
+Vite prints the local URL (`http://localhost:5173` by default). Trigger the example agents:
 
 ```bash
 curl -X POST 'http://localhost:5173/agents/prompt/demo-1' \
