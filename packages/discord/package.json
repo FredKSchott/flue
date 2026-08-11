@@ -31,7 +31,7 @@
 	},
 	"dependencies": {
 		"discord-api-types": "0.38.52",
-		"hono": "4.12.32"
+		"hono": "catalog:"
 	},
 	"peerDependencies": {
 		"@flue/runtime": "workspace:^"

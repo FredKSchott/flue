@@ -13,7 +13,7 @@
 		"@discordjs/rest": "*",
 		"@flue/discord": "workspace:*",
 		"@flue/runtime": "workspace:*",
-		"hono": "^4.7.0",
+		"hono": "catalog:",
 		"valibot": "^1.0.0"
 	},
 	"devDependencies": {

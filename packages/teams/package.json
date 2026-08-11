@@ -31,7 +31,7 @@
 	},
 	"dependencies": {
 		"botframework-schema": "4.23.3",
-		"hono": "4.12.32",
+		"hono": "catalog:",
 		"jose": "6.2.5"
 	},
 	"peerDependencies": {

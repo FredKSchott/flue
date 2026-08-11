@@ -4,6 +4,12 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    hono:
+      specifier: 4.13.1
+      version: 4.13.1
+
 importers:
 
   .:
@@ -187,8 +193,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/runtime
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.39.2
@@ -215,8 +221,8 @@ importers:
         specifier: 3.25.0
         version: 3.25.0(@aws-sdk/credential-provider-web-identity@3.972.71)(zod@4.4.3)
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       valibot:
         specifier: ^1.0.0
         version: 1.4.2(typescript@7.0.2)
@@ -249,8 +255,8 @@ importers:
         specifier: '*'
         version: 4.35.0(zod@4.4.3)
       hono:
-        specifier: ^4.8.3
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       just-bash:
         specifier: ^3.0.1
         version: 3.2.0
@@ -286,8 +292,8 @@ importers:
         specifier: ^0.4.0
         version: 0.4.0
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       valibot:
         specifier: ^1.0.0
         version: 1.4.2(typescript@7.0.2)
@@ -323,8 +329,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/runtime
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       valibot:
         specifier: ^1.0.0
         version: 1.4.2(typescript@7.0.2)
@@ -360,8 +366,8 @@ importers:
         specifier: '*'
         version: 22.0.1
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       valibot:
         specifier: ^1.0.0
         version: 1.4.2(typescript@7.0.2)
@@ -394,8 +400,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/runtime
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       jose:
         specifier: '*'
         version: 6.2.5
@@ -434,8 +440,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/runtime
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       just-bash:
         specifier: ^3.0.1
         version: 3.2.0
@@ -459,8 +465,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/runtime
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       just-bash:
         specifier: ^3.0.1
         version: 3.2.0
@@ -487,8 +493,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/runtime
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       intercom-client:
         specifier: '*'
         version: 7.0.3
@@ -533,8 +539,8 @@ importers:
         specifier: '*'
         version: 88.3.0(graphql@17.0.2)
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       valibot:
         specifier: ^1.0.0
         version: 1.4.2(typescript@7.0.2)
@@ -567,8 +573,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/runtime
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       valibot:
         specifier: ^1.0.0
         version: 1.4.2(typescript@7.0.2)
@@ -601,8 +607,8 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@flue/cli':
         specifier: workspace:*
@@ -626,8 +632,8 @@ importers:
         specifier: '*'
         version: 5.23.3
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       valibot:
         specifier: ^1.0.0
         version: 1.4.2(typescript@7.0.2)
@@ -673,10 +679,10 @@ importers:
         version: link:../../packages/sdk
       '@hono/node-server':
         specifier: ^2.0.3
-        version: 2.0.12(hono@4.12.32)
+        version: 2.0.12(hono@4.13.1)
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       react:
         specifier: ^19.1.1
         version: 19.2.8
@@ -718,8 +724,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/runtime
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       resend:
         specifier: '*'
         version: 6.18.1
@@ -761,8 +767,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/salesforce-marketing-cloud
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.39.2
@@ -804,8 +810,8 @@ importers:
         specifier: ^10.64.0
         version: 10.69.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.220.0(@opentelemetry/api@1.9.1))
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       valibot:
         specifier: ^1.0.0
         version: 1.4.2(typescript@7.0.2)
@@ -832,8 +838,8 @@ importers:
         specifier: '*'
         version: 1.1.2
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.39.2
@@ -872,8 +878,8 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       valibot:
         specifier: ^1.0.0
         version: 1.4.2(typescript@7.0.2)
@@ -906,8 +912,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/stripe
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       stripe:
         specifier: '*'
         version: 22.4.0(@types/node@26.1.2)
@@ -940,8 +946,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/runtime
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       valibot:
         specifier: ^1.0.0
         version: 1.4.2(typescript@7.0.2)
@@ -965,8 +971,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/teams
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       valibot:
         specifier: ^1.0.0
         version: 1.4.2(typescript@7.0.2)
@@ -1002,8 +1008,8 @@ importers:
         specifier: '*'
         version: 1.45.1
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       valibot:
         specifier: ^1.0.0
         version: 1.4.2(typescript@7.0.2)
@@ -1036,8 +1042,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/twilio
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       valibot:
         specifier: ^1.0.0
         version: 1.4.2(typescript@7.0.2)
@@ -1067,8 +1073,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/runtime
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       valibot:
         specifier: ^1.0.0
         version: 1.4.2(typescript@7.0.2)
@@ -1107,8 +1113,8 @@ importers:
         specifier: '*'
         version: 0.2.3
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       valibot:
         specifier: ^1.0.0
         version: 1.4.2(typescript@7.0.2)
@@ -1141,8 +1147,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/zendesk
       hono:
-        specifier: ^4.7.0
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       lossless-json:
         specifier: '*'
         version: 4.3.0
@@ -1230,8 +1236,8 @@ importers:
         specifier: 0.38.52
         version: 0.38.52
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: 0.19.1
@@ -1255,8 +1261,8 @@ importers:
         specifier: 7.6.1
         version: 7.6.1
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: 0.19.1
@@ -1277,8 +1283,8 @@ importers:
   packages/google-chat:
     dependencies:
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       jose:
         specifier: 6.2.5
         version: 6.2.5
@@ -1302,8 +1308,8 @@ importers:
   packages/intercom:
     dependencies:
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: 0.19.1
@@ -1346,8 +1352,8 @@ importers:
         specifier: 88.3.0
         version: 88.3.0(graphql@17.0.2)
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: 0.19.1
@@ -1368,8 +1374,8 @@ importers:
   packages/messenger:
     dependencies:
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: 0.19.1
@@ -1431,8 +1437,8 @@ importers:
   packages/notion:
     dependencies:
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: 0.19.1
@@ -1563,8 +1569,8 @@ importers:
         specifier: '>=18'
         version: 19.2.17
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: 0.19.1
@@ -1598,7 +1604,7 @@ importers:
         version: 0.83.0(@modelcontextprotocol/sdk@1.30.0(@cfworker/json-schema@4.1.1)(zod@4.4.3))(ws@8.21.1)(zod@4.4.3)
       '@hono/node-server':
         specifier: ^2.0.3
-        version: 2.0.12(hono@4.12.32)
+        version: 2.0.12(hono@4.13.1)
       '@modelcontextprotocol/client':
         specifier: 2.0.0
         version: 2.0.0
@@ -1606,8 +1612,8 @@ importers:
         specifier: ^1.3.0
         version: 1.7.1(valibot@1.4.2(typescript@7.0.2))
       hono:
-        specifier: ^4.8.3
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       js-yaml:
         specifier: ^5.2.1
         version: 5.2.2
@@ -1640,8 +1646,8 @@ importers:
   packages/salesforce-marketing-cloud:
     dependencies:
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: 0.19.1
@@ -1681,8 +1687,8 @@ importers:
   packages/shopify:
     dependencies:
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       lossless-json:
         specifier: 4.3.0
         version: 4.3.0
@@ -1709,8 +1715,8 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: 0.19.1
@@ -1731,8 +1737,8 @@ importers:
   packages/stripe:
     dependencies:
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: 0.19.1
@@ -1762,8 +1768,8 @@ importers:
         specifier: 4.23.3
         version: 4.23.3
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       jose:
         specifier: 6.2.5
         version: 6.2.5
@@ -1790,8 +1796,8 @@ importers:
         specifier: 4.0.0
         version: 4.0.0
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: 0.19.1
@@ -1812,8 +1818,8 @@ importers:
   packages/twilio:
     dependencies:
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: 0.19.1
@@ -1841,7 +1847,7 @@ importers:
         version: link:../runtime
       '@hono/node-server':
         specifier: ^2.0.3
-        version: 2.0.12(hono@4.12.32)
+        version: 2.0.12(hono@4.13.1)
       agents:
         specifier: ^0.20.1
         version: 0.20.1(@babel/core@8.0.1)(@babel/runtime@7.29.7)(@cloudflare/workers-types@5.20260731.1)(@modelcontextprotocol/client@2.0.0)(@modelcontextprotocol/sdk@1.30.0(@cfworker/json-schema@4.1.1)(zod@4.4.3))(@modelcontextprotocol/server@2.0.0)(chat@4.35.0(zod@4.4.3))(just-bash@3.2.0)(react@19.2.8)(rolldown@1.2.1)(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0))(zod@4.4.3)
@@ -1862,8 +1868,8 @@ importers:
         specifier: ^0.83.0
         version: 0.83.0(@modelcontextprotocol/sdk@1.30.0(@cfworker/json-schema@4.1.1)(zod@4.4.3))(ws@8.21.1)(zod@4.4.3)
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       tsdown:
         specifier: ^0.22.7
         version: 0.22.14(oxc-resolver@11.24.2)(tsx@4.23.1)(typescript@7.0.2)
@@ -1883,8 +1889,8 @@ importers:
         specifier: 5.0.1
         version: 5.0.1
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: 0.19.1
@@ -1905,8 +1911,8 @@ importers:
   packages/zendesk:
     dependencies:
       hono:
-        specifier: 4.12.32
-        version: 4.12.32
+        specifier: 'catalog:'
+        version: 4.13.1
       lossless-json:
         specifier: 4.3.0
         version: 4.3.0
@@ -7115,6 +7121,10 @@ packages:
     resolution: {integrity: sha512-XcuyW9qE2kJn07PkecMOBd5Vq/hMy7mmGw+idz1yblbg9N17ijJODrvPkn7/dwL3Kulj8LcRJ69DLOWf91dRUg==}
     engines: {node: '>=16.9.0'}
 
+  hono@4.13.1:
+    resolution: {integrity: sha512-kdJoFVv2xmayw6cY09H7AbMJMt8Jn5jdlEdXsP7AGBdF2DIptVlKlOLKXP41yPip4/a3yQPv9gVcJYI8YY04dw==}
+    engines: {node: '>=16.9.0'}
+
   hookable@6.1.1:
     resolution: {integrity: sha512-U9LYDy1CwhMCnprUfeAZWZGByVbhd54hwepegYTK7Pi5NvqEj63ifz5z+xukznehT7i6NIZRu89Ay1AZmRsLEQ==}
 
@@ -10477,6 +10487,10 @@ snapshots:
   '@hono/node-server@2.0.12(hono@4.12.32)':
     dependencies:
       hono: 4.12.32
+
+  '@hono/node-server@2.0.12(hono@4.13.1)':
+    dependencies:
+      hono: 4.13.1
 
   '@iarna/toml@2.2.5': {}
 
@@ -14687,6 +14701,8 @@ snapshots:
       parse-passwd: 1.0.0
 
   hono@4.12.32: {}
+
+  hono@4.13.1: {}
 
   hookable@6.1.1: {}
 

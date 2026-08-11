@@ -1,4 +1,6 @@
 packages: [packages/*, examples/*, apps/*, demo]
+catalog:
+  hono: 4.13.1
 allowBuilds:
   '@google/genai': false
   '@mongodb-js/zstd': false

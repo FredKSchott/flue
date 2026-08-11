@@ -4,7 +4,7 @@
 	"type": "module",
 	"dependencies": {
 		"@flue/runtime": "workspace:*",
-		"hono": "^4.7.0",
+		"hono": "catalog:",
 		"just-bash": "^3.0.1"
 	},
 	"devDependencies": {

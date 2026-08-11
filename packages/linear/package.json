@@ -31,7 +31,7 @@
 	},
 	"dependencies": {
 		"@linear/sdk": "88.3.0",
-		"hono": "4.12.32"
+		"hono": "catalog:"
 	},
 	"peerDependencies": {
 		"@flue/runtime": "workspace:^"

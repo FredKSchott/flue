@@ -9,7 +9,7 @@
 	"dependencies": {
 		"@flue/runtime": "workspace:*",
 		"braintrust": "3.25.0",
-		"hono": "^4.7.0",
+		"hono": "catalog:",
 		"valibot": "^1.0.0"
 	},
 	"devDependencies": {

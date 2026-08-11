@@ -30,7 +30,7 @@
 		"test:workerd": "vitest run --config vitest.workerd.config.ts"
 	},
 	"dependencies": {
-		"hono": "4.12.32",
+		"hono": "catalog:",
 		"lossless-json": "4.3.0"
 	},
 	"peerDependencies": {

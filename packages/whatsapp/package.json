@@ -31,7 +31,7 @@
 	},
 	"dependencies": {
 		"@whatsapp-cloudapi/types": "5.0.1",
-		"hono": "4.12.32"
+		"hono": "catalog:"
 	},
 	"peerDependencies": {
 		"@flue/runtime": "workspace:^"
