@@ -6,7 +6,7 @@ import { ThemeToggle } from "./ui/theme-toggle";
 import { SearchTrigger } from "./ui/search";
 import { config } from "virtual:nimbus/config";
 import { getSidebarSections } from "@cloudflare/nimbus-docs";
-import { withBase } from "@/lib/with-base";
+import { withBase, stripBase } from "@/lib/with-base";
 
 interface Props {
   /** Astro collection id for the current page, forwarded from DocsLayout. */
@@ -31,9 +31,8 @@ const { collection, showSidebar = true } = Astro.props;
 // `segment` groups don't qualify. Our sidebar is hand-curated manual groups,
 // so derive the tab strip from the config's top-level `segment` groups
 // directly. Fall back to the framework helper when no segment groups exist.
-const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const path = Astro.url.pathname;
-const rel = base && path.startsWith(base) ? path.slice(base.length) : path;
+const rel = stripBase(path);
 const currentSeg = `/${rel.split("/").filter(Boolean)[0] ?? ""}`;
 
 const firstLink = (items: any[] | undefined): string | undefined => {

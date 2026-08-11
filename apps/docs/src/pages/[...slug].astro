@@ -12,6 +12,7 @@ import {
 import { getCollection } from "astro:content";
 import { components } from "../components";
 import { dropSectionLead } from "../lib/sidebar";
+import { withBase } from "@/lib/with-base";
 
 export const prerender = true;
 
@@ -48,8 +49,7 @@ const editUrl = await getEditUrl(entry);
 const lastUpdated = entry.data.lastReviewedAt;
 const tocConfig = entry.data.tableOfContents;
 const toc = tocOn && tocConfig !== false ? getTOC(headings, tocConfig) : false;
-const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-const markdownUrl = `${base}/${entry.collection}/${entry.id}/index.md`;
+const markdownUrl = withBase(`/${entry.collection}/${entry.id}/index.md`);
 ---
 
 <DocsLayout

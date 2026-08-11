@@ -3,6 +3,7 @@ import DocsLayout from "../../layouts/DocsLayout.astro";
 import { getSidebar } from "@cloudflare/nimbus-docs";
 import { channels, databases, deploy, ecosystemMeta, sandboxes, tooling } from "../../lib/ecosystem-catalog";
 import { dropSectionLead } from "../../lib/sidebar";
+import { withBase } from "@/lib/with-base";
 
 export const prerender = true;
 
@@ -13,9 +14,8 @@ try {
 	sidebar = false;
 }
 
-const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const breadcrumbs = [
-	{ label: "Home", href: `${base}/` },
+	{ label: "Home", href: withBase("/") },
 	{ label: "Ecosystem" },
 ];
 const prevNext = { prev: undefined, next: undefined };
