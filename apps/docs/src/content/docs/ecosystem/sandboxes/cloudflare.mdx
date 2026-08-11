@@ -4,15 +4,17 @@ description: Run Flue agent work inside Cloudflare container-backed sandboxes.
 lastReviewedAt: 2026-07-21
 ---
 
+import CopyPrompt from '../../../../components/docs/CopyPrompt.astro';
+
 Cloudflare Sandbox uses `@cloudflare/sandbox` to provide a container-backed Linux environment to a Flue application deployed on Cloudflare. This integration is platform-native: it is not an adapter module for a Node-target application.
 
 ## Quickstart
 
-Add container-backed Linux sandbox capability to an existing Flue project with the [Cloudflare Sandbox](https://developers.cloudflare.com/sandbox) blueprint. Run the following command in your terminal or coding agent of choice:
+Ask an AI coding agent to add container-backed Linux sandbox capability to an existing Flue project with the [Cloudflare Sandbox](https://developers.cloudflare.com/sandbox) blueprint. This is a project-specific integration, not a package installer or a standalone terminal command.
 
-```bash
-flue add sandbox cloudflare
-```
+<CopyPrompt text="Add Cloudflare Sandbox to this Flue project. Inspect the existing setup, then generate the required integration without overwriting incompatible configuration." />
+
+Copy this prompt and paste it into your coding agent. The agent will inspect the project and make the changes Cloudflare Sandbox requires, which may include installing `@cloudflare/sandbox`, updating `cloudflare.ts`, adding a Sandbox Durable Object binding and migration, creating or updating the container `Dockerfile`, and wiring `getSandbox(...)` into the Flue agent.
 
 ## Overview
 
@@ -26,13 +28,13 @@ import { cloudflareSandbox } from '@flue/runtime/cloudflare';
 import { getSandbox } from '@cloudflare/sandbox';
 
 interface Env {
-  Sandbox: DurableObjectNamespace;
+	Sandbox: DurableObjectNamespace;
 }
 
 export function CodingAgent({ id }: AgentProps) {
-  useModel('anthropic/claude-opus-4-7');
-  const { Sandbox } = env as unknown as Env;
-  useSandbox(cloudflareSandbox(getSandbox(Sandbox, id)));
+	useModel('anthropic/claude-opus-4-7');
+	const { Sandbox } = env as unknown as Env;
+	useSandbox(cloudflareSandbox(getSandbox(Sandbox, id)));
 }
 ```
 
@@ -65,13 +67,13 @@ import { type AgentProps, useModel, useSandbox } from '@flue/runtime';
 import { cloudflareSandbox } from '@flue/runtime/cloudflare';
 
 interface Env {
-  Sandbox: DurableObjectNamespace;
+	Sandbox: DurableObjectNamespace;
 }
 
 export function Assistant({ id }: AgentProps) {
-  useModel('anthropic/claude-sonnet-4-6');
-  const { Sandbox } = env as unknown as Env;
-  useSandbox(cloudflareSandbox(getSandbox(Sandbox, id)), { cwd: '/workspace' });
+	useModel('anthropic/claude-sonnet-4-6');
+	const { Sandbox } = env as unknown as Env;
+	useSandbox(cloudflareSandbox(getSandbox(Sandbox, id)), { cwd: '/workspace' });
 }
 ```
 
