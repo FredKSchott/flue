@@ -17,6 +17,8 @@ import { PageActions } from "@/components/ui/page-actions";
 import { Badge } from "@/components/ui/badge";
 import type { DocsPageProps } from "@cloudflare/nimbus-docs/types";
 import { getVersionStatus, getVersionAlternates } from "@cloudflare/nimbus-docs";
+import SectionNav from "@/components/SectionNav.astro";
+import { getNavSections } from "@/lib/nav-sections";
 
 type Props = DocsPageProps & { audience?: "human" };
 
@@ -32,6 +34,7 @@ const isCustom = mode === "custom";
 // from the route as literal `false` (not coerced to `[]`). They drive
 // per-column suppression — chrome, mobile dialog, header menu button.
 const showSidebar = sidebar !== false;
+const navSections = showSidebar ? await getNavSections(Astro.url.pathname, collection) : [];
 
 // Versioning: per-page status drives Pagefind faceting, deprecation
 // banner, and the data-pagefind-ignore exclusion for hidden versions.
@@ -69,6 +72,7 @@ if (!effectiveSearchable || versionStatus?.isHidden) {
 const hasHeader = Astro.slots.has("header");
 const hasSidebar = Astro.slots.has("sidebar");
 const hasToc = Astro.slots.has("toc");
+const hasMobileToc = headings !== false && headings.length > 0;
 const hasPageTitle = Astro.slots.has("page-title");
 const hasContentFooter = Astro.slots.has("content-footer");
 const hasPagination = Astro.slots.has("pagination");
@@ -86,7 +90,7 @@ const hasPagination = Astro.slots.has("pagination");
       <div class="flex-1 mx-auto w-full">
         <div class="flex">
           {showSidebar && (
-            <aside id="desktop-sidebar" data-nb-desktop-sidebar class="hidden lg:flex w-(--nb-sidebar-width) shrink-0 border-r border-border bg-background sticky top-14 h-[calc(100vh-3.5rem)] flex-col overflow-y-auto overscroll-contain relative">
+            <aside id="desktop-sidebar" data-nb-desktop-sidebar class="hidden lg:flex w-(--nb-sidebar-width) shrink-0 border-r border-border bg-background sticky top-14 h-[calc(100vh-3.5rem)] flex-col overflow-y-auto overscroll-contain relative [scrollbar-width:thin] [scrollbar-color:gray_transparent]">
               {hasSidebar ? (
                 <slot name="sidebar" />
               ) : (
@@ -155,19 +159,19 @@ const hasPagination = Astro.slots.has("pagination");
                     </div>
                     <PageActions markdownUrl={markdownUrl} lastUpdated={lastUpdated} class="mt-3" />
                     {headings !== false && headings.length > 0 && (
-                      <div class="border-border bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-14 z-20 -mx-4 mt-3 border-y px-4 py-2 backdrop-blur lg:-mx-6 lg:px-6 xl:hidden">
+                      <div class="border-border bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-14 z-20 -mx-4 mt-3 mb-6 border-y px-4 py-2 backdrop-blur lg:-mx-6 lg:px-6 xl:hidden">
                         <MobileTOC headings={headings} />
                       </div>
                     )}
                     {(markdownUrl || audience === "human") && (
                       audience === "human" ? (
-                        <div class="mt-3 mb-6 flex items-center gap-3" role="none">
+                        <div class:list={["mt-3 mb-6 items-center gap-3", hasMobileToc ? "hidden xl:flex" : "flex"]} role="none">
                           <div class="h-px flex-1 bg-border"></div>
                           <Badge text="For humans" variant="success" size="small" class="font-mono uppercase border border-success/15" />
                           <div class="h-px flex-1 bg-border"></div>
                         </div>
                       ) : (
-                        <div class="mt-3 mb-6 h-px w-full bg-border" role="none" />
+                        <div class:list={["mt-3 mb-6 h-px w-full bg-border", hasMobileToc && "hidden xl:block"]} role="none" />
                       )
                     )}
                     {!description && !markdownUrl && audience !== "human" && <div class="mb-4" />}
@@ -209,17 +213,13 @@ const hasPagination = Astro.slots.has("pagination");
     <dialog
       data-mobile-sidebar
       data-state="closed"
-      class="group fixed inset-0 m-0 h-full w-full max-h-full max-w-full border-0 bg-transparent p-0 [&::backdrop]:bg-transparent"
+      class="group fixed inset-0 m-0 h-[100dvh] w-full max-h-[100dvh] max-w-full overflow-hidden border-0 bg-transparent p-0 [&::backdrop]:bg-transparent"
       aria-label="Site navigation"
     >
-      <div data-mobile-sidebar-panel class="h-full w-(--nb-sidebar-width) max-w-[85vw] -translate-x-full overflow-y-auto overscroll-contain border-r border-border bg-card transition-transform duration-250 ease-out group-data-[state=open]:translate-x-0 motion-reduce:transition-none">
-        <div class="sticky top-0 z-[1] flex items-center justify-between border-b border-border bg-card px-4 py-3">
-          <span class="font-semibold text-sm text-foreground">Navigation</span>
-          <button data-close-sidebar class="flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" aria-label="Close sidebar">
-            <Icon name="ph:x" class="w-5 h-5" />
-          </button>
-        </div>
-        <nav class="px-4 pb-8 pt-5">
+      <div data-mobile-sidebar-panel class="flex h-[100dvh] w-full -translate-x-full flex-col overflow-hidden bg-card transition-transform duration-250 ease-out group-data-[state=open]:translate-x-0 motion-reduce:transition-none">
+        <Header collection={collection} entryId={entryId} showSidebar={showSidebar} variant="dialog" />
+        <nav class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-5 [scrollbar-width:thin] [scrollbar-color:gray_transparent]">
+          {navSections.length >= 2 && <SectionNav sections={navSections} class="mb-4 flex flex-nowrap overflow-x-auto border-b border-border pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" />}
           {hasSidebar ? <slot name="sidebar" /> : <Sidebar items={sidebar} />}
         </nav>
       </div>
@@ -259,6 +259,10 @@ const hasPagination = Astro.slots.has("pagination");
             dialog.dataset.state = "open";
           });
         });
+
+        dialog
+          .querySelector<HTMLElement>('[aria-label="Sections"] [aria-current="page"]')
+          ?.scrollIntoView({ inline: "center", block: "nearest" });
 
         dialog.querySelector<HTMLElement>("[data-close-sidebar]")?.focus();
       };

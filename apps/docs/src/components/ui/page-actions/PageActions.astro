@@ -20,7 +20,7 @@ const formattedDate = lastUpdated
 
 {(markdownUrl || lastUpdated) && (
   <div
-    class={cn("not-prose -ml-2 flex flex-wrap items-center gap-y-1 text-[0.8125rem]", className)}
+    class={cn("not-prose -ml-2 flex flex-nowrap items-center whitespace-nowrap text-[0.8125rem]", className)}
     {...attrs}
   >
     {lastUpdated && (

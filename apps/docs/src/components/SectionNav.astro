@@ -1,0 +1,26 @@
+---
+import { withBase } from "@/lib/with-base";
+import type { NavSection } from "@/lib/nav-sections";
+
+interface Props {
+  sections: NavSection[];
+  class?: string;
+}
+
+const { sections, class: className } = Astro.props;
+---
+
+<nav aria-label="Sections" class:list={["items-center gap-1", className]}>
+  {sections.map((section) => (
+    <a
+      href={withBase(section.href)}
+      aria-current={section.isActive ? "page" : undefined}
+      class:list={[
+        "shrink-0 whitespace-nowrap rounded-md px-2 py-1 text-[0.8125rem] font-medium no-underline transition-colors",
+        section.isActive ? "text-nav-active-fg bg-nav-active-bg" : "text-muted-foreground hover:text-link",
+      ]}
+    >
+      {section.label}
+    </a>
+  ))}
+</nav>

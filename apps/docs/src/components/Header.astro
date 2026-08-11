@@ -4,101 +4,49 @@ import { Button } from "./ui/button";
 import { LinkButton } from "./ui/link-button";
 import { ThemeToggle } from "./ui/theme-toggle";
 import { SearchTrigger } from "./ui/search";
+import SectionNav from "./SectionNav.astro";
 import { config } from "virtual:nimbus/config";
-import { getSidebarSections } from "@cloudflare/nimbus-docs";
-import { withBase, stripBase } from "@/lib/with-base";
+import { getNavSections } from "@/lib/nav-sections";
 
 interface Props {
-  /** Astro collection id for the current page, forwarded from DocsLayout. */
   collection?: string;
-  /** Astro entry id for the current page, forwarded from DocsLayout. */
   entryId?: string;
-  /**
-   * Whether the page has a sidebar to open. When `false`, the mobile
-   * menu button is hidden — pages that opted out via `sidebar: false`
-   * shouldn't show a button that opens an empty dialog. Default `true`.
-   */
   showSidebar?: boolean;
+  variant?: "page" | "dialog";
 }
 
-// `entryId` is part of Props as a forward-compat hook (the version-switcher
-// recipe reads it) but the base Header doesn't use it — leave it off the
-// destructure to avoid an unused-var warning.
-const { collection, showSidebar = true } = Astro.props;
+const { collection, showSidebar = true, variant = "page" } = Astro.props;
+const isDialog = variant === "dialog";
 
-// Header tabs. Nimbus's `deriveSidebarSections` only promotes
-// `autogenerate:{collection}` groups (those set `_prefix`) to tabs; manual
-// `segment` groups don't qualify. Our sidebar is hand-curated manual groups,
-// so derive the tab strip from the config's top-level `segment` groups
-// directly. Fall back to the framework helper when no segment groups exist.
-const path = Astro.url.pathname;
-const rel = stripBase(path);
-const currentSeg = `/${rel.split("/").filter(Boolean)[0] ?? ""}`;
-
-const firstLink = (items: any[] | undefined): string | undefined => {
-  for (const it of items ?? []) {
-    if (typeof it?.link === "string" && !/^([a-z][a-z0-9+.\-]*:|\/\/)/i.test(it.link)) return it.link;
-    if (Array.isArray(it?.items)) {
-      const r = firstLink(it.items);
-      if (r) return r;
-    }
-  }
-  return undefined;
-};
-
-const configItems = (config.sidebar?.items ?? []) as Array<Record<string, unknown>>;
-let sections = configItems
-  .filter((it) => it && typeof it === "object" && typeof it.segment === "string")
-  .map((it) => {
-    const seg = (it.segment as string).startsWith("/") ? (it.segment as string) : `/${it.segment}`;
-    const href = (typeof it.landing === "string" ? it.landing : undefined) ?? firstLink(it.items as any[]) ?? seg;
-    return { label: it.label as string, href, isActive: seg === currentSeg };
-  });
-
-if (sections.length < 2) {
-  const currentSlug = path.replace(/\/$/, "") || "/";
-  sections = await getSidebarSections(currentSlug, { collection });
-}
+const sections = isDialog ? [] : await getNavSections(Astro.url.pathname, collection);
 const showSections = sections.length >= 2;
+
+const Wrapper = isDialog ? "div" : "header";
+const wrapperClass = isDialog
+  ? "shrink-0 border-b border-border bg-card"
+  : "sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur-lg";
 ---
 
-<header class="sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur-lg">
-  <div class="mx-auto flex items-center justify-between h-14 px-4 lg:px-6">
-    <div class="flex items-center gap-8">
-      <a href="https://flueframework.com" class="flex items-center gap-2" aria-label={`${config.title} homepage`}>
-        <svg class="size-6 shrink-0" viewBox="0 0 108 108" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<Wrapper class={wrapperClass}>
+  <div class="mx-auto flex items-center justify-between gap-2 h-14 px-4 lg:px-6">
+    <div class="flex min-w-0 items-center gap-8">
+      <a href="https://flueframework.com" class="flex min-w-0 items-center gap-2" aria-label={`${config.title} homepage`}>
+        <svg class="size-5 shrink-0" viewBox="0 0 108 108" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <rect width="108" height="108" transform="matrix(-1 0 0 1 108 0)" class="fill-foreground" />
           <rect width="18" height="18" transform="matrix(-1 0 0 1 72 18)" class="fill-card" />
           <rect width="18" height="18" transform="matrix(-1 0 0 1 54 72)" class="fill-card" />
           <rect width="18" height="18" transform="matrix(-1 0 0 1 54 36)" class="fill-card" />
           <rect width="18" height="18" transform="matrix(-1 0 0 1 72 54)" class="fill-card" />
         </svg>
-        <span class="text-2xl font-extrabold tracking-tight text-foreground leading-none">
+        <span class="truncate text-lg font-bold tracking-tight text-foreground leading-none">
           {config.title}
         </span>
       </a>
 
-      {showSections && (
-        <nav aria-label="Sections" class="hidden md:flex items-center gap-1">
-          {sections.map((section) => (
-            <a
-              href={withBase(section.href)}
-              aria-current={section.isActive ? "page" : undefined}
-              class:list={[
-                "px-2 py-1 rounded-md text-[0.8125rem] font-medium no-underline transition-colors",
-                section.isActive
-                  ? "text-nav-active-fg bg-nav-active-bg"
-                  : "text-muted-foreground hover:text-link",
-              ]}
-            >
-              {section.label}
-            </a>
-          ))}
-        </nav>
-      )}
+      {showSections && <SectionNav sections={sections} class="hidden md:flex" />}
     </div>
 
-    <div class="flex items-center gap-2">
+    <div class="flex shrink-0 items-center gap-2">
       {config.search !== false && <SearchTrigger />}
       {config.github && (
         <LinkButton
@@ -115,17 +63,29 @@ const showSections = sections.length >= 2;
         </LinkButton>
       )}
       <ThemeToggle />
-      {showSidebar && (
+      {isDialog ? (
         <Button
           variant="ghost"
           shape="square"
           size="sm"
-          icon="ph:list"
-          aria-label="Open navigation"
-          data-menu-btn
-          class="lg:hidden text-muted-foreground"
+          icon="ph:x"
+          aria-label="Close navigation"
+          data-close-sidebar
+          class="text-muted-foreground"
         />
+      ) : (
+        showSidebar && (
+          <Button
+            variant="ghost"
+            shape="square"
+            size="sm"
+            icon="ph:list"
+            aria-label="Open navigation"
+            data-menu-btn
+            class="lg:hidden text-muted-foreground"
+          />
+        )
       )}
     </div>
   </div>
-</header>
+</Wrapper>
