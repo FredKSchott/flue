@@ -1,5 +1,3 @@
-/** Sidebar runtime: filter, persistence, "/" shortcut. */
-
 import { mount } from "@cloudflare/nimbus-docs/client";
 
 const STORAGE_KEY = "sidebar-state";
@@ -10,115 +8,11 @@ interface SidebarState {
 }
 
 function initSidebar(root: HTMLElement): () => void {
-  const teardowns: Array<() => void> = [];
-  const persist = root.hasAttribute("data-nb-sidebar-persist");
-
-  const filterTeardown = initFilter(root);
-  if (filterTeardown) teardowns.push(filterTeardown);
-
-  if (persist) {
-    const persistTeardown = initPersistence(root);
-    if (persistTeardown) teardowns.push(persistTeardown);
-  }
-
-  return () => {
-    teardowns.forEach((t) => {
-      t();
-    });
-  };
+  if (!root.hasAttribute("data-nb-sidebar-persist")) return () => {};
+  return initPersistence(root);
 }
 
-// ---------------------------------------------------------------------------
-// Filter
-// ---------------------------------------------------------------------------
-
-function initFilter(root: HTMLElement): (() => void) | null {
-  const input = root.querySelector<HTMLInputElement>("[data-nb-sidebar-filter-input]");
-  // SidebarFilter is rendered *next to* Sidebar (sibling), so also look in
-  // the parent — preserves the existing layout where filter sits above.
-  const inputElement =
-    input ?? root.parentElement?.querySelector<HTMLInputElement>("[data-nb-sidebar-filter-input]") ?? null;
-  if (!inputElement) return null;
-
-  function handleInput() {
-    const query = inputElement!.value.trim().toLowerCase();
-    if (!query) {
-      resetFilter(root);
-      return;
-    }
-    applyFilter(root, query);
-  }
-
-  function handleKeydown(e: KeyboardEvent) {
-    if (e.key === "Escape") {
-      inputElement!.value = "";
-      handleInput();
-      inputElement!.blur();
-    }
-  }
-
-  inputElement.addEventListener("input", handleInput);
-  inputElement.addEventListener("keydown", handleKeydown);
-
-  return () => {
-    inputElement.removeEventListener("input", handleInput);
-    inputElement.removeEventListener("keydown", handleKeydown);
-    resetFilter(root);
-  };
-}
-
-function resetFilter(root: HTMLElement): void {
-  root.querySelectorAll<HTMLElement>("[data-nb-sidebar-hidden]").forEach((el) => {
-    el.removeAttribute("data-nb-sidebar-hidden");
-  });
-}
-
-function applyFilter(root: HTMLElement, query: string): void {
-  const links = root.querySelectorAll<HTMLElement>("[data-nb-sidebar-link]");
-  const groups = root.querySelectorAll<HTMLElement>("[data-nb-sidebar-group]");
-
-  links.forEach((link) => {
-    link.setAttribute("data-nb-sidebar-hidden", "");
-  });
-  groups.forEach((group) => {
-    group.setAttribute("data-nb-sidebar-hidden", "");
-  });
-
-  links.forEach((link) => {
-    const text = link.textContent?.toLowerCase() ?? "";
-    if (!text.includes(query)) return;
-    link.removeAttribute("data-nb-sidebar-hidden");
-    revealAncestors(link, root);
-  });
-
-  groups.forEach((group) => {
-    const label = group.querySelector("[data-nb-sidebar-group-label]");
-    const text = label?.textContent?.toLowerCase() ?? "";
-    if (!text.includes(query)) return;
-    group.removeAttribute("data-nb-sidebar-hidden");
-    group.querySelectorAll<HTMLElement>("[data-nb-sidebar-link], [data-nb-sidebar-group]")
-      .forEach((child) => {
-        child.removeAttribute("data-nb-sidebar-hidden");
-      });
-  });
-}
-
-function revealAncestors(el: HTMLElement, scope: Element): void {
-  let parent: HTMLElement | null = el.parentElement;
-  while (parent && parent !== scope) {
-    if (parent.hasAttribute("data-nb-sidebar-group")) {
-      parent.removeAttribute("data-nb-sidebar-hidden");
-    }
-    parent = parent.parentElement;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Persistence (scroll)
-// ---------------------------------------------------------------------------
-
-function initPersistence(root: HTMLElement): (() => void) | null {
-  // The scrollable container is the closest <aside> or the root itself.
+function initPersistence(root: HTMLElement): () => void {
   const scrollHost: HTMLElement = root.closest("aside") ?? root;
   const hash = root.dataset.nbSidebarHash ?? "";
 
@@ -152,33 +46,5 @@ function initPersistence(root: HTMLElement): (() => void) | null {
     cancelAnimationFrame(raf);
   };
 }
-
-// ---------------------------------------------------------------------------
-// Global `/` shortcut — bound once at module load
-// ---------------------------------------------------------------------------
-
-(function bindFilterShortcut() {
-  if (document.documentElement.hasAttribute("data-nb-sidebar-shortcut-bound")) return;
-  document.documentElement.setAttribute("data-nb-sidebar-shortcut-bound", "");
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key !== "/") return;
-    const active = document.activeElement as HTMLElement | null;
-    if (
-      active &&
-      (active.tagName === "INPUT" ||
-        active.tagName === "TEXTAREA" ||
-        active.isContentEditable)
-    ) {
-      return;
-    }
-    const desktopInput = document.querySelector<HTMLInputElement>(
-      "[data-nb-sidebar-persist] ~ * [data-nb-sidebar-filter-input], [data-nb-desktop-sidebar] [data-nb-sidebar-filter-input]",
-    );
-    if (!desktopInput) return;
-    e.preventDefault();
-    desktopInput.focus();
-  });
-})();
 
 mount("[data-nb-sidebar]", initSidebar);

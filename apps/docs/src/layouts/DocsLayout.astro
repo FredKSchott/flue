@@ -9,7 +9,7 @@ import { Icon } from "astro-icon/components";
 import BaseLayout from "./BaseLayout.astro";
 import Header from "@/components/Header.astro";
 import { Banner } from "@/components/ui/banner";
-import { Sidebar, SidebarFilter } from "@/components/ui/sidebar";
+import { Sidebar } from "@/components/ui/sidebar";
 import { TOC, MobileTOC } from "@/components/ui/toc";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Pagination } from "@/components/ui/pagination";
@@ -91,7 +91,6 @@ const hasPagination = Astro.slots.has("pagination");
                 <slot name="sidebar" />
               ) : (
                 <nav class="px-4 pb-12 pt-5 flex-1">
-                  <SidebarFilter />
                   <Sidebar items={sidebar} persist />
                 </nav>
               )}
@@ -221,12 +220,7 @@ const hasPagination = Astro.slots.has("pagination");
           </button>
         </div>
         <nav class="px-4 pb-8 pt-5">
-          {hasSidebar ? <slot name="sidebar" /> : (
-            <Fragment>
-              <SidebarFilter />
-              <Sidebar items={sidebar} />
-            </Fragment>
-          )}
+          {hasSidebar ? <slot name="sidebar" /> : <Sidebar items={sidebar} />}
         </nav>
       </div>
     </dialog>
