@@ -2,6 +2,8 @@
 	"$schema": "https://turbo.build/schema.json",
 	"globalEnv": [
 		"ANTHROPIC_API_KEY",
+		"FREDKBOT_GITHUB_TOKEN",
+		"GITHUB_REPOSITORY",
 		"GITHUB_TOKEN",
 		"GITHUB_WEBHOOK_SECRET",
 		"ASTRO_REPO",

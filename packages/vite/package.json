@@ -46,7 +46,6 @@
 		"vite": "^8.0.0"
 	},
 	"devDependencies": {
-		"@cloudflare/vite-plugin": "^1.39.2",
 		"@earendil-works/pi-ai": "^0.83.0",
 		"hono": "4.12.32",
 		"tsdown": "^0.22.7",

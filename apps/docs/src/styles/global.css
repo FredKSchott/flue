@@ -259,6 +259,7 @@
 	overflow-x: auto;
 	border: 1px solid #e2e5eb;
 	border-radius: 0.3rem;
+	/* biome-ignore lint/complexity/noImportantStyles: Shiki sets the theme background inline. */
 	background: #f6f8fa !important;
 	box-shadow: 0 1px 1px rgb(0 0 0 / 0.04);
 	font-family: var(--font-mono);

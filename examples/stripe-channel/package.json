@@ -16,7 +16,6 @@
 		"stripe": "*"
 	},
 	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "0.19.1",
 		"@flue/cli": "workspace:*",
 		"@flue/vite": "workspace:*",
 		"@types/node": "^26.1.1",

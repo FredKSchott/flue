@@ -38,7 +38,6 @@
 		"@types/node": ">=18"
 	},
 	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "0.19.1",
 		"@flue/runtime": "workspace:*",
 		"@notionhq/client": "5.23.3",
 		"@types/node": "^26.1.1",

@@ -38,7 +38,6 @@
 		"stripe": "^22.3.2"
 	},
 	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "0.19.1",
 		"@flue/runtime": "workspace:*",
 		"@types/node": "^26.1.1",
 		"stripe": "22.4.0",

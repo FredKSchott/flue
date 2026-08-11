@@ -121,7 +121,7 @@ export function createCloudflareWorkerConfig(
 			);
 		}
 		const info = (await response.json()) as { exists?: unknown; uid?: unknown } | null;
-		if (!info || info.exists !== true) return null;
+		if (info?.exists !== true) return null;
 		return { id: instanceId, ...(typeof info.uid === 'string' ? { uid: info.uid } : {}) };
 	};
 
@@ -161,7 +161,8 @@ function dispatchAdmissionError(input: DispatchInput, status: number, rejection:
 			// The wire body's submissionId names the existing keyed submission;
 			// the dispatch input derived the same id, so it is the fallback.
 			return new SubmissionConflictError({
-				submissionId: typeof body.submissionId === 'string' ? body.submissionId : input.submissionId,
+				submissionId:
+					typeof body.submissionId === 'string' ? body.submissionId : input.submissionId,
 			});
 		case 'invalid_request':
 			return new InvalidRequestError({

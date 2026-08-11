@@ -36,7 +36,6 @@
 		"@flue/runtime": "workspace:^"
 	},
 	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "0.19.1",
 		"@flue/runtime": "workspace:*",
 		"tsdown": "^0.22.7",
 		"twilio": "6.0.2",
