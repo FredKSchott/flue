@@ -94,7 +94,7 @@ const formattedReviewedDate = lastReviewedAt?.toLocaleDateString('en-US', {
 					: 'grid-cols-[254px_minmax(0,820px)_16.5rem] max-2xl:grid-cols-[232px_minmax(0,1fr)]',
 			]}
 		>
-			<aside class="border-r border-docs-border pt-[var(--docs-aside-top)] pr-8 pb-8 pl-5 max-docs-desktop:hidden">
+			<aside class="border-r border-docs-border pr-8 pl-5 max-docs-desktop:hidden">
 				<DocsSidebar groups={currentSection.groups} currentSlug={currentSlug} />
 			</aside>
 			<main
@@ -157,7 +157,7 @@ const formattedReviewedDate = lastReviewedAt?.toLocaleDateString('en-US', {
 			</main>
 			{
 				variant === 'default' && (
-					<aside class="pt-[var(--docs-aside-top)] pr-2 pb-8 pl-7 max-2xl:hidden">
+					<aside class="pr-2 pl-7 max-2xl:hidden">
 						{showTableOfContents && <DocsTableOfContents headings={tableOfContents} />}
 					</aside>
 				)
