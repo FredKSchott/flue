@@ -239,8 +239,7 @@ body {
 }
 
 ::selection {
-	background: color-mix(in oklch, var(--nb-primary) 10%, transparent);
-	color: var(--nb-foreground);
+	background: color-mix(in oklch, var(--nb-link) 25%, transparent);
 }
 
 /* ---- Focus indicators ---- */

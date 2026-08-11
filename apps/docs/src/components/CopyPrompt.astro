@@ -28,6 +28,14 @@ const { text } = Astro.props;
 	</Button>
 </div>
 
+<style is:global>
+	/* In dark mode --nb-link is a lighter blue, so switch the button label to
+	   near-black (the dark surface color) for stronger contrast. */
+	[data-mode="dark"] [data-copy-prompt] button {
+		color: var(--nb-background);
+	}
+</style>
+
 <script>
 	for (const prompt of document.querySelectorAll<HTMLElement>('[data-copy-prompt]')) {
 		const button = prompt.querySelector<HTMLButtonElement>('button');
