@@ -12,14 +12,14 @@
  * Sizes: xs · sm · base (default) · lg.
  * Shapes: base (default) · square · circle (icon-only — pass `aria-label`).
  *
- * `icon` takes an iconify name (astro-icon) rendered before the label;
+ * `icon` takes an iconify name rendered before the label;
  * `loading` swaps it for a spinner and disables the button.
  *
  * Styling lives in `./variants` (shared with LinkButton). For an anchor
  * styled as a button, use `~/components/ui/link-button`.
  */
 import { cn } from "@/lib/cn";
-import { Icon } from "astro-icon/components";
+import Icon from "@cloudflare/nimbus-docs/components/Icon.astro";
 import type { HTMLAttributes } from "astro/types";
 import {
   buttonVariants,

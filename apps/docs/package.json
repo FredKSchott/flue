@@ -14,12 +14,11 @@
 		"lint:docs:fix": "nimbus-docs lint --fix"
 	},
 	"dependencies": {
-		"@cloudflare/nimbus-docs": "https://pkg.pr.new/@cloudflare/nimbus-docs@960280f",
+		"@cloudflare/nimbus-docs": "^0.10.0",
 		"@fontsource-variable/inter": "^5.2.8",
 		"@fontsource-variable/jetbrains-mono": "^5.2.8",
 		"@iconify-json/ph": "^1.2.0",
-		"astro": "^7.0.9",
-		"astro-icon": "^1.1.0",
+		"astro": "~7.0.9",
 		"clsx": "^2.1.1",
 		"tailwind-merge": "^3.5.0"
 	},
