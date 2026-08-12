@@ -5,8 +5,8 @@ import type { DeliveredMessage } from '../types.ts';
 
 export const MAX_IMAGE_DATA_LENGTH = 14 * 1024 * 1024;
 
-/** Attachment shape for a `DeliveredMessage`'s `attachments`. */
-const DeliveredAttachmentSchema = v.object({
+/** Inline images remain a transport convenience; durable files use only an id. */
+const InlineImageAttachmentSchema = v.object({
 	type: v.literal('image'),
 	data: v.pipe(
 		v.string(),
@@ -18,6 +18,17 @@ const DeliveredAttachmentSchema = v.object({
 	mimeType: v.string(),
 	filename: v.optional(v.string()),
 });
+
+const ReferencedAttachmentSchema = v.object({
+	type: v.literal('file'),
+	id: v.pipe(v.string(), v.nonEmpty('File attachment ids must not be empty.')),
+});
+
+/** Attachment shape for a `DeliveredMessage`'s `attachments`. */
+const DeliveredAttachmentSchema = v.variant('type', [
+	InlineImageAttachmentSchema,
+	ReferencedAttachmentSchema,
+]);
 
 const DeliveredUserMessageSchema = v.object({
 	kind: v.literal('user'),
@@ -43,6 +54,7 @@ const DeliveredSignalMessageSchema = v.object({
 	),
 	body: v.string(),
 	attributes: v.optional(v.record(v.string(), v.string())),
+	attachments: v.optional(v.array(DeliveredAttachmentSchema)),
 	// The tag name is rendered unescaped as the signal's XML envelope in model
 	// context, so it must be a valid XML name — anything looser would let a
 	// caller-controlled value inject markup that the body/attribute escaping

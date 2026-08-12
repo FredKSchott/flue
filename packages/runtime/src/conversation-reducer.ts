@@ -523,10 +523,14 @@ export function applyConversationRecord(
 					role: 'signal',
 					type: record.signalType,
 					tagName: record.tagName,
-					content: record.content,
+					content: attachmentManifest(record.content, record.attachments ?? []),
 					attributes: record.attributes,
 					timestamp: new Date(record.timestamp).getTime(),
 				},
+				attachmentRefs:
+					record.attachments && record.attachments.length > 0
+						? new Map(record.attachments.map((attachment) => [attachment.id, attachment]))
+						: undefined,
 			});
 			break;
 		case 'assistant_message_started':
@@ -1441,17 +1445,26 @@ function attachmentRefs(
 }
 
 function userMessage(content: CanonicalUserContent[], timestamp: string): AgentMessage {
+	const messageContent: Array<
+		| { type: 'text'; text: string }
+		| { type: 'image'; data: string; mimeType: string }
+	> = [];
+	for (const block of content) {
+		if (block.type === 'text') {
+			messageContent.push(block);
+			continue;
+		}
+		if (block.attachment.type !== 'file') {
+			messageContent.push({
+				type: 'image',
+				data: block.attachment.id,
+				mimeType: block.attachment.mimeType,
+			});
+		}
+	}
 	return {
 		role: 'user',
-		content: content.map((block) =>
-			block.type === 'text'
-				? block
-				: {
-						type: 'image' as const,
-						data: block.attachment.id,
-						mimeType: block.attachment.mimeType,
-					},
-		),
+		content: messageContent,
 		timestamp: new Date(timestamp).getTime(),
 	} as UserMessage as AgentMessage;
 }
@@ -1510,10 +1523,28 @@ function resolveMessageAttachments(
 function attachmentManifest(text: string, attachments: readonly AttachmentRef[]): string {
 	if (attachments.length === 0) return text;
 	const manifest = attachments
-		.map((attachment) => `<image id="${attachment.id}" mimeType="${attachment.mimeType}" />`)
+		.map(
+			(attachment) =>
+				`<attachment id="${escapeXml(attachment.id)}" type="${attachment.type ?? 'image'}" mimeType="${escapeXml(attachment.mimeType)}"` +
+				(attachment.filename ? ` filename="${escapeXml(attachment.filename)}"` : '') +
+				' />',
+		)
 		.join('\n');
 	const projection = `\n\n<attachments>\n${manifest}\n</attachments>`;
 	return text.endsWith(projection) ? text : `${text}${projection}`;
+}
+
+function escapeXml(value: string): string {
+	return value.replace(/[&<>"']/g, (character) => {
+		switch (character) {
+			case '&': return '&amp;';
+			case '<': return '&lt;';
+			case '>': return '&gt;';
+			case '"': return '&quot;';
+			case "'": return '&apos;';
+			default: return character;
+		}
+	});
 }
 
 function isCompleteToolBatch(

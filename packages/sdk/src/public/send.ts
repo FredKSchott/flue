@@ -1,13 +1,21 @@
 import type { HttpClient } from '../http.ts';
 
-/** One image attachment on a `kind: 'user'` delivered message. */
-export interface DeliveredAttachment {
+/** One inline image attachment on a delivered message. */
+export interface InlineImageAttachment {
 	type: 'image';
 	data: string;
 	mimeType: string;
 	/** Optional original filename, surfaced on the projected `file` part. */
 	filename?: string;
 }
+
+/** One immutable attachment staged through `FlueClient.uploadAttachment`. */
+export interface ReferencedAttachment {
+	type: 'file';
+	id: string;
+}
+
+export type DeliveredAttachment = InlineImageAttachment | ReferencedAttachment;
 
 /**
  * The message delivered into an agent's session — the same unified shape the
@@ -21,8 +29,9 @@ export type DeliveredMessage =
 			kind: 'signal';
 			type: string;
 			body: string;
-			attributes?: Record<string, string>;
-			tagName?: string;
+		attributes?: Record<string, string>;
+		tagName?: string;
+		attachments?: DeliveredAttachment[];
 	  };
 
 /** Options for delivering one message into the conversation. */

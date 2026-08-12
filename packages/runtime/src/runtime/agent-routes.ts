@@ -12,6 +12,12 @@
  */
 
 import { InvalidRequestError, RouteNotFoundError } from '../errors.ts';
+import { createAttachmentRef } from './attachment-store.ts';
+import {
+	attachmentUploadMetadata,
+	deriveAttachmentId,
+	readAttachmentBytes,
+} from './attachment-upload.ts';
 import type { CloudflareRuntime, FlueRuntime } from './flue-app.ts';
 import { handleAgentRequest } from './handle-agent.ts';
 import {
@@ -113,6 +119,27 @@ export async function executeAgentAttachmentRead(
 		target,
 		'attachment read',
 	);
+}
+
+/** Stage arbitrary bytes in the target instance before refs-only admission. */
+export async function executeAgentAttachmentUpload(
+	rt: FlueRuntime,
+	target: AgentRequestTarget,
+): Promise<Response> {
+	if (rt.target !== 'node') {
+		return routeToAgent(rt, canonicalAgentRequest(target, '/attachments'), target, 'attachment upload');
+	}
+	const path = agentStreamPath(target.agentName, target.instanceId);
+	const metadata = attachmentUploadMetadata(target.request.headers);
+	const bytes = await readAttachmentBytes(target.request);
+	const attachment = await createAttachmentRef({
+		id: await deriveAttachmentId({ streamPath: path, idempotencyKey: metadata.idempotencyKey }),
+		mimeType: metadata.mimeType,
+		bytes,
+		...(metadata.filename ? { filename: metadata.filename } : {}),
+	});
+	const staged = await rt.attachmentStore.stage({ streamPath: path, attachment, bytes });
+	return Response.json(attachment, { status: staged.replayed ? 200 : 201 });
 }
 
 /**

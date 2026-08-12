@@ -28,6 +28,14 @@ export interface JsonRequestOptions {
 	signal?: AbortSignal;
 }
 
+export interface RawRequestOptions {
+	method: string;
+	path: string;
+	body: BodyInit;
+	headers?: Record<string, string>;
+	signal?: AbortSignal;
+}
+
 /** Failed SDK HTTP JSON request. */
 export class FlueApiError extends Error {
 	/** HTTP response status. */
@@ -76,6 +84,16 @@ export class HttpClient {
 			method: options.method ?? 'GET',
 			headers: await this.requestHeaders(options.headers, options.body !== undefined),
 			body: options.body === undefined ? undefined : JSON.stringify(options.body),
+			signal: options.signal,
+		});
+		return parseJsonResponse<T>(response);
+	}
+
+	async raw<T>(options: RawRequestOptions): Promise<T> {
+		const response = await this.fetchImpl(this.url(options.path), {
+			method: options.method,
+			headers: await this.requestHeaders(options.headers, false),
+			body: options.body,
 			signal: options.signal,
 		});
 		return parseJsonResponse<T>(response);

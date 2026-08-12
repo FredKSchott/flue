@@ -424,7 +424,10 @@ function projectCompletedMessage(entry: ReducedMessageEntry): ConversationUiMess
 			...(entry.turnId ? { turnId: entry.turnId } : {}),
 			...(Object.keys(signal).length > 0 ? { signal } : {}),
 			...(settlement ? { settlement } : {}),
-			parts: [{ type: 'text', text: message.content, state: 'done' }],
+			parts: [
+				{ type: 'text', text: message.content, state: 'done' },
+				...[...(entry.attachmentRefs?.values() ?? [])].map(fileFromAttachment),
+			],
 		};
 	}
 	if (message.role !== 'assistant') return undefined;

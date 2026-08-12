@@ -3,11 +3,16 @@ import {
 	type AttachmentRef,
 	type AttachmentStore,
 	attachmentBytesEqual,
+	type BindAttachmentsInput,
 	copyAttachmentBytes,
 	type GetAttachmentInput,
+	InvalidRequestError,
 	type PutAttachmentInput,
+	type ReserveAttachmentsInput,
+	type StageAttachmentInput,
 	type StoredAttachment,
 	sameAttachmentRef,
+	sameStagedAttachmentRef,
 	verifyAttachmentBytes,
 } from '@flue/runtime/adapter';
 import type { MysqlQuery, MysqlRunner } from './mysql-adapter.ts';
@@ -19,6 +24,53 @@ interface AttachmentRecord extends StoredAttachment {
 
 export class MysqlAttachmentStore implements AttachmentStore {
 	constructor(private runner: MysqlRunner) {}
+
+	async stage(input: StageAttachmentInput): Promise<{ replayed: boolean }> {
+		assertMysqlConversationStreamPath(input.streamPath, 'stage_attachment');
+		await verifyAttachmentBytes(input.attachment, input.bytes);
+		return this.runner.transaction(async (tx) => {
+			await tx.query(`INSERT INTO flue_attachments (stream_path, attachment_id, mime_type, byte_size, digest, conversation_id, bytes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE attachment_id = attachment_id`, [input.streamPath, input.attachment.id, input.attachment.mimeType, input.attachment.size, input.attachment.digest, STAGED, copyAttachmentBytes(input.bytes), Date.now()]);
+			const existing = await readAttachment(tx.query, input.streamPath, input.attachment.id, true);
+			const staged = await readStaging(tx.query, input.streamPath, input.attachment.id, true);
+			if (staged) {
+				if (existing && sameStagedAttachmentRef({ ...existing.attachment, ...(staged.filename ? { filename: staged.filename } : {}) }, input.attachment) && attachmentBytesEqual(existing.bytes, input.bytes)) return { replayed: true };
+				conflict(input);
+			}
+			if (!existing || existing.conversationId !== STAGED || !sameAttachmentRef(existing.attachment, input.attachment) || !attachmentBytesEqual(existing.bytes, input.bytes)) conflict(input);
+			await tx.query(`INSERT INTO flue_attachment_staging (stream_path, attachment_id, filename, state, staged_at) VALUES (?, ?, ?, 'staged', ?)`, [input.streamPath, input.attachment.id, input.attachment.filename ?? null, Date.now()]);
+			return { replayed: false };
+		});
+	}
+
+	async reserve(input: ReserveAttachmentsInput): Promise<readonly AttachmentRef[]> {
+		return this.runner.transaction(async (tx) => {
+			const rows = await Promise.all(input.attachmentIds.map((id) => readStaging(tx.query, input.streamPath, id, true)));
+			if (rows.some((row) => !row || (row.state !== 'staged' && !(row.state === 'reserved' && row.submissionId === input.submissionId)) || Date.now() - row.stagedAt > TTL)) unavailable(input.attachmentIds);
+			for (const id of input.attachmentIds) await tx.query(`UPDATE flue_attachment_staging SET state = 'reserved', submission_id = ? WHERE stream_path = ? AND attachment_id = ?`, [input.submissionId, input.streamPath, id]);
+			return Promise.all(input.attachmentIds.map((id) => stagedAttachment(tx.query, input.streamPath, id)));
+		});
+	}
+
+	async bind(input: BindAttachmentsInput): Promise<readonly AttachmentRef[]> {
+		return this.runner.transaction(async (tx) => {
+			const rows = await Promise.all(input.attachmentIds.map((id) => readStaging(tx.query, input.streamPath, id, true)));
+			const records = await Promise.all(input.attachmentIds.map((id) => readAttachment(tx.query, input.streamPath, id, true)));
+			if (rows.some((row, index) => !row || !records[index] || (row.state !== 'reserved' && row.state !== 'bound') || row.submissionId !== input.submissionId || (row.state === 'bound' && records[index]!.conversationId !== input.conversationId))) unavailable(input.attachmentIds);
+			for (const id of input.attachmentIds) {
+				await tx.query(`UPDATE flue_attachments SET conversation_id = ? WHERE stream_path = ? AND attachment_id = ?`, [input.conversationId, input.streamPath, id]);
+				await tx.query(`UPDATE flue_attachment_staging SET state = 'bound' WHERE stream_path = ? AND attachment_id = ?`, [input.streamPath, id]);
+			}
+			return Promise.all(input.attachmentIds.map((id) => stagedAttachment(tx.query, input.streamPath, id)));
+		});
+	}
+
+	async release(input: import('@flue/runtime/adapter').ReleaseAttachmentsInput): Promise<void> {
+		await this.runner.transaction(async (tx) => {
+			const rows = await Promise.all(input.attachmentIds.map((id) => readStaging(tx.query, input.streamPath, id, true)));
+			if (rows.some((row) => !row || row.state !== 'reserved' || row.submissionId !== input.submissionId)) unavailable(input.attachmentIds);
+			for (const id of input.attachmentIds) await tx.query(`UPDATE flue_attachment_staging SET state = 'staged', submission_id = NULL WHERE stream_path = ? AND attachment_id = ?`, [input.streamPath, id]);
+		});
+	}
 
 	async put(input: PutAttachmentInput): Promise<void> {
 		assertMysqlConversationStreamPath(input.streamPath, 'put_attachment');
@@ -61,6 +113,20 @@ export class MysqlAttachmentStore implements AttachmentStore {
 		return { attachment: { ...record.attachment }, bytes: copyAttachmentBytes(record.bytes) };
 	}
 }
+
+interface StagingRow { filename?: string; state: string; submissionId?: string; stagedAt: number }
+const STAGED = '__flue_staged_attachment__';
+const TTL = 24 * 60 * 60 * 1000;
+async function readStaging(query: MysqlQuery, path: string, id: string, lock: boolean): Promise<StagingRow | null> {
+	const row = (await query(`SELECT filename, state, submission_id, staged_at FROM flue_attachment_staging WHERE stream_path = ? AND attachment_id = ?${lock ? ' FOR UPDATE' : ''}`, [path, id]))[0];
+	return row ? { filename: row.filename == null ? undefined : String(row.filename), state: String(row.state), submissionId: row.submission_id == null ? undefined : String(row.submission_id), stagedAt: Number(row.staged_at) } : null;
+}
+async function stagedAttachment(query: MysqlQuery, path: string, id: string): Promise<AttachmentRef> {
+	const [record, staged] = await Promise.all([readAttachment(query, path, id, false), readStaging(query, path, id, false)]);
+	if (!record || !staged) unavailable([id]);
+	return { ...record.attachment, ...(staged.filename ? { filename: staged.filename } : {}) };
+}
+function unavailable(ids: readonly string[]): never { throw new InvalidRequestError({ reason: `Attachment references are unavailable: ${ids.join(', ')}.` }); }
 
 async function readAttachment(
 	query: MysqlQuery,

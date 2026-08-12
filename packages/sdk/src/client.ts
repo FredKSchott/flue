@@ -41,6 +41,22 @@ export interface AgentAbortResult {
 	aborted: boolean;
 }
 
+export interface UploadedAttachment {
+	id: string;
+	mimeType: string;
+	size: number;
+	digest: string;
+	filename?: string;
+}
+
+export interface UploadAttachmentInput {
+	body: Blob | Uint8Array | ReadableStream<Uint8Array>;
+	filename?: string;
+	mimeType?: string;
+	idempotencyKey: string;
+	signal?: AbortSignal;
+}
+
 /** Options for creating a client for one agent conversation. */
 export type CreateFlueClientOptions = HttpClientOptions;
 
@@ -57,6 +73,8 @@ export type CreateFlueClientOptions = HttpClientOptions;
 export interface FlueClient {
 	/** The fully resolved conversation URL this client addresses. */
 	readonly url: string;
+	/** Stages arbitrary bytes and returns the immutable ref accepted by `send()`. */
+	uploadAttachment(input: UploadAttachmentInput): Promise<UploadedAttachment>;
 	/** Starts one message delivery without waiting for completion (202 admission). */
 	send(options: AgentPromptOptions): Promise<AgentSendResult>;
 	/**
@@ -149,6 +167,20 @@ export function createFlueClient(options: CreateFlueClientOptions): FlueClient {
 	const http = new HttpClient(options);
 	return {
 		url: http.conversationUrl,
+		uploadAttachment: (input) =>
+			http.raw<UploadedAttachment>({
+				method: 'POST',
+				path: '/attachments',
+				body: input.body as BodyInit,
+				headers: {
+					'Idempotency-Key': input.idempotencyKey,
+					...(input.mimeType ? { 'Content-Type': input.mimeType } : {}),
+					...(input.filename
+						? { 'Content-Disposition': `attachment; filename="${input.filename}"` }
+						: {}),
+				},
+				signal: input.signal,
+			}),
 		send: (opts) => sendConversationMessage(http, opts),
 		read: (target, opts) => readAgentSubmissionReply(http, target, opts),
 		wait: (admission, opts) => waitForAgentSubmission(http, admission, opts),

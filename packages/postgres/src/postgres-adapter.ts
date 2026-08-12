@@ -266,6 +266,17 @@ async function ensureTables(runner: PostgresRunner): Promise<void> {
 				PRIMARY KEY (stream_path, attachment_id)
 			)
 		`);
+		await tx.query(`
+			CREATE TABLE IF NOT EXISTS flue_attachment_staging (
+				stream_path TEXT NOT NULL,
+				attachment_id TEXT NOT NULL,
+				filename TEXT,
+				state TEXT NOT NULL,
+				submission_id TEXT,
+				staged_at BIGINT NOT NULL,
+				PRIMARY KEY (stream_path, attachment_id)
+			)
+		`);
 	});
 }
 

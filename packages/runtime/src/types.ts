@@ -34,12 +34,22 @@ export type {
 export type { ThinkingLevel };
 
 /**
- * One attachment on a `kind: 'user'` {@link DeliveredMessage}. Mirrors pi-ai's
- * `ImageContent` with an optional uploader-provided `filename` (carried on
- * the wire and the canonical record, but not part of pi-ai's model image
- * shape). Today the only supported attachment is an image.
+ * An inline image is a convenience form for clients that already have a small
+ * model-ready image. Durable files travel by reference instead, so their bytes
+ * and metadata remain owned by the attachment store.
  */
-export type DeliveredAttachment = PromptImage & { filename?: string };
+export type InlineImageAttachment = PromptImage & { filename?: string };
+
+/** An immutable file staged in the target agent instance. */
+export type ReferencedAttachment = { type: 'file'; id: string };
+
+export type DeliveredAttachment = InlineImageAttachment | ReferencedAttachment;
+
+export function isInlineImageAttachment(
+	attachment: DeliveredAttachment,
+): attachment is InlineImageAttachment {
+	return attachment.type === 'image';
+}
 
 /**
  * A message delivered into an agent's session — the single unified input
@@ -72,6 +82,7 @@ export type DeliveredMessage =
 			body: string;
 			attributes?: Record<string, string>;
 			tagName?: string;
+			attachments?: DeliveredAttachment[];
 	  };
 
 /**

@@ -101,10 +101,15 @@ export type {
 	ConversationRecord,
 	SubmissionSettledRecord,
 } from './conversation-records.ts';
+export { InvalidRequestError } from './errors.ts';
 export type {
 	AttachmentStore,
+	BindAttachmentsInput,
 	GetAttachmentInput,
 	PutAttachmentInput,
+	ReserveAttachmentsInput,
+	ReleaseAttachmentsInput,
+	StageAttachmentInput,
 	StoredAttachment,
 } from './runtime/attachment-store.ts';
 export {
@@ -113,6 +118,7 @@ export {
 	createAttachmentRef,
 	InMemoryAttachmentStore,
 	sameAttachmentRef,
+	sameStagedAttachmentRef,
 	verifyAttachmentBytes,
 } from './runtime/attachment-store.ts';
 export type {

@@ -337,7 +337,16 @@ function encodeRecord(
 						...(record.turnId ? { turnId: record.turnId } : {}),
 						...(Object.keys(signal).length > 0 ? { signal } : {}),
 						...(settlement ? { settlement } : {}),
-						parts: [{ type: 'text', text: record.content, state: 'done' }],
+						parts: [
+							{ type: 'text', text: record.content, state: 'done' },
+							...(record.attachments ?? []).map((attachment) => ({
+								type: 'file' as const,
+								mediaType: attachment.mimeType,
+								id: attachment.id,
+								size: attachment.size,
+								...(attachment.filename ? { filename: attachment.filename } : {}),
+							})),
+						],
 					},
 				},
 			];

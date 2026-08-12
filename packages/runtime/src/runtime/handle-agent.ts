@@ -108,6 +108,14 @@ export async function handleAgentRequest(opts: HandleAgentOptions): Promise<Resp
 		const { message, initialData, uid, idempotencyKey } = parseDeliveredInput(
 			await parseJsonBody(request),
 		);
+		if (
+			message.attachments?.some((attachment) => attachment.type === 'file') &&
+			idempotencyKey === undefined
+		) {
+			throw new InvalidRequestError({
+				reason: 'Referenced attachment submissions require an idempotencyKey.',
+			});
+		}
 		const traceCarrier = extractTraceCarrier(request.headers);
 		const streamUrl = invocationStreamUrl(request);
 		const receipt = await opts.admitAttachedSubmission(message, {

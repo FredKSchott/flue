@@ -43,6 +43,48 @@ export function defineAttachmentStoreContractTests(
 			).resolves.toEqual({ attachment, bytes });
 		});
 
+		it('makes staged bytes visible only after their complete set is reserved and bound', async () => {
+			const store = await backend.create();
+			const bytes = Uint8Array.from([9, 8, 7]);
+			const attachment = await createAttachmentRef({
+				id: 'staged-attachment',
+				mimeType: 'application/octet-stream',
+				filename: 'evidence.bin',
+				bytes,
+			});
+			expect(
+				await store.stage({ streamPath: 'agents/assistant/new', attachment, bytes }),
+			).toEqual({ replayed: false });
+			expect(
+				await store.stage({ streamPath: 'agents/assistant/new', attachment, bytes }),
+			).toEqual({ replayed: true });
+			await expect(
+				store.reserve({
+					streamPath: 'agents/assistant/new',
+					submissionId: 'submission-1',
+					attachmentIds: [attachment.id, 'missing'],
+				}),
+			).rejects.toMatchObject({ status: 400 });
+			await store.reserve({
+				streamPath: 'agents/assistant/new',
+				submissionId: 'submission-1',
+				attachmentIds: [attachment.id],
+			});
+			await store.bind({
+				streamPath: 'agents/assistant/new',
+				submissionId: 'submission-1',
+				conversationId: 'conversation-1',
+				attachmentIds: [attachment.id],
+			});
+			await expect(
+				store.get({
+					streamPath: 'agents/assistant/new',
+					conversationId: 'conversation-1',
+					attachmentId: attachment.id,
+				}),
+			).resolves.toEqual({ attachment, bytes });
+		});
+
 		it('returns the original bytes when the payload exceeds one persisted chunk', async () => {
 			const store = await backend.create();
 			// Strictly larger than one persisted chunk (512 KiB), so chunked

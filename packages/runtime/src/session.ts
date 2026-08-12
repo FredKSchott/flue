@@ -184,6 +184,7 @@ import {
 	resolveToolRun,
 } from './tool.ts';
 import { getPreparedToolAdapter } from './tool-adapter.ts';
+import { isInlineImageAttachment } from './types.ts';
 import type {
 	AgentConfig,
 	CallHandle,
@@ -1822,12 +1823,15 @@ export class Session implements FlueSession, AgentSubmissionSession {
 				// runs before this walk), after every render the crashed attempt
 				// made. Skipping them restores exactly what the live renders saw.
 				if (RESERVED_SIGNAL_TYPES.has(message.type)) continue;
-				this.advanceDelivery({
-					kind: 'signal',
-					type: message.type,
-					body: message.content,
-					...(message.attributes ? { attributes: message.attributes } : {}),
-					...(message.tagName ? { tagName: message.tagName } : {}),
+			this.advanceDelivery({
+				kind: 'signal',
+				type: message.type,
+				body: message.content,
+				...(message.attributes ? { attributes: message.attributes } : {}),
+				...(message.tagName ? { tagName: message.tagName } : {}),
+				...(entry.attachmentRefs?.size
+					? { attachments: [...entry.attachmentRefs.keys()].map((id) => ({ type: 'file' as const, id })) }
+					: {}),
 				});
 				return;
 			}
@@ -1840,7 +1844,7 @@ export class Session implements FlueSession, AgentSubmissionSession {
 				: String(message.content);
 			const refs = [...(entry.attachmentRefs?.values() ?? [])];
 			const attachments =
-				refs.length > 0 ? await this.resolveCanonicalImages(refs.map((ref) => ref.id)) : undefined;
+				refs.length > 0 ? await this.resolveCanonicalDeliveryAttachments(refs) : undefined;
 			this.advanceDelivery({
 				kind: 'user',
 				body,
@@ -4497,6 +4501,19 @@ export class Session implements FlueSession, AgentSubmissionSession {
 		return images;
 	}
 
+	/** Rebuild the delivery cursor without turning opaque files into images. */
+	private async resolveCanonicalDeliveryAttachments(
+		refs: readonly import('./conversation-records.ts').AttachmentRef[],
+	): Promise<import('./types.ts').DeliveredAttachment[]> {
+		const images = await this.resolveCanonicalImages(
+			refs.filter((ref) => ref.type !== 'file').map((ref) => ref.id),
+		);
+		let imageIndex = 0;
+		return refs.map((ref) =>
+			ref.type === 'file' ? { type: 'file', id: ref.id } : images[imageIndex++]!,
+		);
+	}
+
 	private visibleCanonicalAttachments(
 		conversation: ReducedConversationState,
 	): Map<string, import('./conversation-records.ts').AttachmentRef> {
@@ -4531,6 +4548,38 @@ export class Session implements FlueSession, AgentSubmissionSession {
 				conversationId: this.conversationId,
 			});
 			refs.push(ref);
+		}
+		return refs;
+	}
+
+	/** Resolve staged files without trusting metadata sent on the delivery. */
+	private async persistDeliveredAttachments(
+		kind: AgentSubmissionInput['kind'],
+		submissionId: string,
+		attachments: readonly import('./types.ts').DeliveredAttachment[],
+	): Promise<import('./conversation-records.ts').AttachmentRef[]> {
+		const refs: import('./conversation-records.ts').AttachmentRef[] = [];
+		for (const [index, attachment] of attachments.entries()) {
+			if (isInlineImageAttachment(attachment)) {
+				const [ref] = await this.persistCanonicalAttachments([
+					{
+						id: `att_${kind}_${submissionId}_${index}`,
+						mimeType: attachment.mimeType,
+						data: attachment.data,
+						...(attachment.filename ? { filename: attachment.filename } : {}),
+					},
+				]);
+				if (!ref) throw new Error('[flue] Canonical image attachment is missing.');
+				refs.push(ref);
+				continue;
+			}
+			const stored = await this.attachmentStore.get({
+				streamPath: this.conversationWriter.path,
+				conversationId: this.conversationId,
+				attachmentId: attachment.id,
+			});
+			if (!stored) throw new AttachmentNotAvailableError({ attachmentId: attachment.id });
+			refs.push({ ...stored.attachment, type: 'file' });
 		}
 		return refs;
 	}
@@ -5171,9 +5220,11 @@ export class Session implements FlueSession, AgentSubmissionSession {
 						text: message.body,
 						...(message.attachments?.length
 							? {
-									images: message.attachments.map((attachment) => ({
-										mimeType: attachment.mimeType,
-									})),
+									images: message.attachments
+										.filter(isInlineImageAttachment)
+										.map((attachment) => ({
+											mimeType: attachment.mimeType,
+										})),
 								}
 							: {}),
 					}
@@ -5219,13 +5270,10 @@ export class Session implements FlueSession, AgentSubmissionSession {
 		const messageId = submissionEntryId(input.kind, input.submissionId);
 		const recordId = `record_${input.kind}_input_${input.submissionId}`;
 		if (message.kind === 'user') {
-			const refs = await this.persistCanonicalAttachments(
-				(message.attachments ?? []).map((attachment, index) => ({
-					id: `att_${input.kind}_${input.submissionId}_${index}`,
-					mimeType: attachment.mimeType,
-					data: attachment.data,
-					...(attachment.filename ? { filename: attachment.filename } : {}),
-				})),
+			const refs = await this.persistDeliveredAttachments(
+				input.kind,
+				input.submissionId,
+				message.attachments ?? [],
 			);
 			return {
 				...this.canonicalEnvelope('user_message', recordId),
@@ -5249,6 +5297,15 @@ export class Session implements FlueSession, AgentSubmissionSession {
 			...(message.tagName ? { tagName: message.tagName } : {}),
 			content: message.body,
 			...(message.attributes ? { attributes: message.attributes } : {}),
+			...(message.attachments?.length
+				? {
+					attachments: await this.persistDeliveredAttachments(
+						input.kind,
+						input.submissionId,
+						message.attachments,
+					),
+				}
+				: {}),
 		};
 	}
 

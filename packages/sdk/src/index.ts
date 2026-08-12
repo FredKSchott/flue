@@ -12,6 +12,8 @@ export type {
 	AgentAbortResult,
 	CreateFlueClientOptions,
 	FlueClient,
+	UploadedAttachment,
+	UploadAttachmentInput,
 	HttpClientOptions,
 	RequestHeaders,
 } from './client.ts';
@@ -44,6 +46,8 @@ export type {
 	AgentSendResult,
 	DeliveredAttachment,
 	DeliveredMessage,
+	InlineImageAttachment,
+	ReferencedAttachment,
 } from './public/send.ts';
 export {
 	type AgentWaitOptions,

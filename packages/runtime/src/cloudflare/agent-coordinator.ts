@@ -28,12 +28,19 @@ import {
 	materializeSubmissionAttachments,
 	processSubmission,
 	reconcileInterruptedSubmission,
+	releaseSubmissionAttachments,
+	reserveSubmissionAttachments,
 	serializeSubmissionError,
 	settleUnclaimableSubmission,
 	submissionSyntheticRequest,
 	unreadySubmissionDeadline,
 } from '../runtime/agent-submissions.ts';
-import type { AttachmentStore } from '../runtime/attachment-store.ts';
+import { type AttachmentStore, createAttachmentRef } from '../runtime/attachment-store.ts';
+import {
+	attachmentUploadMetadata,
+	deriveAttachmentId,
+	readAttachmentBytes,
+} from '../runtime/attachment-upload.ts';
 import type { ConversationStreamStore } from '../runtime/conversation-stream-store.ts';
 import {
 	type CoordinatorEventEmitter,
@@ -453,6 +460,20 @@ class CloudflareAgentCoordinator {
 		if (isAbortRequest(request, this.agentName, this.instance.name)) {
 			const aborted = await this.abortInstance();
 			return Response.json({ aborted });
+		}
+
+		if (isAttachmentUploadRequest(request, this.agentName, this.instance.name)) {
+			const streamPath = agentStreamPath(this.agentName, this.instance.name);
+			const metadata = attachmentUploadMetadata(request.headers);
+			const bytes = await readAttachmentBytes(request);
+			const attachment = await createAttachmentRef({
+				id: await deriveAttachmentId({ streamPath, idempotencyKey: metadata.idempotencyKey }),
+				mimeType: metadata.mimeType,
+				bytes,
+				...(metadata.filename ? { filename: metadata.filename } : {}),
+			});
+			const staged = await this.prepared.attachmentStore.stage({ streamPath, attachment, bytes });
+			return Response.json(attachment, { status: staged.replayed ? 200 : 201 });
 		}
 
 		const method = request.method;
@@ -1163,8 +1184,10 @@ class CloudflareAgentCoordinator {
 		let admitted: AgentSubmission;
 		let deduplicated = false;
 		try {
+			await reserveSubmissionAttachments(input, this.prepared.attachmentStore);
 			admitted = await this.submissions.admitDirect(input);
 		} catch (error) {
+			await releaseSubmissionAttachments(input, this.prepared.attachmentStore, this.submissions);
 			// The store rejects a caller retry byte-exactly (it re-stamps
 			// acceptedAt/traceCarrier); a keyed admission converges on identity
 			// above the store instead. Adoption only ever swallows the failure
@@ -1277,7 +1300,18 @@ class CloudflareAgentCoordinator {
 				}
 				throw error;
 			}
-			const admission = await this.submissions.admitDispatch(input);
+			await reserveSubmissionAttachments(submissionInput, this.prepared.attachmentStore);
+			let admission: Awaited<ReturnType<typeof this.submissions.admitDispatch>>;
+			try {
+				admission = await this.submissions.admitDispatch(input);
+			} catch (error) {
+				await releaseSubmissionAttachments(
+					submissionInput,
+					this.prepared.attachmentStore,
+					this.submissions,
+				);
+				throw error;
+			}
 			let submission: AgentSubmission;
 			let deduplicated = false;
 			if (admission.kind === 'submission') {
@@ -1362,6 +1396,17 @@ class CloudflareAgentCoordinator {
 			throw error;
 		}
 	}
+}
+
+function isAttachmentUploadRequest(request: Request, agentName: string, instanceId: string): boolean {
+	if (request.method !== 'POST') return false;
+	const segments = new URL(request.url).pathname.split('/');
+	return (
+		segments.length >= 4 &&
+		segments.at(-1) === 'attachments' &&
+		segments.at(-2) === instanceId &&
+		segments.at(-3) === agentName
+	);
 }
 
 function isInternalDispatchRequest(request: Request): boolean {

@@ -59,20 +59,14 @@ export async function handleAgentAttachmentRead(options: {
 	path: string;
 	attachmentId: string;
 }): Promise<Response> {
-	const meta = await options.conversationStore.getMeta(options.path);
-	if (!meta) return errorResponse(new StreamNotFoundError({ path: options.path }));
+	const conversationId = await defaultConversationId(options.conversationStore, options.path);
+	if (!conversationId) return errorResponse(new StreamNotFoundError({ path: options.path }));
 	// Resolving the default conversation id requires the reduced state — served
 	// from the shared fold host, so a byte read folds only batches appended
 	// since the instance's last read or write.
-	const state = await getConversationFoldHost(
-		options.conversationStore,
-		options.path,
-	).getStateAtHead();
-	const snapshot = projectAgentConversationSnapshot(state);
-	if (!snapshot) return errorResponse(new StreamNotFoundError({ path: options.path }));
 	const stored = await options.attachmentStore.get({
 		streamPath: options.path,
-		conversationId: snapshot.conversationId,
+		conversationId,
 		attachmentId: options.attachmentId,
 	});
 	if (!stored)
@@ -81,7 +75,7 @@ export async function handleAgentAttachmentRead(options: {
 		headers: {
 			'content-type': stored.attachment.mimeType,
 			'content-length': String(stored.attachment.size),
-			'content-disposition': 'inline',
+			'content-disposition': downloadDisposition(stored.attachment.filename),
 			'cache-control': 'private, max-age=31536000, immutable',
 			// The mime type is uploader-controlled, so a malicious "image" could be
 			// served as text/html. `sandbox` neutralizes script/HTML execution on
@@ -91,6 +85,21 @@ export async function handleAgentAttachmentRead(options: {
 			...SECURITY_HEADERS,
 		},
 	});
+}
+
+function downloadDisposition(filename: string | undefined): string {
+	const safe = (filename || 'attachment').replace(/[\r\n"\\]/g, '_');
+	return `attachment; filename="${safe}"`;
+}
+
+/** Resolve the root conversation that owns instance-scoped attachment bytes. */
+export async function defaultConversationId(
+	store: ConversationStreamStore,
+	path: string,
+): Promise<string | null> {
+	if (!(await store.getMeta(path))) return null;
+	const state = await getConversationFoldHost(store, path).getStateAtHead();
+	return projectAgentConversationSnapshot(state)?.conversationId ?? null;
 }
 
 export async function handleAgentConversationHead(

@@ -36,6 +36,7 @@ import {
 	assertAgentInstanceId,
 	executeAgentAbort,
 	executeAgentAttachmentRead,
+	executeAgentAttachmentUpload,
 	executeAgentConversationRead,
 	executeAgentPrompt,
 } from './agent-routes.ts';
@@ -305,6 +306,18 @@ export function createAgentRouter(agent: Agent): Hono {
 			instanceId: c.req.param('id') ?? '',
 			attachmentId: c.req.param('attachmentId') ?? '',
 			request: c.req.raw.clone(),
+			env: c.env,
+		});
+	});
+
+	app.post('/:id/attachments', async (c) => {
+		const rt = requireRuntime();
+		const id = c.req.param('id') ?? '';
+		assertAgentInstanceId(id);
+		return executeAgentAttachmentUpload(rt, {
+			agentName: identity,
+			instanceId: id,
+			request: c.req.raw,
 			env: c.env,
 		});
 	});

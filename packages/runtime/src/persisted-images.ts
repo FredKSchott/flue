@@ -1,6 +1,6 @@
 import type { AgentSubmissionInput } from './runtime/agent-submissions.ts';
 import { MAX_IMAGE_DATA_LENGTH } from './runtime/schemas.ts';
-import type { PromptImage } from './types.ts';
+import { isInlineImageAttachment, type DeliveredAttachment, type PromptImage } from './types.ts';
 
 export { MAX_IMAGE_DATA_LENGTH };
 export const IMAGE_DATA_CHUNK_LENGTH = 256 * 1024;
@@ -53,13 +53,22 @@ export function extractSubmissionAttachments(
 	input: AgentSubmissionInput,
 ): ExtractedImages<AgentSubmissionInput> {
 	if (input.message.kind !== 'user') return { value: input, chunks: [] };
-	const extracted = extractImageArray(input.message.attachments);
+	const extracted = extractImageArray(
+		input.message.attachments?.filter(isInlineImageAttachment),
+	);
 	return {
 		value: {
 			...input,
 			message: {
 				...input.message,
-				...(extracted.value === undefined ? {} : { attachments: extracted.value }),
+				...(extracted.value === undefined
+					? {}
+					: {
+							attachments: mergeInlineImages(
+								input.message.attachments,
+								extracted.value,
+							),
+						}),
 			},
 		} as AgentSubmissionInput,
 		chunks: extracted.chunks,
@@ -74,14 +83,31 @@ export function hydrateSubmissionAttachments(
 		assertExactImageGroups([], itemData);
 		return input;
 	}
-	assertExactImageGroups(markerIds(input.message.attachments), itemData);
+	assertExactImageGroups(
+		markerIds(input.message.attachments.filter(isInlineImageAttachment)),
+		itemData,
+	);
 	return {
 		...input,
 		message: {
 			...input.message,
-			attachments: hydrateImageArray(input.message.attachments, itemData),
+			attachments: mergeInlineImages(
+				input.message.attachments,
+				hydrateImageArray(input.message.attachments.filter(isInlineImageAttachment), itemData),
+			),
 		},
 	} as AgentSubmissionInput;
+}
+
+function mergeInlineImages(
+	attachments: DeliveredAttachment[] | undefined,
+	images: PromptImage[] | undefined,
+): DeliveredAttachment[] | undefined {
+	if (attachments === undefined || images === undefined) return images;
+	let index = 0;
+	return attachments.map((attachment) =>
+		isInlineImageAttachment(attachment) ? images[index++]! : attachment,
+	);
 }
 
 function extractImageArray(

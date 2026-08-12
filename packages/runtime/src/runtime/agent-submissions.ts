@@ -26,7 +26,12 @@ import {
 } from '../errors.ts';
 import { type FlueTraceCarrier, interceptExecution } from '../execution-interceptor.ts';
 import { getInternalSession } from '../session.ts';
-import type { Agent, CallHandle, DeliveredMessage } from '../types.ts';
+import {
+	type Agent,
+	type CallHandle,
+	type DeliveredMessage,
+	isInlineImageAttachment,
+} from '../types.ts';
 import { type AttachmentStore, createAttachmentRef } from './attachment-store.ts';
 import type { DispatchInput } from './dispatch-queue.ts';
 import type { CoordinatorEventEmitter } from './events.ts';
@@ -442,8 +447,23 @@ export async function materializeSubmissionAttachments(
 	attachmentStore?: AttachmentStore,
 ): Promise<void> {
 	const message = input.message;
-	if (message.kind !== 'user' || !attachmentStore) return;
-	for (const [index, attachment] of (message.attachments ?? []).entries()) {
+	if (!attachmentStore) return;
+	const streamPath = agentStreamPath(input.agent, input.id);
+	const fileIds = (message.attachments ?? [])
+		.filter((attachment) => !isInlineImageAttachment(attachment))
+		.map((attachment) => attachment.id);
+	if (fileIds.length > 0) {
+		await attachmentStore.bind({
+			streamPath,
+			submissionId: input.submissionId,
+			conversationId,
+			attachmentIds: fileIds,
+		});
+	}
+	if (message.kind !== 'user') return;
+	for (const [index, attachment] of (message.attachments ?? [])
+		.filter(isInlineImageAttachment)
+		.entries()) {
 		const bytes = decodeBase64(attachment.data);
 		const ref = await createAttachmentRef({
 			id: `att_${input.kind}_${input.submissionId}_${index}`,
@@ -451,7 +471,6 @@ export async function materializeSubmissionAttachments(
 			bytes,
 			...(attachment.filename ? { filename: attachment.filename } : {}),
 		});
-		const streamPath = agentStreamPath(input.agent, input.id);
 		await attachmentStore.put({
 			streamPath,
 			attachment: ref,
@@ -459,6 +478,44 @@ export async function materializeSubmissionAttachments(
 			conversationId,
 		});
 	}
+}
+
+/**
+ * Reject the entire referenced set before an admission row can be written.
+ * This is deliberately separate from canonical binding: the first message
+ * may create the root conversation only after its durable submission exists.
+ */
+export async function reserveSubmissionAttachments(
+	input: AgentSubmissionInput,
+	attachmentStore?: AttachmentStore,
+): Promise<void> {
+	if (!attachmentStore) return;
+	const attachmentIds = (input.message.attachments ?? [])
+		.filter((attachment) => !isInlineImageAttachment(attachment))
+		.map((attachment) => attachment.id);
+	if (attachmentIds.length === 0) return;
+	await attachmentStore.reserve({
+		streamPath: agentStreamPath(input.agent, input.id),
+		submissionId: input.submissionId,
+		attachmentIds,
+	});
+}
+
+export async function releaseSubmissionAttachments(
+	input: AgentSubmissionInput,
+	attachmentStore: AttachmentStore | undefined,
+	submissions: AgentSubmissionStore,
+): Promise<void> {
+	if (!attachmentStore || (await submissions.getSubmission(input.submissionId))) return;
+	const attachmentIds = (input.message.attachments ?? [])
+		.filter((attachment) => !isInlineImageAttachment(attachment))
+		.map((attachment) => attachment.id);
+	if (attachmentIds.length === 0) return;
+	await attachmentStore.release({
+		streamPath: agentStreamPath(input.agent, input.id),
+		submissionId: input.submissionId,
+		attachmentIds,
+	});
 }
 
 export function createAgentSubmissionSessionHandler(

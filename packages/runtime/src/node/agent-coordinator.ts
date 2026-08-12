@@ -25,6 +25,8 @@ import {
 	materializeSubmissionAttachments,
 	processSubmission,
 	reconcileInterruptedSubmission,
+	releaseSubmissionAttachments,
+	reserveSubmissionAttachments,
 	serializeSubmissionError,
 	settleUnclaimableSubmission,
 	submissionSyntheticRequest,
@@ -1013,7 +1015,14 @@ export function createNodeAgentCoordinator(options: {
 					}
 					throw error;
 				}
-				let admission = await submissions.admitDispatch(input);
+				await reserveSubmissionAttachments(submissionInput, attachmentStore);
+				let admission: Awaited<ReturnType<typeof submissions.admitDispatch>>;
+				try {
+					admission = await submissions.admitDispatch(input);
+				} catch (error) {
+					await releaseSubmissionAttachments(submissionInput, attachmentStore, submissions);
+					throw error;
+				}
 				let deduplicated = false;
 				if (admission.kind !== 'submission') {
 					// The store's byte-exact compare rejects a caller retry (it
@@ -1185,8 +1194,10 @@ export function createNodeAgentCoordinator(options: {
 					let admitted: AgentSubmission;
 					let deduplicated = false;
 					try {
+						await reserveSubmissionAttachments(input, attachmentStore);
 						admitted = await submissions.admitDirect(input);
 					} catch (error) {
+						await releaseSubmissionAttachments(input, attachmentStore, submissions);
 						// The store rejects a caller retry byte-exactly (it re-stamps
 						// acceptedAt/traceCarrier); a keyed admission converges on
 						// identity above the store instead. Adoption only ever

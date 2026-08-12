@@ -19,6 +19,8 @@ interface ConversationRecordEnvelope {
 
 export interface AttachmentRef {
 	id: string;
+	/** Reference uploads are opaque files, never provider image inputs. */
+	type?: 'file';
 	mimeType: string;
 	size: number;
 	digest: string;
@@ -105,6 +107,7 @@ interface SignalRecord extends ConversationRecordEnvelope {
 	tagName?: string;
 	content: string;
 	attributes?: Record<string, string>;
+	attachments?: AttachmentRef[];
 }
 
 /**
