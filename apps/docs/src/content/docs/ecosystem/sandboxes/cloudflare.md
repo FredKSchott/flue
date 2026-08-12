@@ -6,6 +6,8 @@ lastReviewedAt: 2026-07-21
 
 Cloudflare Sandbox uses `@cloudflare/sandbox` to provide a container-backed Linux environment to a Flue application deployed on Cloudflare. This integration is platform-native: it is not an adapter module for a Node-target application.
 
+> **Warning:** Deploying Cloudflare Sandbox requires the [Cloudflare Workers Paid plan](https://developers.cloudflare.com/sandbox/platform/pricing/). Local development runs the same container-backed sandbox through Docker and is not subject to this requirement — the Paid plan applies to deployed Workers usage only.
+
 ## Quickstart
 
 Add container-backed Linux sandbox capability to an existing Flue project with the [Cloudflare Sandbox](https://developers.cloudflare.com/sandbox) blueprint. Run the following command in your terminal or coding agent of choice:
