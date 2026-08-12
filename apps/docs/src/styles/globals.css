@@ -290,7 +290,7 @@ pre.astro-code {
 	margin: 1rem 0;
 	padding: 0.75rem 1rem;
 	border-radius: 0.5rem;
-	border: 1px solid var(--nb-border);
+	border: 1px solid color-mix(in oklch, var(--nb-link) 30%, transparent);
 	background-color: var(--nb-card);
 	overflow-x: auto;
 	font-family: var(--nb-font-mono);
@@ -321,9 +321,9 @@ pre.astro-code span {
 	height: 1.75rem;
 	margin: 0;
 	padding: 0;
-	border: 1px solid var(--nb-border);
+	border: 1px solid color-mix(in oklch, var(--nb-link) 30%, transparent);
 	border-radius: 0.375rem;
-	background: var(--nb-card);
+	background: color-mix(in oklch, var(--nb-link) 14%, var(--nb-card));
 	color: var(--nb-muted-foreground);
 	cursor: pointer;
 	opacity: 0;
@@ -338,8 +338,8 @@ pre.astro-code span {
 	opacity: 1;
 }
 .nb-code-copy:hover {
-	color: var(--nb-foreground);
-	background: var(--nb-muted);
+	color: var(--nb-link);
+	background: color-mix(in oklch, var(--nb-link) 20%, var(--nb-card));
 }
 .nb-code-copy svg {
 	width: 0.875rem;
@@ -358,7 +358,7 @@ pre.astro-code span {
 .nb-code-figure {
 	position: relative;
 	margin: 1rem 0;
-	border: 1px solid var(--nb-border);
+	border: 1px solid color-mix(in oklch, var(--nb-link) 30%, transparent);
 	border-radius: 0.5rem;
 	background-color: var(--nb-card);
 	overflow: hidden;
@@ -375,8 +375,8 @@ pre.astro-code span {
 	justify-content: space-between;
 	gap: 0.75rem;
 	padding: 0.8125rem 0.875rem;
-	border-bottom: 1px solid var(--nb-border);
-	background: color-mix(in oklch, var(--nb-muted) 50%, transparent);
+	border-bottom: 1px solid color-mix(in oklch, var(--nb-link) 20%, transparent);
+	background: color-mix(in oklch, var(--nb-link) 6%, transparent);
 	font-family: var(--nb-font-mono);
 	font-size: 0.75rem;
 	line-height: 1.4;
@@ -392,8 +392,8 @@ pre.astro-code span {
 	flex-shrink: 0;
 	padding: 0.0625rem 0.375rem;
 	border-radius: 0.25rem;
-	background: var(--nb-muted);
-	color: var(--nb-muted-foreground);
+	background: color-mix(in oklch, var(--nb-link) 12%, transparent);
+	color: var(--nb-link);
 	font-size: 0.6875rem;
 	letter-spacing: 0.02em;
 	text-transform: uppercase;
@@ -423,14 +423,14 @@ pre.astro-code span {
 	right: 0.625rem;
 	padding: 0.0625rem 0.375rem;
 	border-radius: 0.25rem;
-	background: var(--nb-muted);
-	color: var(--nb-muted-foreground);
+	background: color-mix(in oklch, var(--nb-link) 14%, var(--nb-card));
+	color: var(--nb-link);
 	font-family: var(--nb-font-mono);
 	font-size: 0.6875rem;
 	letter-spacing: 0.02em;
 	text-transform: uppercase;
 	pointer-events: none;
-	opacity: 0.75;
+	opacity: 1;
 	transition: opacity 0.15s ease;
 	z-index: 1;
 }

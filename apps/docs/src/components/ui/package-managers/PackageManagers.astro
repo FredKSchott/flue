@@ -80,7 +80,7 @@ const uid =
           aria-controls={`pm-panel-${uid}-${tab.mgr}`}
           id={`pm-tab-${uid}-${tab.mgr}`}
           data-nb-pm-tab
-          class="m-0 cursor-pointer rounded-md border-0 bg-transparent px-2 py-0.5 text-xs leading-5 font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-selected:bg-selected aria-selected:text-foreground"
+          class="m-0 cursor-pointer rounded-md border-0 bg-transparent px-2 py-0.5 text-xs leading-5 font-medium text-muted-foreground transition-colors hover:bg-link/10 hover:text-foreground aria-selected:bg-link aria-selected:text-white"
         >
           {tab.mgr}
         </button>
@@ -101,7 +101,7 @@ const uid =
           aria-labelledby={`pm-tab-${uid}-${tab.mgr}`}
           hidden={i !== 0}
           data-nb-pm-panel
-          class="relative overflow-hidden rounded-lg bg-card text-inherit ring ring-border"
+          class="relative overflow-hidden rounded-lg bg-card text-inherit ring ring-link/30"
         >
           <div class="flex items-stretch">
             <pre class="my-0 min-w-0 grow overflow-x-auto border-0 bg-transparent px-4 py-3 text-sm leading-relaxed whitespace-pre font-mono text-foreground"><code data-nb-pm-code>{commentPrefix && <span class="text-muted-foreground">{commentPrefix}</span>}<span class="text-success">{codeFirst}</span><span class="text-warning">{codeRest}</span></code></pre>
@@ -110,7 +110,7 @@ const uid =
               data-nb-pm-copy
               data-nb-command={tab.cmd}
               aria-label="Copy to clipboard"
-              class="m-0 flex shrink-0 cursor-pointer items-center justify-center border-0 border-l border-solid border-border bg-transparent px-3 text-muted-foreground transition-colors hover:text-foreground"
+              class="m-0 flex shrink-0 cursor-pointer items-center justify-center border-0 border-l border-solid border-link/20 bg-transparent px-3 text-muted-foreground transition-colors hover:text-link"
             >
               <Icon name="ph:copy" class="w-[18px] h-[18px]" is:inline />
             </button>
@@ -123,6 +123,12 @@ const uid =
   <template data-nb-pm-icon-copy><Icon name="ph:copy" class="w-[18px] h-[18px]" is:inline /></template>
   <template data-nb-pm-icon-check><Icon name="ph:check" class="w-[18px] h-[18px]" is:inline /></template>
 </div>
+
+<style is:global>
+  [data-mode="dark"] [data-nb-pm] [role="tab"][aria-selected="true"] {
+    color: var(--nb-background);
+  }
+</style>
 
 <script>
   import "./package-managers.client";

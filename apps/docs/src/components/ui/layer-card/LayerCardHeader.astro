@@ -9,7 +9,7 @@ const { class: className, ...attrs } = Astro.props;
 ---
 
 <div
-  class={cn("flex items-center gap-2 bg-muted px-3 py-2 text-[0.8125rem] font-medium leading-5 text-muted-foreground", className)}
+  class={cn("flex items-center gap-2 bg-transparent px-3 py-2 text-[0.8125rem] font-medium leading-5 text-muted-foreground", className)}
   {...attrs}
 >
   <slot />

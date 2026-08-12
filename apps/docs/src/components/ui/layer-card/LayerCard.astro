@@ -16,7 +16,7 @@ const { class: className, ...attrs } = Astro.props;
 ---
 
 <div
-  class={cn("flex w-full flex-col overflow-hidden rounded-lg bg-muted text-sm ring ring-border", className)}
+  class={cn("flex w-full flex-col overflow-hidden rounded-lg bg-link/5 text-sm ring ring-link/30", className)}
   {...attrs}
 >
   <slot />
