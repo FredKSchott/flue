@@ -31,7 +31,7 @@ const hash = sidebarHash(items);
   <ul class="top-level flex list-none flex-col gap-0.5 p-0">
     {items.map((item) =>
       item.type === "group" ? (
-        <li>
+        <li data-kind="group">
           <SidebarGroup
             label={item.label}
             items={item.children}
@@ -44,17 +44,23 @@ const hash = sidebarHash(items);
           />
         </li>
       ) : item.type === "external" ? (
-        <li>
+        <li data-kind="leaf">
           <SidebarLink label={item.label} href={item.href} badge={item.badge} target="_blank" rel="noopener" />
         </li>
       ) : (
-        <li>
+        <li data-kind="leaf">
           <SidebarLink label={item.label} href={item.href} isCurrent={item.isCurrent} badge={item.badge} />
         </li>
       ),
     )}
   </ul>
 </div>
+
+<style>
+  .top-level > li[data-kind="leaf"] + li[data-kind="group"] {
+    margin-top: 0.5rem;
+  }
+</style>
 
 <script>
   import "./sidebar.client";
