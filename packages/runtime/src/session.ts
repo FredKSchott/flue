@@ -2748,11 +2748,11 @@ export class Session implements FlueSession, AgentSubmissionSession {
 		input: AgentSubmissionInput,
 		options?: ProcessAgentSubmissionOptions,
 	): CallHandle<void> {
-		return createCallHandle(undefined, (signal) =>
-			this.runOperation('prompt', signal, () =>
+		return createCallHandle(undefined, async (signal) => {
+			await this.runOperation('prompt', signal, () =>
 				this.runPersistedSubmissionInput(input, signal, options),
-			),
-		);
+			);
+		});
 	}
 
 	/**
@@ -5163,7 +5163,7 @@ export class Session implements FlueSession, AgentSubmissionSession {
 		input: AgentSubmissionInput,
 		signal: AbortSignal,
 		options?: ProcessAgentSubmissionOptions,
-	): Promise<void> {
+	): Promise<{ text: string }> {
 		const message = input.message;
 		this.activeAgentInput =
 			message.kind === 'user'
@@ -5473,7 +5473,7 @@ export class Session implements FlueSession, AgentSubmissionSession {
 		submissionAttempt?: import('./agent-execution-store.ts').SubmissionAttemptRef;
 		joinSource?: SubmissionJoinSource;
 		signal: AbortSignal;
-	}): Promise<void> {
+	}): Promise<{ text: string }> {
 		return this.withCallOverrides(
 			{
 				tools: [],
@@ -5550,6 +5550,10 @@ export class Session implements FlueSession, AgentSubmissionSession {
 						signal: options.signal,
 					});
 					await this.flushResponseOutput();
+					// The persisted submission path is still an agent invocation. Return
+					// its final text so runOperation can include agentOutput in its
+					// terminal telemetry observation; callers intentionally discard it.
+					return { text: this.getAssistantText() };
 				} finally {
 					// A failed attempt drops its unflushed signal appends (they never
 					// happened, like the state writes and tool batch they rode with)
