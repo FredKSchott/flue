@@ -27,20 +27,21 @@ Flue builds on `agents`, Cloudflare's Agents SDK — it uses the SDK's Durable O
 
 ```ts title="vite.config.ts"
 import { cloudflare } from '@cloudflare/vite-plugin';
-import { flue } from '@flue/vite';
+import { flue, flueWorkerConfig } from '@flue/vite';
 import { defineConfig } from 'vite';
 
 // flue() must come before cloudflare(): it prepares the generated Worker
 // entry and the merged wrangler config that the Cloudflare plugin consumes.
-// The cloudflare target is auto-detected from the presence of cloudflare()
-// in the plugin array.
+// Pass flueWorkerConfig() to cloudflare() so the plugin picks up that
+// generated Worker entry and per-agent Durable Object bindings.
 export default defineConfig({
-  plugins: [flue(), cloudflare()],
+  plugins: [flue(), cloudflare({ config: flueWorkerConfig() })],
 });
 ```
 
 ```jsonc title="package.json"
 {
+  "type": "module",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
@@ -48,6 +49,8 @@ export default defineConfig({
   },
 }
 ```
+
+`"type": "module"` is required: `@cloudflare/vite-plugin` is ESM-only, and without it Vite loads `vite.config.ts` with `require()` and fails to resolve the plugin.
 
 ### 2. Create your first agent
 
