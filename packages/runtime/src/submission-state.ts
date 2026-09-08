@@ -445,7 +445,7 @@ export function isRetryableModelError(message: AssistantMessage): boolean {
 	// reason, which is transient like a 5xx. The lookahead excludes qualified
 	// reasons (error_quota, error-content-filter, content_filter, …), which
 	// stay terminal.
-	return /overloaded|rate.?limit|too many requests|429|500|502|503|504|service.?unavailable|server.?error|network.?error|connection.?(?:reset|refused|lost)|socket hang up|fetch failed|timed? out|timeout|terminated|provider finish_reason:\s*error(?![-\w])/i.test(
+	return /overloaded|rate.?limit|too many requests|429|500|502|503|504|service.?unavailable|server.?error|network.?error|connection.?(?:reset|refused|lost|error)|socket hang up|fetch failed|timed? out|timeout|terminated|provider finish_reason:\s*error(?![-\w])/i.test(
 		message.errorMessage,
 	);
 }
