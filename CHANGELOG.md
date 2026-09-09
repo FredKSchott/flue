@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.4 - 2026-09-09
+
+### Fixes & Other Changes
+
+- **`"Connection error."` is now classified as a retryable model error.** The retryable-error matcher recognized `connection reset`/`connection refused`/`connection lost` but not a bare `connection error` — a transient "Connection error." (with its trailing period) fell through the pattern and terminated the submission as a hard failure. The matcher now also accepts `connection error` and the run retries it under the transient-error budget (#629).
+
 ## 2.0.3 - 2026-08-04
 
 ### Fixes & Other Changes
