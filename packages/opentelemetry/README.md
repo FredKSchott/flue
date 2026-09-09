@@ -43,26 +43,32 @@ A provider chat span measures provider inference only. Tool spans are siblings u
 
 ## Content capture
 
-Content capture is disabled by default. Implemented model-message, system-instruction, tool-definition, tool-description, argument/result, exception-message, and external-content paths receive no raw content in this mode.
+Content capture is enabled by default once instrumentation is installed: model messages, reasoning, system instructions, tool definitions, tool descriptions, arguments/results, exception messages, and stack traces all ship as span attributes. The explicit `instrument(...)` call is the consent. Review the receiving backend's retention and access controls before exporting conversation data to it.
 
-Enable one instrumentation-wide policy and redact before export:
+`content: false` produces content-free spans:
+
+```ts
+const instrumentation = createOpenTelemetryInstrumentation({ content: false });
+```
+
+Provide a `transform` to redact or drop values before export:
 
 ```ts
 const instrumentation = createOpenTelemetryInstrumentation({
   content: {
-    enabled: process.env.OTEL_GENAI_CAPTURE_CONTENT === 'true',
-    transform(content) {
+    transform(content, scope) {
+      if (scope.contentType === 'exception_stacktrace') return undefined; // strip stacks
       return redactSecrets(content);
     },
   },
 });
 ```
 
-The master `enabled` value is the privacy ceiling. One detached copy passes through `transform`; returning `undefined` suppresses both destinations. Transforms are trusted application code: Flue does not validate their returned GenAI shape. After transformation, `maxMessageParts` retains the first complete parts in every input/output message and the first top-level system instructions, while `maxToolDefinitions` retains the first definitions. Limits must be finite nonnegative safe integers.
+One detached copy passes through `transform` per content type, with a `scope` carrying the content type, event type, execution identity, and `traceId`/`spanId` where the backend can supply them. Returning `undefined` omits that content; a throwing transform emits a `[flue] content transform failed; content omitted` sentinel instead of the unredacted value — a failed redaction never leaks. Transforms are trusted application code: Flue does not validate their returned GenAI shape, and a transform can never mutate the caller's original content.
 
-`externalContent` is a side-effect-only sink for system instructions and input/output messages. It receives a detached, structurally limited clone plus a stable `contentType` scope before inline recording, regardless of sampling or `inline`. Its return value and mutations are ignored, failures only produce safe diagnostics, and tool definitions, descriptions, arguments, and results are never delivered to it.
+Everything content-bearing a span carries — messages, system instructions, tool definitions, arguments/results, exception message and stack — draws from one shared 56 KiB in-band budget, with a reserve held so response content has room beside large prompts. Truncation is in-band, inside the payload: serialized content stays valid JSON, oldest messages drop first behind a `role: "flue"` sentinel message, oversized strings are cut with a `[flue:truncated, …]` suffix, and unserializable values become `[flue] content unserializable` — there are no side-channel `*.truncated/.omitted` marker attributes; search payloads for `[flue]` instead. For tighter per-attribute budgets, slice inside the transform with the exported `truncateContent(content, { maxBytes })`.
 
-Set `inline: false` to skip serialization while retaining external delivery. `maxAttributeBytes` applies only to the exact final UTF-8 inline attribute string. Object-shaped tool arguments/results use standard `gen_ai.tool.call.*` attributes; other useful values use `flue.tool.call.arguments` or `flue.tool.call.result` under the same privacy and size policy. Tool descriptions and plain-text fallbacks remain raw strings. Structural truncation and byte omission are marked with bounded `flue.telemetry.content.*` attributes. Flue does not flatten undeclared child keys beneath `gen_ai.*`.
+Object-shaped tool arguments/results use the standard `gen_ai.tool.call.*` attributes; other shapes use `flue.tool.call.arguments` or `flue.tool.call.result` under the same policy and budget. Tool descriptions and plain-text fallbacks remain raw strings. Flue does not flatten undeclared child keys beneath `gen_ai.*`.
 
 ## Metrics and Logs
 
